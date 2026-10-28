@@ -50,6 +50,30 @@ export function initTitleScreen(root = document) {
   background.appendChild(renderer.domElement);
 
   // --------------------------------------------------
+  // Title screen music
+  // --------------------------------------------------
+
+  const titleMusic = new Audio("./soundtrack/title.mp3");
+
+  titleMusic.loop = true;
+  titleMusic.volume = 1;
+  titleMusic.preload = "auto";
+
+  function startTitleMusic() {
+    titleMusic.play().catch(error => {
+      // Browsers may block autoplay until user interaction.
+      console.info("Title music is waiting for user interaction.", error);
+    });
+  }
+
+  function onFirstInteraction() {
+    startTitleMusic();
+  }
+
+  document.addEventListener("pointerdown", onFirstInteraction);
+  document.addEventListener("keydown", onFirstInteraction);
+  
+  // --------------------------------------------------
   // Lighting
   // --------------------------------------------------
 
@@ -413,7 +437,7 @@ export function initTitleScreen(root = document) {
     const elapsed = clock.elapsedTime;
 
     // Slow, continuous 360-degree camera orbit.
-    cameraAngle += delta * 0.012;
+    cameraAngle += delta * 0.05;
 
     updateCamera();
 
@@ -472,6 +496,12 @@ export function initTitleScreen(root = document) {
         }
       }
     });
+
+    document.removeEventListener("pointerdown", onFirstInteraction);
+    document.removeEventListener("keydown", onFirstInteraction);
+
+    titleMusic.pause();
+    titleMusic.currentTime = 0;
 
     renderer.dispose();
     renderer.domElement.remove();
