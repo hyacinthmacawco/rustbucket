@@ -26,8 +26,8 @@ export function initTutorialScreen(root = document) {
   // --------------------------------------------------
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080d15);
-  scene.fog = new THREE.Fog(0x080d15, 24, 65);
+  scene.background = new THREE.Color(0x78b9f5);
+  scene.fog = new THREE.Fog(0xa6cbed, 35, 85);
 
   const camera = new THREE.PerspectiveCamera(
     43,
@@ -57,7 +57,7 @@ export function initTutorialScreen(root = document) {
 
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.3;
 
   background.appendChild(renderer.domElement);
 
@@ -186,47 +186,54 @@ export function initTutorialScreen(root = document) {
   // Lighting
   // --------------------------------------------------
 
+  // Bright blue sky and warm reflected light.
   scene.add(
-    new THREE.HemisphereLight(0x9eabc5, 0x242329, 1.05)
+    new THREE.HemisphereLight(
+      0xb8dcff,
+      0x5a5040,
+      2.0
+    )
   );
 
+  // Warm afternoon sunlight entering the garage.
+  const sunlight = new THREE.DirectionalLight(
+    0xffd39a,
+    3.0
+  );
+
+  sunlight.position.set(-12, 14, 12);
+  scene.add(sunlight);
+
+  // Soft fill light inside the storage unit.
   const ceilingLight = new THREE.PointLight(
-    0xd7e2ed,
-    115,
-    36,
-    1.8
+    0xffe5c2,
+    65,
+    38,
+    1.5
   );
 
-  ceilingLight.position.set(0, 10.5, -3);
+  ceilingLight.position.set(0, 10, -3);
   scene.add(ceilingLight);
 
+  // Cool daylight entering from the entrance.
   const frontFill = new THREE.DirectionalLight(
-    0x7a9fc5,
-    1.25
+    0x9bcfff,
+    2.0
   );
 
-  frontFill.position.set(-7, 8, 13);
+  frontFill.position.set(0, 8, 18);
   scene.add(frontFill);
 
+  // Warm bounce light on the right wall.
   const sideLight = new THREE.PointLight(
-    0xb2c7d4,
-    65,
+    0xffc681,
+    30,
     24,
     2
   );
 
-  sideLight.position.set(-8, 5, 1);
+  sideLight.position.set(8, 5, 2);
   scene.add(sideLight);
-
-  const warmLight = new THREE.PointLight(
-    0xffa35d,
-    22,
-    15,
-    2
-  );
-
-  warmLight.position.set(7, 4, 2);
-  scene.add(warmLight);
 
   // --------------------------------------------------
   // Storage unit architecture
@@ -313,46 +320,6 @@ export function initTutorialScreen(root = document) {
     4.2, 7.8, 0.55,
     wallMaterial,
     14.2, 4.1, 14.2
-  );
-
-  // Roller shutter: horizontal metal slats.
-  const shutter = new THREE.Group();
-  scene.add(shutter);
-
-  for (let i = 0; i < 33; i++) {
-    const y = 0.15 + i * 0.205;
-
-    addBox(
-      24.6,
-      0.14,
-      0.13,
-      i % 2 === 0
-        ? standardMaterial(0x303943, 0.8)
-        : standardMaterial(0x424a53, 0.8),
-      0,
-      y,
-      14.0,
-      shutter
-    );
-  }
-
-  // Door frame.
-  addBox(
-    0.35, 7.1, 0.4,
-    trimMaterial,
-    -12.6, 3.55, 14.15
-  );
-
-  addBox(
-    0.35, 7.1, 0.4,
-    trimMaterial,
-    12.6, 3.55, 14.15
-  );
-
-  addBox(
-    25.5, 0.35, 0.4,
-    trimMaterial,
-    0, 7.1, 14.15
   );
 
   // High windows on the back wall.
