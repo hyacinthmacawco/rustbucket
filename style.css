@@ -1,0 +1,205 @@
+
+:root {
+  color-scheme: dark;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #02040a;
+  color: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #02040a;
+}
+
+button {
+  font: inherit;
+}
+
+#title-root,
+#title-screen,
+#space-background {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#title-screen {
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 50%, #101827 0%, #02040a 75%);
+}
+
+#space-background {
+  z-index: -1;
+  overflow: hidden;
+}
+
+#space-background canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Main menu */
+
+#title-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  width: max-content;
+  max-width: calc(100vw - 40px);
+
+  color: #fff;
+  text-align: center;
+  z-index: 2;
+}
+
+#game-title {
+  width: max-content;
+  max-width: 100%;
+  align-self: center;
+
+  margin: 0 0 20px;
+  color: #fff;
+
+  font-size: clamp(36px, 7.2vw, 84px);
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1;
+
+  white-space: nowrap;
+  text-shadow: 0 0 24px rgb(255 255 255 / 12%);
+}
+
+/* Buttons share the title's total width */
+
+#title-buttons {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  gap: 0;
+}
+
+#title-buttons button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  background: transparent;
+  border: none;
+  border-radius: 0;
+
+  color: #fff;
+  font-size: clamp(12px, 1.7vw, 17px);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    text-shadow 180ms ease;
+}
+
+#title-buttons button:hover,
+#title-buttons button:focus-visible {
+  background: rgb(255 255 255 / 9%);
+  color: #fff;
+  text-shadow: 0 0 12px rgb(255 255 255 / 50%);
+  outline: none;
+}
+
+#title-buttons button:focus-visible {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 70%);
+}
+
+#title-buttons button:active {
+  background: rgb(255 255 255 / 15%);
+}
+
+.chevron {
+  flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+
+#load-game-button[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+/* Temporary load-game panel */
+
+#load-game-panel {
+  margin-top: 12px;
+  padding: 12px;
+  color: rgb(255 255 255 / 70%);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+}
+
+#load-game-panel p {
+  margin: 0;
+}
+
+#load-game-panel[hidden] {
+  display: none;
+}
+
+/* Smaller screens */
+
+@media (max-width: 520px) {
+  #title-menu {
+    max-width: calc(100vw - 28px);
+  }
+
+  #game-title {
+    font-size: clamp(28px, 8vw, 42px);
+    letter-spacing: 0.055em;
+    margin-bottom: 16px;
+  }
+
+  #title-buttons button {
+    min-height: 44px;
+    padding: 10px 4px;
+    font-size: clamp(10px, 2.8vw, 13px);
+    letter-spacing: 0.04em;
+    gap: 4px;
+  }
+
+  .chevron {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #title-buttons button,
+  .chevron {
+    transition: none;
+  }
+}
