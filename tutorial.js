@@ -474,7 +474,7 @@ export function initTutorialScreen(root = document) {
     paleCream
   );
 
-  nose.rotation.x = -Math.PI / 2;
+  nose.rotation.x = Math.PI / 2;
   nose.position.set(0, 0, 6.0);
   nose.scale.set(1, 1, 1);
   nose.castShadow = true;
@@ -799,7 +799,7 @@ export function initTutorialScreen(root = document) {
       // Keep the screen black for the full dialogue.
     }).catch(error => {
       console.warn(
-        "Dialogue playback was blocked or failed:",
+        "Dialogue playback failed. Waiting for user interaction:",
         error
       );
 
