@@ -60,17 +60,6 @@ export function initTitleScreen(root = document) {
   titleMusic.volume = 0.5;
   titleMusic.preload = "auto";
 
-  titleMusic.addEventListener("canplay", () => {
-    console.log("Title music is ready to play.");
-  });
-
-  titleMusic.addEventListener("error", () => {
-    console.error(
-      "Could not load title.mp3:",
-      titleMusic.error
-    );
-  });
-
   async function startTitleMusic() {
     try {
       await titleMusic.play();
@@ -79,14 +68,25 @@ export function initTitleScreen(root = document) {
       console.error("Title music playback failed:", error);
     }
   }
-
-  // Attempt autoplay.
-  startTitleMusic();
-
-  // Browsers often require a user gesture before allowing audio.
-  document.addEventListener("pointerdown", startTitleMusic);
-  document.addEventListener("keydown", startTitleMusic);
   
+  async function enterFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.warn("Fullscreen is not supported here:", error);
+    }
+  }
+
+  function onFirstInteraction() {
+    startTitleMusic();
+    enterFullscreen();
+  }
+
+  document.addEventListener("pointerdown", onFirstInteraction);
+  document.addEventListener("keydown", onFirstInteraction);
+
   // --------------------------------------------------
   // Lighting
   // --------------------------------------------------
