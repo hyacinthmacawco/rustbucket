@@ -1,4 +1,4 @@
-root {
+:root {
   color-scheme: dark;
   font-family: Arial, Helvetica, sans-serif;
   background: #02040a;
@@ -15,6 +15,8 @@ body {
   width: 100%;
   height: 100%;
   margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
 }
 
 body {
@@ -25,21 +27,42 @@ button {
   font: inherit;
 }
 
+#game-root,
 #title-root,
 #title-screen,
-#space-background {
+#space-background,
+#tutorial-screen,
+#tutorial-scene {
   position: fixed;
   inset: 0;
-  margin: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
 }
 
-#title-screen {
+#game-root {
+  overflow: hidden;
+  background: #02040a;
+  isolation: isolate;
+}
+
+#title-screen,
+#tutorial-screen {
   overflow: hidden;
   isolation: isolate;
+}
+
+/* =========================================
+   TITLE SCREEN
+   ========================================= */
+
+#title-screen {
   background:
-    radial-gradient(ellipse at 50% 50%, #101827 0%, #02040a 75%);
+    radial-gradient(
+      ellipse at 50% 50%,
+      #101827 0%,
+      #02040a 75%
+    );
 }
 
 #space-background {
@@ -47,14 +70,13 @@ button {
   overflow: hidden;
 }
 
-#space-background canvas {
+#space-background canvas,
+#tutorial-scene canvas {
   display: block;
   width: 100%;
   height: 100%;
   touch-action: manipulation;
 }
-
-/* Main menu */
 
 #title-menu {
   position: absolute;
@@ -90,8 +112,6 @@ button {
   white-space: nowrap;
   text-shadow: 0 0 24px rgb(255 255 255 / 12%);
 }
-
-/* Buttons share the title's total width */
 
 #title-buttons {
   display: flex;
@@ -153,8 +173,6 @@ button {
   transform: rotate(180deg);
 }
 
-/* Temporary load-game panel */
-
 #load-game-panel {
   margin-top: 12px;
   padding: 12px;
@@ -171,7 +189,106 @@ button {
   display: none;
 }
 
-/* Smaller screens */
+/* =========================================
+   TUTORIAL SCREEN
+   ========================================= */
+
+#tutorial-screen {
+  background: #000;
+  isolation: isolate;
+}
+
+#tutorial-scene {
+  z-index: 0;
+  overflow: hidden;
+  background: #080d15;
+}
+
+#tutorial-scene canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * This overlay covers the entire 3D scene.
+ * JavaScript fades its opacity from 1 to 0.
+ */
+
+#tutorial-blackout {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+
+  display: block;
+  opacity: 1;
+  background: #000;
+
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/*
+ * JavaScript controls the transition so the fade
+ * starts only after the dialogue finishes.
+ */
+
+#tutorial-blackout.fade-in {
+  transition: opacity 5.5s linear;
+}
+
+/* Minimal loading indicator, visible only during audio. */
+
+#tutorial-loading {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+
+  color: rgb(255 255 255 / 40%);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+#tutorial-loading.loading-hidden {
+  opacity: 0;
+}
+
+/* =========================================
+   ERROR STATE
+   ========================================= */
+
+.game-error {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  padding: 24px;
+  background: #02040a;
+  color: #fff;
+  text-align: center;
+}
+
+.game-error button {
+  padding: 14px 20px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* =========================================
+   MOBILE
+   ========================================= */
 
 @media (max-width: 520px) {
   #title-menu {
