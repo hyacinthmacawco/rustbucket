@@ -1,4 +1,3 @@
-
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
@@ -16,7 +15,7 @@ export function initTitleScreen(root = document) {
   }
 
   // --------------------------------------------------
-  // Renderer
+  // Scene and renderer
   // --------------------------------------------------
 
   const scene = new THREE.Scene();
@@ -54,21 +53,19 @@ export function initTitleScreen(root = document) {
   // Lighting
   // --------------------------------------------------
 
-  const ambientLight = new THREE.AmbientLight(
-    0x52617f,
-    1.1
+  scene.add(
+    new THREE.AmbientLight(0x52617f, 0.45)
   );
 
-  scene.add(ambientLight);
-
+  // Actual light emitted from the Sun.
   const sunLight = new THREE.PointLight(
     0xffb65c,
-    180,
-    100,
+    1800,
+    160,
     1.5
   );
 
-  sunLight.position.set(-6, 0, 1);
+  sunLight.position.set(-6, 0, 0);
   scene.add(sunLight);
 
   // --------------------------------------------------
@@ -86,7 +83,11 @@ export function initTitleScreen(root = document) {
       },
       undefined,
       error => {
-        console.warn("Texture could not be loaded:", url, error);
+        console.warn(
+          "Could not load texture:",
+          url,
+          error
+        );
       }
     );
   }
@@ -112,7 +113,6 @@ export function initTitleScreen(root = document) {
   const starColors = new Float32Array(starCount * 3);
 
   for (let i = 0; i < starCount; i++) {
-    // Distribute stars throughout a large spherical volume.
     const radius = 45 + Math.random() * 110;
     const theta = Math.random() * Math.PI * 2;
     const z = Math.random() * 2 - 1;
@@ -128,8 +128,6 @@ export function initTitleScreen(root = document) {
       radius * planar * Math.sin(theta);
 
     const brightness = 0.55 + Math.random() * 0.45;
-
-    // Mostly white, with occasional cool blue stars.
     const blueStar = Math.random() > 0.84;
 
     starColors[i * 3] =
@@ -175,6 +173,7 @@ export function initTitleScreen(root = document) {
 
   const sunPosition = [-6, 0, 0];
 
+  // Bright surface that remains luminous regardless of lighting.
   const sunMaterial = new THREE.MeshBasicMaterial({
     color: 0xffbd55
   });
@@ -185,7 +184,7 @@ export function initTitleScreen(root = document) {
     sunPosition
   );
 
-  // Animated surface detail using a second transparent sphere.
+  // Inner glow.
   const sunAura = makeSphere(
     3.18,
     new THREE.MeshBasicMaterial({
@@ -198,6 +197,7 @@ export function initTitleScreen(root = document) {
     sunPosition
   );
 
+  // Outer glow.
   const sunOuterGlow = makeSphere(
     3.65,
     new THREE.MeshBasicMaterial({
@@ -229,11 +229,11 @@ export function initTitleScreen(root = document) {
     earthPosition
   );
 
+  // Atmospheric glow.
   const earthGroup = new THREE.Group();
   earthGroup.position.set(...earthPosition);
   scene.add(earthGroup);
 
-  // Atmospheric halo.
   const atmosphere = new THREE.Mesh(
     new THREE.SphereGeometry(
       earthRadius * 1.045,
@@ -251,7 +251,6 @@ export function initTitleScreen(root = document) {
 
   earthGroup.add(atmosphere);
 
-  // A slightly larger, subtle outer atmospheric glow.
   const outerAtmosphere = new THREE.Mesh(
     new THREE.SphereGeometry(
       earthRadius * 1.12,
@@ -269,7 +268,7 @@ export function initTitleScreen(root = document) {
 
   earthGroup.add(outerAtmosphere);
 
-  // Public planet textures from the Three.js examples repository.
+  // Earth's surface texture.
   const textureBase =
     "https://threejs.org/examples/textures/planets/";
 
@@ -282,26 +281,8 @@ export function initTitleScreen(root = document) {
   );
 
   // --------------------------------------------------
-  // Additional planets
+  // Moon
   // --------------------------------------------------
-
-  const mars = makeSphere(
-    0.46,
-    new THREE.MeshStandardMaterial({
-      color: 0xb65c38,
-      roughness: 1
-    }),
-    [-1.5, 1.7, -2.2]
-  );
-
-  const jupiter = makeSphere(
-    0.85,
-    new THREE.MeshStandardMaterial({
-      color: 0xc6a77b,
-      roughness: 1
-    }),
-    [0.4, 3.5, -5]
-  );
 
   const moon = makeSphere(
     0.35,
@@ -313,55 +294,11 @@ export function initTitleScreen(root = document) {
   );
 
   // --------------------------------------------------
-  // Orbital paths
-  // --------------------------------------------------
-
-  function createOrbit(radius, color, opacity) {
-    const points = [];
-    const segments = 180;
-
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-
-      points.push(
-        new THREE.Vector3(
-          Math.cos(angle) * radius,
-          0,
-          Math.sin(angle) * radius
-        )
-      );
-    }
-
-    const geometry = new THREE.BufferGeometry()
-      .setFromPoints(points);
-
-    const material = new THREE.LineBasicMaterial({
-      color,
-      transparent: true,
-      opacity
-    });
-
-    const orbit = new THREE.LineLoop(
-      geometry,
-      material
-    );
-
-    orbit.rotation.x = Math.PI / 2.3;
-    orbit.position.set(0, -0.2, -3);
-    scene.add(orbit);
-
-    return orbit;
-  }
-
-  const orbit1 = createOrbit(5.1, 0x91a8cc, 0.16);
-  const orbit2 = createOrbit(8.5, 0x91a8cc, 0.10);
-  const orbit3 = createOrbit(12.0, 0x91a8cc, 0.07);
-
-  // --------------------------------------------------
-  // Camera framing
+  // Camera orbit
   // --------------------------------------------------
 
   const lookTarget = new THREE.Vector3(0, 0, 0);
+
   let cameraAngle = 0;
 
   function updateCamera() {
@@ -369,19 +306,22 @@ export function initTitleScreen(root = document) {
     const height = window.innerHeight;
     const aspect = width / height;
 
-    // Pull back on narrow screens to keep the Sun and Earth visible.
-    const distance =
-      aspect < 0.8 ? 28 :
+    // Keep the Sun and Earth in view on narrower screens.
+    const orbitRadius =
+      aspect < 0.8 ? 27 :
       aspect < 1.15 ? 23 :
       19;
 
+    // Move around the entire scene rather than just shifting
+    // the camera slightly from side to side.
     camera.position.set(
-      Math.sin(cameraAngle) * 1.15,
-      Math.sin(cameraAngle * 0.65) * 0.45,
-      distance
+      Math.sin(cameraAngle) * orbitRadius,
+      1.5 + Math.sin(cameraAngle * 0.6) * 1.5,
+      Math.cos(cameraAngle) * orbitRadius
     );
 
     camera.lookAt(lookTarget);
+
     camera.fov = aspect < 0.8 ? 55 : 45;
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
@@ -394,13 +334,11 @@ export function initTitleScreen(root = document) {
   // --------------------------------------------------
 
   function updateMenuWidth() {
-    // Measure after fonts and layout have settled.
     const titleWidth = title.getBoundingClientRect().width;
     const availableWidth = window.innerWidth - 28;
 
-    const width = Math.min(titleWidth, availableWidth);
-
-    buttonRow.style.width = `${width}px`;
+    buttonRow.style.width =
+      `${Math.min(titleWidth, availableWidth)}px`;
   }
 
   if (document.fonts?.ready) {
@@ -414,7 +352,6 @@ export function initTitleScreen(root = document) {
   // --------------------------------------------------
 
   function onNewGame() {
-    // The actual game-start flow will be implemented later.
     screen.dispatchEvent(
       new CustomEvent("rustbucket:newgame", {
         bubbles: true
@@ -475,22 +412,23 @@ export function initTitleScreen(root = document) {
     const delta = Math.min(clock.getDelta(), 0.05);
     const elapsed = clock.elapsedTime;
 
-    // Slow, continuous camera orbit.
+    // Slow, continuous 360-degree camera orbit.
     cameraAngle += delta * 0.012;
+
     updateCamera();
 
-    // Gentle planetary rotation.
+    // Rotate Earth and Moon gently.
     earth.rotation.y += delta * 0.035;
-    mars.rotation.y += delta * 0.02;
-    jupiter.rotation.y += delta * 0.012;
+    moon.rotation.y += delta * 0.02;
 
-    // Subtle glow variation.
+    // Subtle changes in the Sun's glow.
     sunAura.material.opacity =
       0.11 + Math.sin(elapsed * 0.7) * 0.025;
 
     sunOuterGlow.material.opacity =
       0.05 + Math.sin(elapsed * 0.45) * 0.012;
 
+    // Slowly rotate the background starfield.
     stars.rotation.y += delta * 0.0008;
 
     renderer.render(scene, camera);
@@ -504,6 +442,7 @@ export function initTitleScreen(root = document) {
 
   function destroy() {
     if (disposed) return;
+
     disposed = true;
 
     cancelAnimationFrame(animationFrame);
@@ -513,7 +452,9 @@ export function initTitleScreen(root = document) {
     loadGameButton.removeEventListener("click", onLoadGame);
 
     scene.traverse(object => {
-      if (object.geometry) object.geometry.dispose();
+      if (object.geometry) {
+        object.geometry.dispose();
+      }
 
       if (object.material) {
         const materials = Array.isArray(object.material)
@@ -522,7 +463,9 @@ export function initTitleScreen(root = document) {
 
         for (const material of materials) {
           for (const value of Object.values(material)) {
-            if (value?.isTexture) value.dispose();
+            if (value?.isTexture) {
+              value.dispose();
+            }
           }
 
           material.dispose();
@@ -534,5 +477,10 @@ export function initTitleScreen(root = document) {
     renderer.domElement.remove();
   }
 
-  return { scene, camera, renderer, destroy };
+  return {
+    scene,
+    camera,
+    renderer,
+    destroy
+  };
 }
