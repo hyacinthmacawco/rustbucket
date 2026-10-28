@@ -49,6 +49,7 @@ export function initTitleScreen(root = document) {
 
   background.appendChild(renderer.domElement);
 
+
   // --------------------------------------------------
   // Title screen music
   // --------------------------------------------------
@@ -56,22 +57,35 @@ export function initTitleScreen(root = document) {
   const titleMusic = new Audio("./soundtrack/title.mp3");
 
   titleMusic.loop = true;
-  titleMusic.volume = 1;
+  titleMusic.volume = 0.5;
   titleMusic.preload = "auto";
 
-  function startTitleMusic() {
-    titleMusic.play().catch(error => {
-      // Browsers may block autoplay until user interaction.
-      console.info("Title music is waiting for user interaction.", error);
-    });
+  titleMusic.addEventListener("canplay", () => {
+    console.log("Title music is ready to play.");
+  });
+
+  titleMusic.addEventListener("error", () => {
+    console.error(
+      "Could not load title.mp3:",
+      titleMusic.error
+    );
+  });
+
+  async function startTitleMusic() {
+    try {
+      await titleMusic.play();
+      console.log("Title music is playing.");
+    } catch (error) {
+      console.error("Title music playback failed:", error);
+    }
   }
 
-  function onFirstInteraction() {
-    startTitleMusic();
-  }
+  // Attempt autoplay.
+  startTitleMusic();
 
-  document.addEventListener("pointerdown", onFirstInteraction);
-  document.addEventListener("keydown", onFirstInteraction);
+  // Browsers often require a user gesture before allowing audio.
+  document.addEventListener("pointerdown", startTitleMusic);
+  document.addEventListener("keydown", startTitleMusic);
   
   // --------------------------------------------------
   // Lighting
