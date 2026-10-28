@@ -1,20 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <meta name="theme-color" content="#02040a" />
   <title>Rustbucket</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <div id="title-root"></div>
+  <div id="game-root"></div>
 
   <script type="module">
-    const root = document.getElementById("title-root");
+    const root = document.getElementById("game-root");
 
-    try {
+    let activeScreen = null;
+    let transitionInProgress = false;
+
+    async function loadTitleScreen() {
       const response = await fetch("./title.html");
 
       if (!response.ok) {
@@ -24,11 +29,61 @@
       root.innerHTML = await response.text();
 
       const { initTitleScreen } = await import("./title.js");
-      initTitleScreen(root);
+      activeScreen = initTitleScreen(root);
+    }
+
+    async function loadTutorialScreen() {
+      if (transitionInProgress) return;
+      transitionInProgress = true;
+
+      try {
+        if (activeScreen?.destroy) {
+          activeScreen.destroy();
+        }
+
+        activeScreen = null;
+
+        const response = await fetch("./tutorial.html");
+
+        if (!response.ok) {
+          throw new Error("Could not load tutorial.html");
+        }
+
+        root.innerHTML = await response.text();
+
+        const { initTutorialScreen } = await import("./tutorial.js");
+        activeScreen = initTutorialScreen(root);
+      } catch (error) {
+        console.error("Could not start the tutorial:", error);
+
+        root.innerHTML = `
+          <div class="game-error">
+            <p>Unable to load the tutorial.</p>
+            <button id="return-to-title" type="button">
+              RETURN TO TITLE
+            </button>
+          </div>
+        `;
+
+        root.querySelector("#return-to-title")
+          ?.addEventListener("click", async () => {
+            transitionInProgress = false;
+            await loadTitleScreen();
+          });
+      } finally {
+        transitionInProgress = false;
+      }
+    }
+
+    root.addEventListener("rustbucket:newgame", loadTutorialScreen);
+
+    try {
+      await loadTitleScreen();
     } catch (error) {
       console.error(error);
+
       root.innerHTML = `
-        <div style="color:white;padding:24px">
+        <div class="game-error">
           Unable to load Rustbucket. Run the game using a local web server.
         </div>
       `;
