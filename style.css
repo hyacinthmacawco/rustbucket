@@ -227,15 +227,6 @@ button {
   will-change: opacity;
 }
 
-/*
- * JavaScript controls the transition so the fade
- * starts only after the dialogue finishes.
- */
-
-#tutorial-blackout.fade-in {
-  transition: opacity 5.5s linear;
-}
-
 /* Minimal loading indicator, visible only during audio. */
 
 #tutorial-loading {
