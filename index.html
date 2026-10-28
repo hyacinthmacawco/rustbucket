@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#02040a" />
+  <title>Rustbucket</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="title-root"></div>
+
+  <script type="module">
+    const root = document.getElementById("title-root");
+
+    try {
+      const response = await fetch("./title.html");
+
+      if (!response.ok) {
+        throw new Error("Could not load title.html");
+      }
+
+      root.innerHTML = await response.text();
+
+      const { initTitleScreen } = await import("./title.js");
+      initTitleScreen(root);
+    } catch (error) {
+      console.error(error);
+      root.innerHTML = `
+        <div style="color:white;padding:24px">
+          Unable to load Rustbucket. Run the game using a local web server.
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
