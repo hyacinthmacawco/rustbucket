@@ -24,7 +24,7 @@ export function initTutorialScreen(root = document) {
   let fadingIn = false;
   let fadeStart = 0;
 
-  const fadeDuration = 0; // prod = 5.5
+  const fadeDuration = 5.5;
 
   // --------------------------------------------------
   // Scene and renderer
@@ -148,7 +148,6 @@ export function initTutorialScreen(root = document) {
   }
 
   function startDialogue() {
-    /* prod
     if (audioStarted || disposed) return;
 
     audioStarted = true;
@@ -161,8 +160,6 @@ export function initTutorialScreen(root = document) {
 
       beginFadeIn();
     });
-    */
-    beginFadeIn();
   }
 
   dialogue.addEventListener("ended", beginFadeIn);
