@@ -122,7 +122,8 @@ export function initTutorialScreen(root = document) {
   const { ship } = createRustbucket(scene);
 
   const ben = createBen(THREE);
-  ben.position.set(-3, 0, 5)
+  ben.position.set(-3, 0, 5);
+  ben.scale.setScalar(0.5);
   scene.add(ben);
 
   // --------------------------------------------------
@@ -408,26 +409,29 @@ export function initTutorialScreen(root = document) {
     const moving = magnitude > 0.08;
   
     if (moving) {
-      // Movement relative to the camera's horizontal direction.
-      const forwardX = Math.sin(cameraYaw);
-      const forwardZ = Math.cos(cameraYaw);
-  
-      const rightX = Math.cos(cameraYaw);
-      const rightZ = -Math.sin(cameraYaw);
+      // Move relative to the camera's actual horizontal orientation.
+      camera.getWorldDirection(cameraTarget);
+
+      const forwardX = cameraTarget.x;
+      const forwardZ = cameraTarget.z;
+
+      const forwardLength = Math.hypot(forwardX, forwardZ) || 1;
+
+      const normalizedForwardX = forwardX / forwardLength;
+      const normalizedForwardZ = forwardZ / forwardLength;
+
+      // Camera-relative right direction.
+      const rightX = -normalizedForwardZ;
+      const rightZ = normalizedForwardX;
   
       const speed = 3.5;
   
-      ben.position.x +=
-        (forwardX * forward + rightX * right) *
-        speed * deltaTime;
-  
-      ben.position.z +=
-        (forwardZ * forward + rightZ * right) *
-        speed * deltaTime;
-  
+      ben.position.x += (normalizedForwardX * forward + rightX * right) * speed * deltaTime;
+      ben.position.z += (normalizedForwardZ * forward + rightZ * right) * speed * deltaTime;
+
       // Face the direction of movement.
-      const moveX = forwardX * forward + rightX * right;
-      const moveZ = forwardZ * forward + rightZ * right;
+      const moveX = normalizedForwardX * forward + rightX * right;
+      const moveZ = normalizedForwardZ * forward + rightZ * right;
   
       ben.rotation.y = Math.atan2(moveX, moveZ);
   
