@@ -3,7 +3,7 @@ import * as THREE from
 
 import { createRustbucket } from "../models/rustbucket.js";
 import { createKevinStorageUnit } from "../models/kevin-storage-unit.js";
-import { createBen } from '../models/ben.js';
+import createBen from '../models/ben.js';
 
 export function initTutorialScreen(root = document) {
   const screen = root.querySelector("#tutorial-screen");
@@ -120,7 +120,9 @@ export function initTutorialScreen(root = document) {
 
   const { unit } = createKevinStorageUnit(scene);
   const { ship } = createRustbucket(scene);
-  const { ben } = createBen(scene);
+
+  const ben = createBen(THREE);
+  scene.add(ben);
 
   // --------------------------------------------------
   // Dialogue audio and reveal
