@@ -57,7 +57,7 @@ export function initTitleScreen(root = document) {
   // Title screen music
   // --------------------------------------------------
 
-  const titleMusic = new Audio("./soundtrack/title.mp3");
+  const titleMusic = new Audio("./sounds/title.mp3");
 
   titleMusic.loop = true;
   titleMusic.volume = 0.5;
