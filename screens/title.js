@@ -1,5 +1,8 @@
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import { createSun } from "../models/sun.js";
+import { createEarth } from "../models/earth.js";
+import { createMoon } from "../models/moon.js";
 
 export function initTitleScreen(root = document) {
   const screen = root.querySelector("#title-screen");
@@ -205,132 +208,10 @@ export function initTitleScreen(root = document) {
 
   scene.add(stars);
 
-  // --------------------------------------------------
-  // Sun
-  // --------------------------------------------------
-
-  const sunPosition = [-6, 0, 0];
-
-  // Bright surface that remains luminous regardless of lighting.
-  const sunMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffbd55
-  });
-
-  const sun = makeSphere(
-    3.0,
-    sunMaterial,
-    sunPosition
-  );
-
-  // Inner glow.
-  const sunAura = makeSphere(
-    3.18,
-    new THREE.MeshBasicMaterial({
-      color: 0xff8a2a,
-      transparent: true,
-      opacity: 0.13,
-      side: THREE.BackSide,
-      depthWrite: false
-    }),
-    sunPosition
-  );
-
-  // Outer glow.
-  const sunOuterGlow = makeSphere(
-    3.65,
-    new THREE.MeshBasicMaterial({
-      color: 0xff671f,
-      transparent: true,
-      opacity: 0.055,
-      side: THREE.BackSide,
-      depthWrite: false
-    }),
-    sunPosition
-  );
-
-  // --------------------------------------------------
-  // Earth
-  // --------------------------------------------------
-
-  const earthPosition = [4.5, 0, 0];
-  const earthRadius = 2.05;
-
-  const earthMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    roughness: 0.95,
-    metalness: 0
-  });
-
-  const earth = makeSphere(
-    earthRadius,
-    earthMaterial,
-    earthPosition
-  );
-
-  // Atmospheric glow.
-  const earthGroup = new THREE.Group();
-  earthGroup.position.set(...earthPosition);
-  scene.add(earthGroup);
-
-  const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      earthRadius * 1.045,
-      64,
-      48
-    ),
-    new THREE.MeshBasicMaterial({
-      color: 0x4b9fff,
-      transparent: true,
-      opacity: 0.12,
-      side: THREE.BackSide,
-      depthWrite: false
-    })
-  );
-
-  earthGroup.add(atmosphere);
-
-  const outerAtmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      earthRadius * 1.12,
-      64,
-      48
-    ),
-    new THREE.MeshBasicMaterial({
-      color: 0x216eff,
-      transparent: true,
-      opacity: 0.045,
-      side: THREE.BackSide,
-      depthWrite: false
-    })
-  );
-
-  earthGroup.add(outerAtmosphere);
-
-  // Earth's surface texture.
-  const textureBase =
-    "https://threejs.org/examples/textures/planets/";
-
-  loadTexture(
-    textureBase + "earth_atmos_2048.jpg",
-    texture => {
-      earthMaterial.map = texture;
-      earthMaterial.needsUpdate = true;
-    }
-  );
-
-  // --------------------------------------------------
-  // Moon
-  // --------------------------------------------------
-
-  const moon = makeSphere(
-    0.35,
-    new THREE.MeshStandardMaterial({
-      color: 0x9ca3af,
-      roughness: 1
-    }),
-    [6.8, 0.2, -1.5]
-  );
-
+  const { sun, sunAura, sunOuterGlow } = createSun(scene);
+  const { earth } = createEarth(scene);
+  const { moon } = createMoon(scene);
+  
   // --------------------------------------------------
   // Camera orbit
   // --------------------------------------------------
@@ -451,13 +332,13 @@ export function initTitleScreen(root = document) {
     const elapsed = clock.elapsedTime;
 
     // Slow, continuous 360-degree camera orbit.
-    cameraAngle += delta * 0.05;
+    cameraAngle += delta * 0.03;
 
     updateCamera();
 
     // Rotate Earth and Moon gently.
-    earth.rotation.y += delta * 0.035;
-    moon.rotation.y += delta * 0.02;
+    earth.rotation.y += delta * 0.07;
+    moon.rotation.y += delta * 0.04;
 
     // Subtle changes in the Sun's glow.
     sunAura.material.opacity =
