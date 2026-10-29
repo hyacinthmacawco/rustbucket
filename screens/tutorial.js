@@ -126,6 +126,181 @@ export function initTutorialScreen(root = document) {
   scene.add(ben);
 
   // --------------------------------------------------
+  // Camera orbit and player controls
+  // --------------------------------------------------
+  
+  const cameraTarget = new THREE.Vector3();
+  const cameraOffset = new THREE.Vector3();
+  
+  let cameraYaw = 0;
+  let cameraPitch = 0.18;
+  let cameraDistance = 18.5;
+  
+  const keys = new Set();
+  
+  const joystick = {
+    active: false,
+    pointerId: null,
+    x: 0,
+    y: 0
+  };
+  
+  const joystickElement = root.querySelector("#movement-joystick");
+  const joystickKnob = root.querySelector("#joystick-knob");
+  
+  function updateCamera() {
+    cameraTarget.set(
+      ben.position.x,
+      ben.position.y + 1.8,
+      ben.position.z
+    );
+  
+    cameraOffset.set(
+      Math.sin(cameraYaw) * Math.cos(cameraPitch),
+      Math.sin(cameraPitch),
+      Math.cos(cameraYaw) * Math.cos(cameraPitch)
+    ).multiplyScalar(cameraDistance);
+  
+    camera.position.copy(cameraTarget).add(cameraOffset);
+    camera.lookAt(cameraTarget);
+  }
+  
+  updateCamera();
+  
+  // Mouse and touch camera orbit.
+  let draggingCamera = false;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  
+  const canvas = renderer.domElement;
+  
+  canvas.style.touchAction = "none";
+  
+  function onPointerDown(event) {
+    draggingCamera = true;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+  
+    canvas.setPointerCapture(event.pointerId);
+  }
+  
+  function onPointerMove(event) {
+    if (!draggingCamera) return;
+  
+    const dx = event.clientX - lastPointerX;
+    const dy = event.clientY - lastPointerY;
+  
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+  
+    cameraYaw -= dx * 0.006;
+    cameraPitch = THREE.MathUtils.clamp(
+      cameraPitch + dy * 0.004,
+      -0.15,
+      1.0
+    );
+  
+    updateCamera();
+  }
+  
+  function onPointerUp() {
+    draggingCamera = false;
+  }
+  
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerUp);
+  
+  // Keyboard movement.
+  function onKeyDown(event) {
+    const key = event.key.toLowerCase();
+  
+    if ([
+      "w", "a", "s", "d",
+      "arrowup", "arrowdown",
+      "arrowleft", "arrowright"
+    ].includes(key)) {
+      event.preventDefault();
+      keys.add(key);
+    }
+  }
+  
+  function onKeyUp(event) {
+    keys.delete(event.key.toLowerCase());
+  }
+  
+  function onBlur() {
+    keys.clear();
+  }
+  
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup", onKeyUp);
+  window.addEventListener("blur", onBlur);
+  
+  // Mobile joystick.
+  function updateJoystick(event) {
+    const rect = joystickElement.getBoundingClientRect();
+  
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+  
+    const dx = event.clientX - centerX;
+    const dy = event.clientY - centerY;
+  
+    const maxRadius = rect.width * 0.32;
+    const distance = Math.hypot(dx, dy);
+    const scale = distance > maxRadius
+      ? maxRadius / distance
+      : 1;
+  
+    const knobX = dx * scale;
+    const knobY = dy * scale;
+  
+    joystick.x = knobX / maxRadius;
+    joystick.y = -knobY / maxRadius;
+  
+    joystickKnob.style.transform =
+      `translate(${knobX}px, ${knobY}px)`;
+  }
+  
+  function onJoystickDown(event) {
+    event.preventDefault();
+  
+    joystick.active = true;
+    joystick.pointerId = event.pointerId;
+  
+    joystickElement.setPointerCapture(event.pointerId);
+    updateJoystick(event);
+  }
+  
+  function onJoystickMove(event) {
+    if (
+      !joystick.active ||
+      event.pointerId !== joystick.pointerId
+    ) return;
+  
+    event.preventDefault();
+    updateJoystick(event);
+  }
+  
+  function onJoystickUp(event) {
+    if (event.pointerId !== joystick.pointerId) return;
+  
+    joystick.active = false;
+    joystick.pointerId = null;
+    joystick.x = 0;
+    joystick.y = 0;
+  
+    joystickKnob.style.transform = "translate(0px, 0px)";
+  }
+  
+  joystickElement.addEventListener("pointerdown", onJoystickDown);
+  joystickElement.addEventListener("pointermove", onJoystickMove);
+  joystickElement.addEventListener("pointerup", onJoystickUp);
+  joystickElement.addEventListener("pointercancel", onJoystickUp);
+
+  // --------------------------------------------------
   // Dialogue audio and reveal
   // --------------------------------------------------
 
@@ -196,14 +371,8 @@ export function initTutorialScreen(root = document) {
     camera.aspect = aspect;
     camera.fov = aspect < 0.8 ? 53 : 43;
 
-    camera.position.set(
-      0,
-      aspect < 0.8 ? 6.8 : 5.3,
-      aspect < 0.8 ? 23.5 : 18.5
-    );
-
-    camera.lookAt(0, 3.3, 0);
     camera.updateProjectionMatrix();
+    updateCamera();
 
     renderer.setSize(
       window.innerWidth,
@@ -217,9 +386,65 @@ export function initTutorialScreen(root = document) {
 
   window.addEventListener("resize", onResize);
 
+  function updatePlayer(deltaTime) {
+    const forwardInput =
+      (keys.has("w") || keys.has("arrowup") ? 1 : 0) -
+      (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
+  
+    const rightInput =
+      (keys.has("d") || keys.has("arrowright") ? 1 : 0) -
+      (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
+  
+    let forward = forwardInput + joystick.y;
+    let right = rightInput + joystick.x;
+  
+    const magnitude = Math.hypot(forward, right);
+  
+    if (magnitude > 1) {
+      forward /= magnitude;
+      right /= magnitude;
+    }
+  
+    const moving = magnitude > 0.08;
+  
+    if (moving) {
+      // Movement relative to the camera's horizontal direction.
+      const forwardX = Math.sin(cameraYaw);
+      const forwardZ = Math.cos(cameraYaw);
+  
+      const rightX = Math.cos(cameraYaw);
+      const rightZ = -Math.sin(cameraYaw);
+  
+      const speed = 3.5;
+  
+      ben.position.x +=
+        (forwardX * forward + rightX * right) *
+        speed * deltaTime;
+  
+      ben.position.z +=
+        (forwardZ * forward + rightZ * right) *
+        speed * deltaTime;
+  
+      // Face the direction of movement.
+      const moveX = forwardX * forward + rightX * right;
+      const moveZ = forwardZ * forward + rightZ * right;
+  
+      ben.rotation.y = Math.atan2(moveX, moveZ);
+  
+      ben.setAnimation("walk");
+    } else {
+      ben.setAnimation("idle");
+    }
+  
+    ben.update(deltaTime);
+    updateCamera();
+  }
+  
   // --------------------------------------------------
   // Render loop
   // --------------------------------------------------
+
+  const clock = new THREE.Clock();
 
   function animate(now) {
     if (disposed) return;
@@ -239,6 +464,7 @@ export function initTutorialScreen(root = document) {
       }
     }
 
+    updatePlayer(Math.min(clock.getDelta(), 0.05));
     renderer.render(scene, camera);
   }
 
