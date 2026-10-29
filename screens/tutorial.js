@@ -122,6 +122,7 @@ export function initTutorialScreen(root = document) {
   const { ship } = createRustbucket(scene);
 
   const ben = createBen(THREE);
+  ben.position.set(-3, 0, 5)
   scene.add(ben);
 
   // --------------------------------------------------
