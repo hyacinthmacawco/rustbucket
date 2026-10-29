@@ -249,6 +249,48 @@ button {
   opacity: 0;
 }
 
+/* Mobile movement joystick */
+
+#movement-joystick {
+  position: absolute;
+  z-index: 4;
+  left: max(24px, env(safe-area-inset-left));
+  bottom: max(28px, env(safe-area-inset-bottom));
+
+  width: 132px;
+  height: 132px;
+
+  border: 2px solid rgb(255 255 255 / 35%);
+  border-radius: 50%;
+  background: rgb(12 20 28 / 35%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#joystick-knob {
+  width: 54px;
+  height: 54px;
+
+  border: 2px solid rgb(255 255 255 / 65%);
+  border-radius: 50%;
+  background: rgb(220 235 240 / 45%);
+
+  pointer-events: none;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #movement-joystick {
+    display: none;
+  }
+}
+
 /* =========================================
    ERROR STATE
    ========================================= */
