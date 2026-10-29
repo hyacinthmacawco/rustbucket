@@ -2,13 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#02040a" />
   <title>Rustbucket</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./screens/style.css" />
 </head>
 <body>
   <div id="game-root"></div>
@@ -20,7 +17,7 @@
     let transitionInProgress = false;
 
     async function loadTitleScreen() {
-      const response = await fetch("./title.html");
+      const response = await fetch("./screens/title.html");
 
       if (!response.ok) {
         throw new Error("Could not load title.html");
@@ -28,7 +25,7 @@
 
       root.innerHTML = await response.text();
 
-      const { initTitleScreen } = await import("./title.js");
+      const { initTitleScreen } = await import("./screens/title.js");
       activeScreen = initTitleScreen(root);
     }
 
@@ -43,7 +40,7 @@
 
         activeScreen = null;
 
-        const response = await fetch("./tutorial.html");
+        const response = await fetch("./screens/tutorial.html");
 
         if (!response.ok) {
           throw new Error("Could not load tutorial.html");
@@ -51,7 +48,7 @@
 
         root.innerHTML = await response.text();
 
-        const { initTutorialScreen } = await import("./tutorial.js");
+        const { initTutorialScreen } = await import("./screens/tutorial.js");
         activeScreen = initTutorialScreen(root);
       } catch (error) {
         console.error("Could not start the tutorial:", error);
