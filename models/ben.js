@@ -263,14 +263,14 @@ export default function createBen(THREE) {
   // PANTS AND LEGS.
   // --------------------------------------------------
 
-  box(body, pants, [0, 1.10, 0], [0.47, 0.42, 0.29]);
+  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
 
   const legs = [];
 
   for (const side of [-1, 1]) {
     const hip = new THREE.Group();
     hip.name = side < 0 ? 'LeftLeg' : 'RightLeg';
-    hip.position.set(side * 0.17, 1.02, 0);
+    hip.position.set(side * 0.17, 1.10, 0);
     body.add(hip);
     legs.push(hip);
 
