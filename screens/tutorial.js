@@ -1,9 +1,9 @@
-
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
 import { createRustbucket } from "../models/rustbucket.js";
 import { createKevinStorageUnit } from "../models/kevin-storage-unit.js";
+import { createBen } from '../models/ben.js';
 
 export function initTutorialScreen(root = document) {
   const screen = root.querySelector("#tutorial-screen");
@@ -24,7 +24,7 @@ export function initTutorialScreen(root = document) {
   let fadingIn = false;
   let fadeStart = 0;
 
-  const fadeDuration = 5.5;
+  const fadeDuration = 0; // prod = 5.5
 
   // --------------------------------------------------
   // Scene and renderer
@@ -120,6 +120,7 @@ export function initTutorialScreen(root = document) {
 
   const { unit } = createKevinStorageUnit(scene);
   const { ship } = createRustbucket(scene);
+  const { ben } = createBen(scene);
 
   // --------------------------------------------------
   // Dialogue audio and reveal
@@ -147,6 +148,7 @@ export function initTutorialScreen(root = document) {
   }
 
   function startDialogue() {
+    /* prod
     if (audioStarted || disposed) return;
 
     audioStarted = true;
@@ -159,6 +161,8 @@ export function initTutorialScreen(root = document) {
 
       beginFadeIn();
     });
+    */
+    beginFadeIn();
   }
 
   dialogue.addEventListener("ended", beginFadeIn);
