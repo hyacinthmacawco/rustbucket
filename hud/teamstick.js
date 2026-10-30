@@ -35,6 +35,11 @@ export function createTeamstick() {
   return {
     element,
     get selected() { return selected; },
+    select(target) {
+      if (!["ben", "gwen", "kevin", "rook", "rustbucket"].includes(target)) return;
+      selected = target;
+      renderSelection();
+    },
     setVisible(visible) { element.style.display = visible ? "" : "none"; },
     destroy() {
       element.removeEventListener("click", onClick);
