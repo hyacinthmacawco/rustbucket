@@ -11,22 +11,29 @@ export function createTutorialLabel({ isMobile = false } = {}) {
   };
   let currentStep = 1;
   let completionTimer = null;
+  let finished = false;
   function setStep(step) {
     currentStep = step;
+    finished = false;
     element.textContent = steps[step] || "";
     element.style.display = steps[step] ? "block" : "none";
   }
   function completeStep(step) {
-    if (step !== currentStep || completionTimer !== null) return;
+    if (step !== currentStep || completionTimer !== null || finished) return;
     completionTimer = window.setTimeout(() => {
       completionTimer = null;
       if (step === 1) setStep(2);
-      else element.style.display = "none";
+      else {
+        finished = true;
+        element.style.display = "none";
+      }
     }, 2000);
   }
   return {
     setStep, completeStep,
-    setVisible(value) { element.style.display = value && steps[currentStep] ? "block" : "none"; },
+    setVisible(value) {
+      element.style.display = value && !finished && steps[currentStep] ? "block" : "none";
+    },
     destroy() {
       if (completionTimer !== null) window.clearTimeout(completionTimer);
       element.remove();
