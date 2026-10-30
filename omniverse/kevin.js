@@ -23,7 +23,6 @@ export function createKevin (THREE) {
   const shoe = material(0x515b6b);
   const white = material(0x687b91);
   const sole = material(0x303b4b);
-  const watchBlack = material(0x687b91);
 
   function mesh(geometry, mat, parent, position, scale) {
     const object = new THREE.Mesh(geometry, mat);
@@ -150,39 +149,6 @@ export function createKevin (THREE) {
     [1, 0.7, 0.8]
   );
   collar.rotation.x = Math.PI / 2;
-
-  // Number 10, drawn on a canvas to avoid a font dependency.
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
-
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 256, 128);
-  ctx.font = 'bold 100px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 13;
-  ctx.strokeStyle = '#e9eee9';
-  ctx.strokeText('10', 128, 66);
-  ctx.fillStyle = '#a8d5b2';
-  ctx.fillText('10', 128, 66);
-
-  const numberTexture = new THREE.CanvasTexture(canvas);
-  const numberMat = new THREE.MeshBasicMaterial({
-    map: numberTexture,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide
-  });
-
-  const number = mesh(
-    new THREE.PlaneGeometry(0.38, 0.19),
-    numberMat,
-    torso,
-    [0, -0.05, 0.222]
-  );
-  number.name = 'ShirtNumber10';
 
   // --------------------------------------------------
   // ARMS: pivoted at the shoulders.
