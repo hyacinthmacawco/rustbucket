@@ -95,7 +95,7 @@ import { dimensions, state } from "./config.js";
     joystick.setVisible(false);
     const teamstick = createTeamstick();
     teamstick.setVisible(false);
-    const isMobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const tutorialLabel = createTutorialLabel({ isMobile });
 
     // One audio handle is reused for the active stage's soundtrack/dialogue.
@@ -352,8 +352,8 @@ import { dimensions, state } from "./config.js";
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
-        joystick.setVisible(true);
-        teamstick.setVisible(true);
+        joystick.setVisible(isMobile && activeStage === "tutorial");
+        teamstick.setVisible(isMobile && activeStage === "tutorial");
         stopMusic();
       }
     }
