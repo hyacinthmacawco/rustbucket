@@ -17,9 +17,9 @@ export function createGwen (THREE) {
   const shirt = material(0x315c88);
   const green = material(0x72b6d5);
   const greenDark = material(0x426b9a);
-  const pants = material(0x315c88);
-  const pantsLight = material(0x426b9a);
-  const pantsDark = material(0x203d63);
+  const pants = material(0x426b9a);
+  const pantsLight = material(0xe9b6a5);
+  const pantsDark = material(0xc98778);
   const shoe = material(0x172d4b);
   const white = material(0xe5e9e9);
   const sole = material(0xc8d5df);
@@ -94,30 +94,15 @@ export function createGwen (THREE) {
     0.15
   );
 
-  // Hair cap and rear hair mass.
+  // Gwen's long orange hair: cap, back, side locks and front fringe.
   sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
-
-  // Side and back hair.
-  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
-  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
-  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
-
-  // Angular hair spikes, all made from simple cones.
-  function spike(parent, position, rotation, size) {
-    const part = mesh(
-      new THREE.ConeGeometry(size, size * 1.8, 5),
-      hair,
-      parent,
-      position,
-      [1, 1, 0.7]
-    );
-    part.rotation.set(...rotation);
-    return part;
+  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.34, 0.20]);
+  for (const side of [-1, 1]) {
+    sphere(head, hair, [side * 0.29, -0.10, -0.01], [0.13, 0.48, 0.14]);
+    sphere(head, hairLight, [side * 0.29, 0.10, 0.12], [0.055, 0.22, 0.035]);
   }
-
-  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
-  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
-  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
+  sphere(head, hair, [-0.12, 0.35, 0.20], [0.17, 0.13, 0.13]);
+  sphere(head, hairLight, [0.08, 0.39, 0.20], [0.13, 0.09, 0.08]);
 
   // Gwen's flared blue skirt is fixed to the pelvis, not the animated legs.
   const skirt = mesh(
@@ -223,7 +208,7 @@ export function createGwen (THREE) {
   // PANTS AND LEGS.
   // --------------------------------------------------
 
-  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
+  box(body, pants, [0, 1.10, 0], [0.52, 0.20, 0.34]);
 
   const legs = [];
 
@@ -301,6 +286,28 @@ export function createGwen (THREE) {
       [0, 0.055, 0.09],
       [0.22, 0.025, 0.24]
     );
+  }
+
+  // Gwen's original outfit details: fitted blue top, emblem, skirt grid,
+  // knee socks and blue shoes. These sit on the shared articulated rig.
+  box(torso, green, [0, -0.16, 0.207], [0.19, 0.90, 0.018]).visible = false;
+  const emblemOuter = sphere(torso, greenDark, [0, -0.02, 0.225], [0.12, 0.12, 0.025]);
+  sphere(torso, shirt, [0, -0.02, 0.247], [0.075, 0.075, 0.012]);
+  const skirt = mesh(new THREE.CylinderGeometry(0.25, 0.43, 0.48, 8), pants, body, [0, 1.22, 0]);
+  skirt.name = 'GwenSkirt';
+  for (let i = -2; i <= 2; i++) {
+    const line = box(body, greenDark, [i * 0.105, 1.22, 0.255], [0.009, 0.43, 0.008]);
+    line.userData.static = true;
+  }
+  for (let i = 0; i < 3; i++) {
+    const line = box(body, greenDark, [0, 1.12 + i * 0.13, 0.30 - i * 0.02], [0.62 - i * 0.07, 0.009, 0.008]);
+    line.userData.static = true;
+  }
+  for (const side of [-1, 1]) {
+    const sock = mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.52, 12), white, body, [side * 0.17, 0.38, 0]);
+    sphere(body, white, [side * 0.17, 0.64, 0], [0.08, 0.05, 0.08]);
+    sphere(body, shoe, [side * 0.17, 0.12, 0.10], [0.16, 0.12, 0.24]);
+    box(body, white, [side * 0.17, 0.035, 0.10], [0.31, 0.045, 0.40]);
   }
 
   // --------------------------------------------------
