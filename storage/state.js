@@ -133,7 +133,7 @@ import { dimensions, state } from "./config.js";
     function unlockAudio() {
       if (!audioUnlocked) audioUnlocked = true;
       if (state.stage === "title") {
-        if (!music) playStageMusic("../hud/senji-v2-ov.mp3", true);
+        if (!music) playStageMusic("./hud/senji-v2-ov.mp3", true);
         else if (music.paused) music.play().catch(() => {});
       } else if (state.stage === "prelude" && music?.paused) {
         music.play().catch(() => {});
@@ -331,14 +331,14 @@ import { dimensions, state } from "./config.js";
         joystick.setVisible(false);
         teamstick.setVisible(false);
         setCameraPreset(dimensions.camera.title);
-        playStageMusic("../hud/senji-v2-ov.mp3", true);
+        playStageMusic("./hud/senji-v2-ov.mp3", true);
       } else if (activeStage === "prelude") {
         titleScreen.setVisible(false);
         joystick.setVisible(false);
         teamstick.setVisible(false);
         preludeScreen.style.display = "flex";
         stopMusic();
-        playStageMusic("../hud/ov-final-dialogues.mp3", false, () => {
+        playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
           if (state.stage === "prelude") state.stage = "tutorial";
         });
       } else if (activeStage === "tutorial") {
@@ -348,7 +348,7 @@ import { dimensions, state } from "./config.js";
         teamstick.setVisible(isMobile);
         tutorialLabel.setStep(1);
         setCameraPreset(dimensions.camera.tutorial);
-        playStageMusic("../hud/neodevol-ov.mp3", true);
+        playStageMusic("./hud/neodevol-ov.mp3", true);
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
