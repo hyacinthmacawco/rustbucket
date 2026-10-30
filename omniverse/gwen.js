@@ -249,7 +249,7 @@ export function createGwen() {
     if (!part.isMesh || part.userData.static) return false;
     const x = Math.abs(part.position.x);
     const y = part.position.y;
-    return (x < 0.2 && y < 1.55) || (x > 0.22 && y >= 1.08 && y < 2.2);
+    return (x < 0.2 && y < 1.48) || (x > 0.22 && y >= 1.08 && y < 2.2);
   }).map(part => ({ part, rotation: part.rotation.clone() }));
 
   gwen.setAnimation = name => { animation = name; };
