@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { dimensions } from '../storage/state.js';
+import { dimensions } from '../storage/config.js';
 
 export function createGwen() {
   const gwen = new THREE.Group();
