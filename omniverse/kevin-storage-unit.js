@@ -33,6 +33,15 @@ export function createKevinStorageUnit(scene) {
   unit.scale.set(...dimensions.kevinStorageUnit.scale);
   scene.add(unit);
 
+  // Interior ceiling and side lights belong to the storage-unit model.
+  const ceilingLight = new THREE.PointLight(0xffe5c2, 65, 38, 1.5);
+  ceilingLight.position.set(0, 10, -3);
+  unit.add(ceilingLight);
+
+  const sideLight = new THREE.PointLight(0xffc681, 30, 24, 2);
+  sideLight.position.set(8, 5, 2);
+  unit.add(sideLight);
+
   function addBox(
     width, height, depth,
     material, x, y, z
