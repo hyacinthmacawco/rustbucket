@@ -48,10 +48,10 @@ export const state = {
   stage: "title"
 };
 
-    import { createTitleScreen } from "../hud/title.js";
-    import { createJoystick } from "../hud/joystick.js";
-    import { createTeamstick } from "../hud/teamstick.js";
-    import { createTutorialLabel } from "../hud/tutorial.js";
+import { createTitleScreen } from "../hud/title.js";
+import { createJoystick } from "../hud/joystick.js";
+import { createTeamstick } from "../hud/teamstick.js";
+import { createTutorialLabel } from "../hud/tutorial.js";
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -170,6 +170,9 @@ export const state = {
       music.volume = 0.55;
       music.preload = "auto";
       music.load();
+      music.addEventListener("error", () => {
+        console.error("Could not load soundtrack:", music?.src);
+      }, { once: true });
       if (onEnded) {
         preludeEndedHandler = onEnded;
         music.addEventListener("ended", onEnded, { once: true });
@@ -183,7 +186,7 @@ export const state = {
       if (!audioUnlocked) audioUnlocked = true;
       if (state.stage === "title") {
         if (!music) playStageMusic("./hud/senji-v2-ov.mp3", true);
-        else if (music.paused) music.play().catch(() => {});
+        else if (music.paused) music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
       } else if (music?.paused) {
         music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
       }
