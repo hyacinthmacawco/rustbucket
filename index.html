@@ -34,6 +34,8 @@
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
@@ -250,6 +252,8 @@
             import("./omniverse/moon.js"),
             import("./omniverse/starfield.js")
           ]);
+          scene.background = new THREE.Color(0x02040a);
+          scene.fog = null;
           group.add(new THREE.AmbientLight(0x52617f, 0.45));
           const sun = sunModule.createSun(group);
           const earth = earthModule.createEarth(group);
@@ -265,7 +269,7 @@
             import("./omniverse/ben.js"),
             import("./hud/tutorial.js")
           ]);
-          bellwoodModule.createBellwood(group);
+          bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
           ben = benModule.default(THREE);
