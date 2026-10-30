@@ -1,7 +1,7 @@
 import { dimensions } from '../storage/state.js';
-const d = dimensions.earth.values;
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+const d = dimensions.earth.values;
 
 export function createEarth(scene) {
   const earthPosition = [d[0], d[1], d[2]];
