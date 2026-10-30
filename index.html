@@ -339,6 +339,9 @@
       animationFrame = requestAnimationFrame(animate);
 
       updateStage();
+      titleScreen.setVisible(state.stage === "title");
+      preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
+      joystick.setVisible(state.stage !== "title" && state.stage !== "prelude");
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
