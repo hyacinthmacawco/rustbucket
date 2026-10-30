@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/config.js';
+import { installCharacterAnimation } from './character-animation.js';
 
 export function createRook() {
   const rook = new THREE.Group();
@@ -494,6 +495,7 @@ export function createRook() {
   // Final scale
   rook.position.set(...dimensions.rook.position);
   rook.scale.set(...dimensions.rook.scale);
+  installCharacterAnimation(rook);
 
   return rook;
 }
