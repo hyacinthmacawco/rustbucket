@@ -1,15 +1,14 @@
-import { dimensions } from '../storage/state.js';
-const d = dimensions.rook.values;
 import * as THREE from 'three';
+import { dimensions } from '../storage/state.js';
 
 export function createRook() {
   const rook = new THREE.Group();
   rook.name = 'Rook';
 
-  const mat = (color, metalness = d[0]) =>
+  const mat = (color, metalness = 0) =>
     new THREE.MeshStandardMaterial({
       color,
-      roughness: d[1],
+      roughness: 0.85,
       metalness
     });
 
@@ -19,14 +18,14 @@ export function createRook() {
   const blackLight = mat(0x24232f);
   const blue = mat(0x304e80);
   const blueLight = mat(0x496a9e);
-  const armor = mat(0x8799ae, d[2]);
-  const armorDark = mat(0x53677f, d[3]);
-  const toolBlack = mat(0x17191f, d[4]);
-  const toolMetal = mat(0x999987, d[5]);
+  const armor = mat(0x8799ae, 0.2);
+  const armorDark = mat(0x53677f, 0.15);
+  const toolBlack = mat(0x17191f, 0.25);
+  const toolMetal = mat(0x999987, 0.25);
 
   function ellipsoid(parent, material, x, y, z, sx, sy, sz) {
     const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(d[6], d[7], d[8]),
+      new THREE.SphereGeometry(1, 20, 16),
       material
     );
 
@@ -61,14 +60,14 @@ export function createRook() {
         radiusB,
         radiusA,
         direction.length(),
-        d[9]
+        14
       ),
       material
     );
 
-    mesh.position.copy(start).add(end).multiplyScalar(d[10]);
+    mesh.position.copy(start).add(end).multiplyScalar(0.5);
     mesh.quaternion.setFromUnitVectors(
-      new THREE.Vector3(d[11], d[12], d[13]),
+      new THREE.Vector3(0, 1, 0),
       direction.normalize()
     );
 
@@ -82,86 +81,86 @@ export function createRook() {
   // LEGS
   // -------------------------
 
-  for (const side of [-d[14], d[15]]) {
-    const hipX = side * d[16];
+  for (const side of [-1, 1]) {
+    const hipX = side * 0.13;
 
     // Upper legs
     limb(
       rook, black,
-      [hipX, d[17], d[18]],
-      [side * d[19], d[20], d[21]],
-      d[22], d[23]
+      [hipX, 1.75, 0],
+      [side * 0.15, 1.05, 0],
+      0.115, 0.085
     );
 
     // Knees
     ellipsoid(
       rook, black,
-      side * d[24], d[25], d[26],
-      d[27], d[28], d[29]
+      side * 0.15, 1.03, 0,
+      0.09, 0.11, 0.09
     );
 
     // Lower legs
     limb(
       rook, black,
-      [side * d[30], d[31], d[32]],
-      [side * d[33], d[34], d[35]],
-      d[36], d[37]
+      [side * 0.15, 1.02, 0],
+      [side * 0.17, 0.40, 0],
+      0.08, 0.055
     );
 
     // Blue shin armor
     ellipsoid(
       rook, blue,
-      side * d[38], d[39], d[40],
-      d[41], d[42], d[43]
+      side * 0.17, 0.62, 0.035,
+      0.085, 0.27, 0.09
     );
 
     // Metallic outer shin plate
     ellipsoid(
       rook, armor,
-      side * d[44], d[45], d[46],
-      d[47], d[48], d[49]
+      side * 0.23, 0.63, 0.005,
+      0.045, 0.18, 0.07
     );
 
     // Back of shin armor
     ellipsoid(
       rook, armorDark,
-      side * d[50], d[51], -d[52],
-      d[53], d[54], d[55]
+      side * 0.18, 0.62, -0.065,
+      0.07, 0.20, 0.035
     );
 
     // Ankle
     ellipsoid(
       rook, black,
-      side * d[56], d[57], d[58],
-      d[59], d[60], d[61]
+      side * 0.17, 0.24, 0,
+      0.06, 0.10, 0.07
     );
 
     // Feet
     ellipsoid(
       rook, blue,
-      side * d[62], d[63], d[64],
-      d[65], d[66], d[67]
+      side * 0.17, 0.12, 0.09,
+      0.105, 0.10, 0.23
     );
 
     // Black toe caps
     ellipsoid(
       rook, black,
-      side * d[68], d[69], d[70],
-      d[71], d[72], d[73]
+      side * 0.17, 0.10, 0.23,
+      0.11, 0.075, 0.11
     );
 
     // Shoe soles
     box(
       rook, armor,
-      side * d[74], d[75], d[76],
-      d[77], d[78], d[79]
+      side * 0.17, 0.035, 0.09,
+      0.23, 0.045, 0.43
     );
 
     // Outer knee/leg armor
     ellipsoid(
       rook, armor,
-      side * d[80], d[81], -d[82],
-      d[83], d[84], d[85]
+      side * 0.22, 1.08, -0.015,
+      0.055, 0.16, 0.09
     );
   }
 
@@ -169,24 +168,24 @@ export function createRook() {
   // PELVIS AND WAIST
   // -------------------------
 
-  ellipsoid(rook, black, d[86], d[87], d[88], d[89], d[90], d[91]);
+  ellipsoid(rook, black, 0, 1.77, 0, 0.22, 0.20, 0.14);
 
   // Blue waist armor
-  box(rook, blue, d[92], d[93], d[94], d[95], d[96], d[97]);
+  box(rook, blue, 0, 1.76, 0.035, 0.39, 0.22, 0.25);
 
   // Central lower abdomen armor
   ellipsoid(
     rook, black,
-    d[98], d[99], d[100],
-    d[101], d[102], d[103]
+    0, 1.60, 0.04,
+    0.16, 0.18, 0.12
   );
 
   // Side hip armor
-  for (const side of [-d[104], d[105]]) {
+  for (const side of [-1, 1]) {
     ellipsoid(
       rook, armor,
-      side * d[106], d[107], d[108],
-      d[109], d[110], d[111]
+      side * 0.23, 1.76, 0,
+      0.075, 0.16, 0.13
     );
   }
 
@@ -197,85 +196,85 @@ export function createRook() {
   // Main black bodysuit
   ellipsoid(
     rook, black,
-    d[112], d[113], d[114],
-    d[115], d[116], d[117]
+    0, 2.18, 0,
+    0.29, 0.47, 0.18
   );
 
   // Upper chest
   ellipsoid(
     rook, black,
-    d[118], d[119], d[120],
-    d[121], d[122], d[123]
+    0, 2.42, 0,
+    0.31, 0.22, 0.18
   );
 
   // Blue chest armor
   ellipsoid(
     rook, blue,
-    d[124], d[125], d[126],
-    d[127], d[128], d[129]
+    0, 2.32, 0.125,
+    0.28, 0.29, 0.085
   );
 
   // Upper chest armor plate
   box(
     rook, blue,
-    d[130], d[131], d[132],
-    d[133], d[134], d[135]
+    0, 2.47, 0.15,
+    0.46, 0.18, 0.075
   );
 
   // Central chest plate
   ellipsoid(
     rook, blueLight,
-    d[136], d[137], d[138],
-    d[139], d[140], d[141]
+    0, 2.19, 0.19,
+    0.16, 0.23, 0.045
   );
 
   // Chest plate lower border
   box(
     rook, black,
-    d[142], d[143], d[144],
-    d[145], d[146], d[147]
+    0, 2.00, 0.16,
+    0.27, 0.07, 0.07
   );
 
   // Neck
   const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(d[148], d[149], d[150], d[151]),
+    new THREE.CylinderGeometry(0.105, 0.12, 0.25, 16),
     skin
   );
-  neck.position.set(d[152], d[153], d[154]);
+  neck.position.set(0, 2.78, 0);
   neck.castShadow = true;
   rook.add(neck);
 
   // Black neck suit
   ellipsoid(
     rook, black,
-    d[155], d[156], d[157],
-    d[158], d[159], d[160]
+    0, 2.68, 0,
+    0.17, 0.11, 0.15
   );
 
   // -------------------------
   // SHOULDERS
   // -------------------------
 
-  for (const side of [-d[161], d[162]]) {
+  for (const side of [-1, 1]) {
     // Black shoulder base
     ellipsoid(
       rook, black,
-      side * d[163], d[164], d[165],
-      d[166], d[167], d[168]
+      side * 0.31, 2.44, 0,
+      0.16, 0.16, 0.16
     );
 
     // Blue shoulder plates
     ellipsoid(
       rook, blue,
-      side * d[169], d[170], d[171],
-      d[172], d[173], d[174]
+      side * 0.37, 2.43, 0.025,
+      0.17, 0.15, 0.17
     );
 
     // Shoulder armor highlight
     ellipsoid(
       rook, blueLight,
-      side * d[175], d[176], d[177],
-      d[178], d[179], d[180]
+      side * 0.39, 2.47, 0.10,
+      0.11, 0.09, 0.07
     );
   }
 
@@ -283,80 +282,80 @@ export function createRook() {
   // ARMS
   // -------------------------
 
-  for (const side of [-d[181], d[182]]) {
-    const shoulderX = side * d[183];
-    const elbowX = side * d[184];
-    const wristX = side * d[185];
+  for (const side of [-1, 1]) {
+    const shoulderX = side * 0.40;
+    const elbowX = side * 0.46;
+    const wristX = side * 0.49;
 
     // Upper arm
     limb(
       rook, black,
-      [shoulderX, d[186], d[187]],
-      [elbowX, d[188], d[189]],
-      d[190], d[191]
+      [shoulderX, 2.39, 0],
+      [elbowX, 1.88, 0],
+      0.105, 0.075
     );
 
     // Elbow
     ellipsoid(
       rook, black,
-      elbowX, d[192], d[193],
-      d[194], d[195], d[196]
+      elbowX, 1.87, 0,
+      0.085, 0.09, 0.08
     );
 
     // Forearm
     limb(
       rook, black,
-      [elbowX, d[197], d[198]],
-      [wristX, d[199], d[200]],
-      d[201], d[202]
+      [elbowX, 1.86, 0],
+      [wristX, 1.24, 0],
+      0.08, 0.06
     );
 
     // Blue forearm armor
     ellipsoid(
       rook, blue,
-      side * d[203], d[204], d[205],
-      d[206], d[207], d[208]
+      side * 0.48, 1.53, 0.025,
+      0.09, 0.25, 0.10
     );
 
     // Metallic forearm plate
     ellipsoid(
       rook, armor,
-      side * d[209], d[210], d[211],
-      d[212], d[213], d[214]
+      side * 0.48, 1.52, 0.09,
+      0.065, 0.20, 0.045
     );
 
     // Wrist
     ellipsoid(
       rook, skinShade,
-      wristX, d[215], d[216],
-      d[217], d[218], d[219]
+      wristX, 1.20, 0,
+      0.07, 0.07, 0.065
     );
 
     // Hand palm
     ellipsoid(
       rook, skinShade,
-      wristX, d[220], d[221],
-      d[222], d[223], d[224]
+      wristX, 1.12, 0.025,
+      0.085, 0.11, 0.07
     );
 
     // Three long fingers
-    for (let f = d[225]; f < d[226]; f++) {
-      const offset = (f - d[227]) * d[228];
+    for (let f = 0; f < 3; f++) {
+      const offset = (f - 1) * 0.065;
 
       limb(
         rook, skinShade,
-        [wristX + offset, d[229], d[230]],
-        [wristX + offset * d[231], d[232], d[233]],
-        d[234], d[235]
+        [wristX + offset, 1.08, 0.045],
+        [wristX + offset * 1.35, 0.94, 0.065],
+        0.025, 0.016
       );
     }
 
     // Opposing thumb
     limb(
       rook, skinShade,
-      [wristX - side * d[236], d[237], d[238]],
-      [wristX - side * d[239], d[240], d[241]],
-      d[242], d[243]
+      [wristX - side * 0.075, 1.13, 0.025],
+      [wristX - side * 0.14, 1.04, 0.06],
+      0.03, 0.018
     );
   }
 
@@ -367,49 +366,49 @@ export function createRook() {
   // Main blank alien head
   ellipsoid(
     rook, skin,
-    d[244], d[245], d[246],
-    d[247], d[248], d[249]
+    0, 3.08, 0,
+    0.20, 0.27, 0.17
   );
 
   // Lower jaw shape
   ellipsoid(
     rook, skin,
-    d[250], d[251], d[252],
-    d[253], d[254], d[255]
+    0, 2.94, 0.025,
+    0.17, 0.14, 0.15
   );
 
   // Dark side head markings
-  for (const side of [-d[256], d[257]]) {
+  for (const side of [-1, 1]) {
     ellipsoid(
       rook, black,
-      side * d[258], d[259], d[260],
-      d[261], d[262], d[263]
+      side * 0.16, 3.09, 0.035,
+      0.045, 0.19, 0.055
     );
   }
 
   // Rear head structure
   ellipsoid(
     rook, skinShade,
-    d[264], d[265], -d[266],
-    d[267], d[268], d[269]
+    0, 3.12, -0.12,
+    0.19, 0.23, 0.075
   );
 
   // Top head markings
   ellipsoid(
     rook, black,
-    d[270], d[271], -d[272],
-    d[273], d[274], d[275]
+    0, 3.29, -0.005,
+    0.12, 0.065, 0.13
   );
 
   // Side head fins
-  for (const side of [-d[276], d[277]]) {
+  for (const side of [-1, 1]) {
     const fin = new THREE.Mesh(
-      new THREE.ConeGeometry(d[278], d[279], d[280]),
+      new THREE.ConeGeometry(0.105, 0.27, 8),
       skinShade
     );
 
-    fin.position.set(side * d[281], d[282], -d[283]);
-    fin.rotation.z = -side * Math.PI / d[284];
+    fin.position.set(side * 0.20, 3.06, -0.025);
+    fin.rotation.z = -side * Math.PI / 2.7;
     fin.castShadow = true;
     rook.add(fin);
   }
@@ -421,79 +420,80 @@ export function createRook() {
   // Main tool housing
   const tool = new THREE.Group();
   tool.name = 'ProtoTool';
-  tool.position.set(d[285], d[286], -d[287]);
-  tool.rotation.z = -d[288];
-  tool.rotation.x = -d[289];
+  tool.position.set(0.30, 2.67, -0.19);
+  tool.rotation.z = -0.12;
+  tool.rotation.x = -0.08;
   rook.add(tool);
 
   // Long main casing
   box(
     tool, toolBlack,
-    d[290], d[291], d[292],
-    d[293], d[294], d[295]
+    0, 0.31, 0,
+    0.23, 1.00, 0.23
   );
 
   // Upper casing
   ellipsoid(
     tool, toolBlack,
-    d[296], d[297], d[298],
-    d[299], d[300], d[301]
+    0, 0.79, 0,
+    0.16, 0.22, 0.15
   );
 
   // Main metallic side panel
   box(
     tool, toolMetal,
-    d[302], d[303], d[304],
-    d[305], d[306], d[307]
+    0.12, 0.27, 0.025,
+    0.045, 0.67, 0.16
   );
 
   // Lower metallic panel
   box(
     tool, armorDark,
-    d[308], -d[309], d[310],
-    d[311], d[312], d[313]
+    0.13, -0.15, 0.025,
+    0.045, 0.19, 0.17
   );
 
   // Tool upper tip
   const toolTip = new THREE.Mesh(
-    new THREE.ConeGeometry(d[314], d[315], d[316]),
+    new THREE.ConeGeometry(0.13, 0.25, 6),
     toolBlack
   );
-  toolTip.position.set(d[317], d[318], d[319]);
+  toolTip.position.set(0, 0.93, 0);
   toolTip.castShadow = true;
   tool.add(toolTip);
 
   // Side mechanical ridges
-  for (let i = d[320]; i < d[321]; i++) {
+  for (let i = 0; i < 3; i++) {
     const ridge = box(
       tool,
       blackLight,
-      d[322],
-      d[323] - i * d[324],
-      d[325],
-      d[326],
-      d[327],
-      d[328]
+      0.03,
+      0.48 - i * 0.16,
+      0.13,
+      0.18,
+      0.07,
+      0.045
     );
-    ridge.rotation.z = -d[329];
+    ridge.rotation.z = -0.3;
   }
 
   // Tool bottom connector
   ellipsoid(
     tool, armorDark,
-    d[330], -d[331], d[332],
-    d[333], d[334], d[335]
+    0, -0.22, 0,
+    0.13, 0.09, 0.13
   );
 
   // Shoulder mounting bracket
   box(
     rook, blackLight,
-    d[336], d[337], -d[338],
-    d[339], d[340], d[341]
+    0.28, 2.42, -0.14,
+    0.18, 0.32, 0.12
   );
 
   // Final scale
-  rook.scale.set(d[342], d[343], d[344]);
+  rook.position.set(...dimensions.rook.position);
+  rook.scale.set(...dimensions.rook.scale);
 
   return rook;
 }
