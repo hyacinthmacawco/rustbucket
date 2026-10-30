@@ -1,3 +1,5 @@
+import { dimensions } from '../storage/state.js';
+const d = dimensions.ben.values;
 export default function createBen(THREE) {
   const root = new THREE.Group();
   root.name = 'Ben';
@@ -6,7 +8,7 @@ export default function createBen(THREE) {
   body.name = 'BenBody';
   root.add(body);
 
-  const material = (color, roughness = 0.85) =>
+  const material = (color, roughness = d[0]) =>
     new THREE.MeshStandardMaterial({ color, roughness });
 
   const skin = material(0xd9a28d);
@@ -47,7 +49,7 @@ export default function createBen(THREE) {
 
   function sphere(parent, mat, position, scale) {
     return mesh(
-      new THREE.SphereGeometry(1, 16, 12),
+      new THREE.SphereGeometry(d[1], d[2], d[3]),
       mat,
       parent,
       position,
@@ -55,20 +57,20 @@ export default function createBen(THREE) {
     );
   }
 
-  function capsule(parent, mat, a, b, radius, segments = 8) {
+  function capsule(parent, mat, a, b, radius, segments = d[4]) {
     const start = new THREE.Vector3(...a);
     const end = new THREE.Vector3(...b);
     const direction = end.clone().sub(start);
 
     const object = mesh(
-      new THREE.CapsuleGeometry(radius, direction.length(), 4, segments),
+      new THREE.CapsuleGeometry(radius, direction.length(), d[5], segments),
       mat,
       parent,
-      start.clone().add(end).multiplyScalar(0.5).toArray()
+      start.clone().add(end).multiplyScalar(d[6]).toArray()
     );
 
     object.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(d[7], d[8], d[9]),
       direction.normalize()
     );
 
@@ -81,43 +83,43 @@ export default function createBen(THREE) {
 
   const head = new THREE.Group();
   head.name = 'Head';
-  head.position.set(0, 3.12, 0);
+  head.position.set(d[10], d[11], d[12]);
   body.add(head);
 
-  sphere(head, skin, [0, 0, 0], [0.37, 0.46, 0.32]);
+  sphere(head, skin, [d[13], d[14], d[15]], [d[16], d[17], d[18]]);
 
   // Neck.
   capsule(
     body, skin,
-    [0, 2.48, 0],
-    [0, 2.83, 0],
-    0.15
+    [d[19], d[20], d[21]],
+    [d[22], d[23], d[24]],
+    d[25]
   );
 
   // Hair cap and rear hair mass.
-  sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
+  sphere(head, hair, [d[26], d[27], -d[28]], [d[29], d[30], d[31]]);
 
   // Side and back hair.
-  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
-  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
-  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
+  sphere(head, hair, [-d[32], d[33], -d[34]], [d[35], d[36], d[37]]);
+  sphere(head, hair, [d[38], d[39], -d[40]], [d[41], d[42], d[43]]);
+  sphere(head, hair, [d[44], -d[45], -d[46]], [d[47], d[48], d[49]]);
 
   // Angular hair spikes, all made from simple cones.
   function spike(parent, position, rotation, size) {
     const part = mesh(
-      new THREE.ConeGeometry(size, size * 1.8, 5),
+      new THREE.ConeGeometry(size, size * d[50], d[51]),
       hair,
       parent,
       position,
-      [1, 1, 0.7]
+      [d[52], d[53], d[54]]
     );
     part.rotation.set(...rotation);
     return part;
   }
 
-  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
-  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
-  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
+  spike(head, [-d[55], d[56], -d[57]], [d[58], d[59], d[60]], d[61]);
+  spike(head, [d[62], d[63], -d[64]], [d[65], d[66], d[67]], d[68]);
+  spike(head, [d[69], d[70], -d[71]], [d[72], d[73], -d[74]], d[75]);
 
   // --------------------------------------------------
   // TORSO: black shirt with green center stripe.
@@ -125,47 +127,47 @@ export default function createBen(THREE) {
 
   const torso = new THREE.Group();
   torso.name = 'Torso';
-  torso.position.y = 2.12;
+  torso.position.y = d[76];
   body.add(torso);
 
-  sphere(torso, shirt, [0, 0.12, 0], [0.43, 0.61, 0.25]);
+  sphere(torso, shirt, [d[77], d[78], d[79]], [d[80], d[81], d[82]]);
 
   // Main shirt body.
-  box(torso, shirt, [0, -0.17, 0], [0.69, 0.90, 0.40]);
+  box(torso, shirt, [d[83], -d[84], d[85]], [d[86], d[87], d[88]]);
 
   // Green vertical shirt stripe.
-  box(torso, green, [0, -0.16, 0.207], [0.19, 0.90, 0.018]);
+  box(torso, green, [d[89], -d[90], d[91]], [d[92], d[93], d[94]]);
 
   // Green shoulder panels.
-  sphere(torso, green, [-0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
-  sphere(torso, green, [0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
+  sphere(torso, green, [-d[95], d[96], d[97]], [d[98], d[99], d[100]]);
+  sphere(torso, green, [d[101], d[102], d[103]], [d[104], d[105], d[106]]);
 
   // Collar.
   const collar = mesh(
-    new THREE.TorusGeometry(0.17, 0.035, 6, 16),
+    new THREE.TorusGeometry(d[107], d[108], d[109], d[110]),
     green,
     torso,
-    [0, 0.52, 0],
-    [1, 0.7, 0.8]
+    [d[111], d[112], d[113]],
+    [d[114], d[115], d[116]]
   );
-  collar.rotation.x = Math.PI / 2;
+  collar.rotation.x = Math.PI / d[117];
 
   // Number 10, drawn on a canvas to avoid a font dependency.
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
+  canvas.width = d[118];
+  canvas.height = d[119];
 
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 256, 128);
+  ctx.clearRect(d[120], d[121], d[122], d[123]);
   ctx.font = 'bold 100px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
-  ctx.lineWidth = 13;
+  ctx.lineWidth = d[124];
   ctx.strokeStyle = '#e9eee9';
-  ctx.strokeText('10', 128, 66);
+  ctx.strokeText('10', d[125], d[126]);
   ctx.fillStyle = '#a8d5b2';
-  ctx.fillText('10', 128, 66);
+  ctx.fillText('10', d[127], d[128]);
 
   const numberTexture = new THREE.CanvasTexture(canvas);
   const numberMat = new THREE.MeshBasicMaterial({
@@ -176,10 +178,10 @@ export default function createBen(THREE) {
   });
 
   const number = mesh(
-    new THREE.PlaneGeometry(0.38, 0.19),
+    new THREE.PlaneGeometry(d[129], d[130]),
     numberMat,
     torso,
-    [0, -0.05, 0.222]
+    [d[131], -d[132], d[133]]
   );
   number.name = 'ShirtNumber10';
 
@@ -189,157 +191,157 @@ export default function createBen(THREE) {
 
   const arms = [];
 
-  for (const side of [-1, 1]) {
+  for (const side of [-d[134], d[135]]) {
     const shoulder = new THREE.Group();
-    shoulder.name = side < 0 ? 'LeftArm' : 'RightArm';
-    shoulder.position.set(side * 0.39, 0.30, 0);
+    shoulder.name = side < d[136] ? 'LeftArm' : 'RightArm';
+    shoulder.position.set(side * d[137], d[138], d[139]);
     torso.add(shoulder);
     arms.push(shoulder);
 
     // Green-and-black short sleeve.
     sphere(
       shoulder, shirt,
-      [side * 0.035, -0.10, 0],
-      [0.16, 0.24, 0.19]
+      [side * d[140], -d[141], d[142]],
+      [d[143], d[144], d[145]]
     );
 
     sphere(
       shoulder, green,
-      [side * 0.04, -0.22, 0.015],
-      [0.15, 0.09, 0.19]
+      [side * d[146], -d[147], d[148]],
+      [d[149], d[150], d[151]]
     );
 
     // Upper arm and forearm.
     capsule(
       shoulder, skin,
-      [0, -0.25, 0],
-      [side * 0.015, -0.61, 0],
-      0.105
+      [d[152], -d[153], d[154]],
+      [side * d[155], -d[156], d[157]],
+      d[158]
     );
 
     const elbow = new THREE.Group();
-    elbow.position.set(side * 0.015, -0.61, 0);
+    elbow.position.set(side * d[159], -d[160], d[161]);
     shoulder.add(elbow);
     shoulder.userData.elbow = elbow;
 
     capsule(
       elbow, skin,
-      [0, 0, 0],
-      [side * 0.015, -0.47, 0.015],
-      0.09
+      [d[162], d[163], d[164]],
+      [side * d[165], -d[166], d[167]],
+      d[168]
     );
 
     sphere(
       elbow, skin,
-      [side * 0.015, -0.53, 0.015],
-      [0.105, 0.12, 0.10]
+      [side * d[169], -d[170], d[171]],
+      [d[172], d[173], d[174]]
     );
 
     // Simple hands, without individual fingers.
     sphere(
       elbow, skin,
-      [side * 0.015, -0.62, 0.02],
-      [0.115, 0.14, 0.09]
+      [side * d[175], -d[176], d[177]],
+      [d[178], d[179], d[180]]
     );
   }
 
   // Omnitrix watch on the left wrist.
   const watch = box(
-    arms[0].userData.elbow,
+    arms[d[181]].userData.elbow,
     green,
-    [0, -0.49, 0.04],
-    [0.16, 0.17, 0.13]
+    [d[182], -d[183], d[184]],
+    [d[185], d[186], d[187]]
   );
   watch.name = 'Omnitrix';
 
   box(
-    arms[0].userData.elbow,
+    arms[d[188]].userData.elbow,
     watchBlack,
-    [0, -0.49, 0.115],
-    [0.105, 0.105, 0.025]
+    [d[189], -d[190], d[191]],
+    [d[192], d[193], d[194]]
   );
 
   // --------------------------------------------------
   // PANTS AND LEGS.
   // --------------------------------------------------
 
-  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
+  box(body, pants, [d[195], d[196], d[197]], [d[198], d[199], d[200]]);
 
   const legs = [];
 
-  for (const side of [-1, 1]) {
+  for (const side of [-d[201], d[202]]) {
     const hip = new THREE.Group();
-    hip.name = side < 0 ? 'LeftLeg' : 'RightLeg';
-    hip.position.set(side * 0.17, 1.10, 0);
+    hip.name = side < d[203] ? 'LeftLeg' : 'RightLeg';
+    hip.position.set(side * d[204], d[205], d[206]);
     body.add(hip);
     legs.push(hip);
 
     // Wide brown trouser legs.
     capsule(
       hip, pants,
-      [0, 0, 0],
-      [side * 0.015, -0.90, 0],
-      0.17,
-      10
+      [d[207], d[208], d[209]],
+      [side * d[210], -d[211], d[212]],
+      d[213],
+      d[214]
     );
 
     // Outer trouser seam.
     capsule(
       hip, pantsDark,
-      [side * 0.10, -0.05, 0.12],
-      [side * 0.10, -0.85, 0.12],
-      0.025
+      [side * d[215], -d[216], d[217]],
+      [side * d[218], -d[219], d[220]],
+      d[221]
     );
 
     // Cargo pocket on each outer thigh.
     const pocket = box(
       hip,
       pantsLight,
-      [side * 0.15, -0.48, 0.10],
-      [0.19, 0.27, 0.08]
+      [side * d[222], -d[223], d[224]],
+      [d[225], d[226], d[227]]
     );
-    pocket.rotation.z = side * -0.10;
+    pocket.rotation.z = side * -d[228];
 
     box(
       hip,
       pantsDark,
-      [side * 0.15, -0.36, 0.15],
-      [0.18, 0.045, 0.025]
+      [side * d[229], -d[230], d[231]],
+      [d[232], d[233], d[234]]
     );
 
     // Shoe pivot.
     const foot = new THREE.Group();
     foot.name = 'Foot';
-    foot.position.set(0, -0.94, 0.08);
+    foot.position.set(d[235], -d[236], d[237]);
     hip.add(foot);
     hip.userData.foot = foot;
 
     // White sneaker sole.
     box(
       foot, sole,
-      [0, -0.075, 0.10],
-      [0.35, 0.10, 0.52]
+      [d[238], -d[239], d[240]],
+      [d[241], d[242], d[243]]
     );
 
     // Sneaker upper.
     sphere(
       foot, shoe,
-      [0, 0, 0.10],
-      [0.17, 0.12, 0.25]
+      [d[244], d[245], d[246]],
+      [d[247], d[248], d[249]]
     );
 
     // White toe.
     sphere(
       foot, white,
-      [0, -0.015, 0.25],
-      [0.16, 0.085, 0.12]
+      [d[250], -d[251], d[252]],
+      [d[253], d[254], d[255]]
     );
 
     // Green sneaker accent.
     box(
       foot, green,
-      [0, 0.055, 0.09],
-      [0.22, 0.025, 0.24]
+      [d[256], d[257], d[258]],
+      [d[259], d[260], d[261]]
     );
   }
 
@@ -348,11 +350,11 @@ export default function createBen(THREE) {
   // --------------------------------------------------
 
   let animation = 'idle';
-  let elapsed = 0;
-  let verticalVelocity = 0;
+  let elapsed = d[262];
+  let verticalVelocity = d[263];
   let grounded = true;
 
-  const baseY = 0;
+  const baseY = d[264];
 
   root.position.y = baseY;
 
@@ -368,7 +370,7 @@ export default function createBen(THREE) {
     animation = name;
   };
 
-  root.userData.jump = function (strength = 4.8) {
+  root.userData.jump = function (strength = d[265]) {
     if (!grounded) return;
 
     verticalVelocity = strength;
@@ -377,57 +379,57 @@ export default function createBen(THREE) {
   };
 
   root.userData.update = function (deltaTime) {
-    const dt = Math.min(deltaTime, 0.05);
+    const dt = Math.min(deltaTime, d[266]);
     elapsed += dt;
 
     const walking = animation === 'walk' || animation === 'run';
-    const speed = animation === 'run' ? 12 : 7;
-    const swing = walking ? Math.sin(elapsed * speed) : 0;
+    const speed = animation === 'run' ? d[267] : d[268];
+    const swing = walking ? Math.sin(elapsed * speed) : d[269];
 
     // Arm swing.
     arms.forEach((arm, index) => {
-      const side = index === 0 ? -1 : 1;
+      const side = index === d[270] ? -d[271] : d[272];
 
       arm.rotation.x = walking
-        ? swing * 0.45 * side
-        : THREE.MathUtils.damp(arm.rotation.x, 0, 8, dt);
+        ? swing * d[273] * side
+        : THREE.MathUtils.damp(arm.rotation.x, d[274], d[275], dt);
 
       arm.userData.elbow.rotation.x = walking
-        ? Math.max(0, -swing * side) * 0.45
+        ? Math.max(d[276], -swing * side) * d[277]
         : THREE.MathUtils.damp(
-            arm.userData.elbow.rotation.x, 0, 8, dt
+            arm.userData.elbow.rotation.x, d[278], d[279], dt
           );
     });
 
     // Leg swing.
     legs.forEach((leg, index) => {
-      const side = index === 0 ? -1 : 1;
+      const side = index === d[280] ? -d[281] : d[282];
 
       leg.rotation.x = walking
-        ? swing * 0.55 * side
-        : THREE.MathUtils.damp(leg.rotation.x, 0, 8, dt);
+        ? swing * d[283] * side
+        : THREE.MathUtils.damp(leg.rotation.x, d[284], d[285], dt);
 
       leg.userData.foot.rotation.x = walking
-        ? Math.max(0, swing * side) * 0.35
+        ? Math.max(d[286], swing * side) * d[287]
         : THREE.MathUtils.damp(
-            leg.userData.foot.rotation.x, 0, 8, dt
+            leg.userData.foot.rotation.x, d[288], d[289], dt
           );
     });
 
     // Slight torso movement while walking.
-    torso.rotation.z = walking ? swing * 0.025 : 0;
-    torso.position.y = 2.12 + (
-      walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.025 : 0
+    torso.rotation.z = walking ? swing * d[290] : d[291];
+    torso.position.y = d[292] + (
+      walking ? Math.abs(Math.sin(elapsed * speed * d[293])) * d[294] : d[295]
     );
 
     // Basic gravity and jump.
     if (!grounded) {
-      verticalVelocity -= 12 * dt;
+      verticalVelocity -= d[296] * dt;
       root.position.y += verticalVelocity * dt;
 
       if (root.position.y <= baseY) {
         root.position.y = baseY;
-        verticalVelocity = 0;
+        verticalVelocity = d[297];
         grounded = true;
         animation = 'idle';
       }
