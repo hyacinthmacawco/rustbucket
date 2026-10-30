@@ -13,14 +13,14 @@ export const dimensions = {
 
   // Shared camera configuration. The target and distance frame the Sun and Earth.
   camera: {
-    position: [-8, 7, 52],
-    target: [-8, 0, 0],
+    position: [-22.75, 6, 90],
+    target: [-22.75, 0, 0],
     fov: 55,
     near: 0.1,
     far: 1000,
-    distance: 52,
-    minDistance: 25,
-    maxDistance: 90,
+    distance: 90,
+    minDistance: 45,
+    maxDistance: 140,
     initialYaw: 0,
     initialPitch: 0.13,
     dragSensitivity: 0.006,
