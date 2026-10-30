@@ -1,527 +1,429 @@
-import * as THREE from 'three';
 import { dimensions } from '../storage/state.js';
+export function createRook (THREE) {
+  const root = new THREE.Group();
+  root.name = 'Rook';
 
-export function createRook() {
-  const rook = new THREE.Group();
-  rook.name = 'Rook';
+  const body = new THREE.Group();
+  body.name = 'RookBody';
+  root.add(body);
 
-  const mat = (color, metalness = 0) =>
-    new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.85,
-      metalness
-    });
+  const material = (color, roughness = 0.85) =>
+    new THREE.MeshStandardMaterial({ color, roughness });
 
-  const skin = mat(0xc8d5dc);
-  const skinShade = mat(0x8296ad);
-  const black = mat(0x101116);
-  const blackLight = mat(0x24232f);
-  const blue = mat(0x304e80);
-  const blueLight = mat(0x496a9e);
-  const armor = mat(0x8799ae, 0.2);
-  const armorDark = mat(0x53677f, 0.15);
-  const toolBlack = mat(0x17191f, 0.25);
-  const toolMetal = mat(0x999987, 0.25);
+  const skin = material(0xc8d5dc);
+  const skinShadow = material(0x8296ad);
+  const hair = material(0x101116);
+  const hairLight = material(0x24232f);
+  const shirt = material(0x101116);
+  const green = material(0x304e80);
+  const greenDark = material(0x496a9e);
+  const pants = material(0x101116);
+  const pantsLight = material(0x24232f);
+  const pantsDark = material(0x08090d);
+  const shoe = material(0x304e80);
+  const white = material(0x8799ae);
+  const sole = material(0x53677f);
+  const watchBlack = material(0x53677f);
 
-  function ellipsoid(parent, material, x, y, z, sx, sy, sz) {
-    const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 20, 16),
-      material
-    );
+  function mesh(geometry, mat, parent, position, scale) {
+    const object = new THREE.Mesh(geometry, mat);
+    object.position.set(...position);
 
-    mesh.position.set(x, y, z);
-    mesh.scale.set(sx, sy, sz);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    parent.add(mesh);
-    return mesh;
+    if (scale) object.scale.set(...scale);
+
+    object.castShadow = true;
+    object.receiveShadow = true;
+    parent.add(object);
+    return object;
   }
 
-  function box(parent, material, x, y, z, sx, sy, sz) {
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(sx, sy, sz),
-      material
+  function box(parent, mat, position, size) {
+    return mesh(
+      new THREE.BoxGeometry(...size),
+      mat,
+      parent,
+      position
     );
-
-    mesh.position.set(x, y, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    parent.add(mesh);
-    return mesh;
   }
 
-  function limb(parent, material, a, b, radiusA, radiusB) {
+  function sphere(parent, mat, position, scale) {
+    return mesh(
+      new THREE.SphereGeometry(1, 16, 12),
+      mat,
+      parent,
+      position,
+      scale
+    );
+  }
+
+  function capsule(parent, mat, a, b, radius, segments = 8) {
     const start = new THREE.Vector3(...a);
     const end = new THREE.Vector3(...b);
-    const direction = new THREE.Vector3().subVectors(end, start);
+    const direction = end.clone().sub(start);
 
-    const mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        radiusB,
-        radiusA,
-        direction.length(),
-        14
-      ),
-      material
+    const object = mesh(
+      new THREE.CapsuleGeometry(radius, direction.length(), 4, segments),
+      mat,
+      parent,
+      start.clone().add(end).multiplyScalar(0.5).toArray()
     );
 
-    mesh.position.copy(start).add(end).multiplyScalar(0.5);
-    mesh.quaternion.setFromUnitVectors(
+    object.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
       direction.normalize()
     );
 
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    parent.add(mesh);
-    return mesh;
+    return object;
   }
 
-  // -------------------------
-  // LEGS
-  // -------------------------
+  // --------------------------------------------------
+  // HEAD: intentionally blank, with no facial features.
+  // --------------------------------------------------
+
+  const head = new THREE.Group();
+  head.name = 'Head';
+  head.position.set(0, 3.12, 0);
+  body.add(head);
+
+  sphere(head, skin, [0, 0, 0], [0.37, 0.46, 0.32]);
+
+  // Neck.
+  capsule(
+    body, skin,
+    [0, 2.48, 0],
+    [0, 2.83, 0],
+    0.15
+  );
+
+  // Hair cap and rear hair mass.
+  sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
+
+  // Side and back hair.
+  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
+  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
+  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
+
+  // Angular hair spikes, all made from simple cones.
+  function spike(parent, position, rotation, size) {
+    const part = mesh(
+      new THREE.ConeGeometry(size, size * 1.8, 5),
+      hair,
+      parent,
+      position,
+      [1, 1, 0.7]
+    );
+    part.rotation.set(...rotation);
+    return part;
+  }
+
+  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
+  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
+  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
+
+  // --------------------------------------------------
+  // TORSO: black shirt with green center stripe.
+  // --------------------------------------------------
+
+  const torso = new THREE.Group();
+  torso.name = 'Torso';
+  torso.position.y = 2.12;
+  body.add(torso);
+
+  sphere(torso, shirt, [0, 0.12, 0], [0.43, 0.61, 0.25]);
+
+  // Main shirt body.
+  box(torso, shirt, [0, -0.17, 0], [0.69, 0.90, 0.40]);
+
+  // Green vertical shirt stripe.
+  box(torso, green, [0, -0.16, 0.207], [0.19, 0.90, 0.018]);
+
+  // Green shoulder panels.
+  sphere(torso, green, [-0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
+  sphere(torso, green, [0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
+
+  // Collar.
+  const collar = mesh(
+    new THREE.TorusGeometry(0.17, 0.035, 6, 16),
+    green,
+    torso,
+    [0, 0.52, 0],
+    [1, 0.7, 0.8]
+  );
+  collar.rotation.x = Math.PI / 2;
+
+  // Number 10, drawn on a canvas to avoid a font dependency.
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 256, 128);
+  ctx.font = 'bold 100px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 13;
+  ctx.strokeStyle = '#e9eee9';
+  ctx.strokeText('10', 128, 66);
+  ctx.fillStyle = '#a8d5b2';
+  ctx.fillText('10', 128, 66);
+
+  const numberTexture = new THREE.CanvasTexture(canvas);
+  const numberMat = new THREE.MeshBasicMaterial({
+    map: numberTexture,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+
+  const number = mesh(
+    new THREE.PlaneGeometry(0.38, 0.19),
+    numberMat,
+    torso,
+    [0, -0.05, 0.222]
+  );
+  number.name = 'ShirtNumber10';
+
+  // --------------------------------------------------
+  // ARMS: pivoted at the shoulders.
+  // --------------------------------------------------
+
+  const arms = [];
 
   for (const side of [-1, 1]) {
-    const hipX = side * 0.13;
+    const shoulder = new THREE.Group();
+    shoulder.name = side < 0 ? 'LeftArm' : 'RightArm';
+    shoulder.position.set(side * 0.39, 0.30, 0);
+    torso.add(shoulder);
+    arms.push(shoulder);
 
-    // Upper legs
-    limb(
-      rook, black,
-      [hipX, 1.75, 0],
-      [side * 0.15, 1.05, 0],
-      0.115, 0.085
+    // Green-and-black short sleeve.
+    sphere(
+      shoulder, shirt,
+      [side * 0.035, -0.10, 0],
+      [0.16, 0.24, 0.19]
     );
 
-    // Knees
-    ellipsoid(
-      rook, black,
-      side * 0.15, 1.03, 0,
-      0.09, 0.11, 0.09
+    sphere(
+      shoulder, green,
+      [side * 0.04, -0.22, 0.015],
+      [0.15, 0.09, 0.19]
     );
 
-    // Lower legs
-    limb(
-      rook, black,
-      [side * 0.15, 1.02, 0],
-      [side * 0.17, 0.40, 0],
-      0.08, 0.055
+    // Upper arm and forearm.
+    capsule(
+      shoulder, skin,
+      [0, -0.25, 0],
+      [side * 0.015, -0.61, 0],
+      0.105
     );
 
-    // Blue shin armor
-    ellipsoid(
-      rook, blue,
-      side * 0.17, 0.62, 0.035,
-      0.085, 0.27, 0.09
+    const elbow = new THREE.Group();
+    elbow.position.set(side * 0.015, -0.61, 0);
+    shoulder.add(elbow);
+    shoulder.userData.elbow = elbow;
+
+    capsule(
+      elbow, skin,
+      [0, 0, 0],
+      [side * 0.015, -0.47, 0.015],
+      0.09
     );
 
-    // Metallic outer shin plate
-    ellipsoid(
-      rook, armor,
-      side * 0.23, 0.63, 0.005,
-      0.045, 0.18, 0.07
+    sphere(
+      elbow, skin,
+      [side * 0.015, -0.53, 0.015],
+      [0.105, 0.12, 0.10]
     );
 
-    // Back of shin armor
-    ellipsoid(
-      rook, armorDark,
-      side * 0.18, 0.62, -0.065,
-      0.07, 0.20, 0.035
+    // Simple hands, without individual fingers.
+    sphere(
+      elbow, skin,
+      [side * 0.015, -0.62, 0.02],
+      [0.115, 0.14, 0.09]
+    );
+  }
+
+  // --------------------------------------------------
+  // PANTS AND LEGS.
+  // --------------------------------------------------
+
+  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
+
+  const legs = [];
+
+  for (const side of [-1, 1]) {
+    const hip = new THREE.Group();
+    hip.name = side < 0 ? 'LeftLeg' : 'RightLeg';
+    hip.position.set(side * 0.17, 1.10, 0);
+    body.add(hip);
+    legs.push(hip);
+
+    // Wide brown trouser legs.
+    capsule(
+      hip, pants,
+      [0, 0, 0],
+      [side * 0.015, -0.90, 0],
+      0.17,
+      10
     );
 
-    // Ankle
-    ellipsoid(
-      rook, black,
-      side * 0.17, 0.24, 0,
-      0.06, 0.10, 0.07
+    // Outer trouser seam.
+    capsule(
+      hip, pantsDark,
+      [side * 0.10, -0.05, 0.12],
+      [side * 0.10, -0.85, 0.12],
+      0.025
     );
 
-    // Feet
-    ellipsoid(
-      rook, blue,
-      side * 0.17, 0.12, 0.09,
-      0.105, 0.10, 0.23
+    // Cargo pocket on each outer thigh.
+    const pocket = box(
+      hip,
+      pantsLight,
+      [side * 0.15, -0.48, 0.10],
+      [0.19, 0.27, 0.08]
     );
+    pocket.rotation.z = side * -0.10;
 
-    // Black toe caps
-    ellipsoid(
-      rook, black,
-      side * 0.17, 0.10, 0.23,
-      0.11, 0.075, 0.11
-    );
-
-    // Shoe soles
     box(
-      rook, armor,
-      side * 0.17, 0.035, 0.09,
-      0.23, 0.045, 0.43
+      hip,
+      pantsDark,
+      [side * 0.15, -0.36, 0.15],
+      [0.18, 0.045, 0.025]
     );
 
-    // Outer knee/leg armor
-    ellipsoid(
-      rook, armor,
-      side * 0.22, 1.08, -0.015,
-      0.055, 0.16, 0.09
-    );
-  }
+    // Shoe pivot.
+    const foot = new THREE.Group();
+    foot.name = 'Foot';
+    foot.position.set(0, -0.94, 0.08);
+    hip.add(foot);
+    hip.userData.foot = foot;
 
-  // -------------------------
-  // PELVIS AND WAIST
-  // -------------------------
-
-  ellipsoid(rook, black, 0, 1.77, 0, 0.22, 0.20, 0.14);
-
-  // Blue waist armor
-  box(rook, blue, 0, 1.76, 0.035, 0.39, 0.22, 0.25);
-
-  // Central lower abdomen armor
-  ellipsoid(
-    rook, black,
-    0, 1.60, 0.04,
-    0.16, 0.18, 0.12
-  );
-
-  // Side hip armor
-  for (const side of [-1, 1]) {
-    ellipsoid(
-      rook, armor,
-      side * 0.23, 1.76, 0,
-      0.075, 0.16, 0.13
-    );
-  }
-
-  // -------------------------
-  // TORSO
-  // -------------------------
-
-  // Main black bodysuit
-  ellipsoid(
-    rook, black,
-    0, 2.18, 0,
-    0.29, 0.47, 0.18
-  );
-
-  // Upper chest
-  ellipsoid(
-    rook, black,
-    0, 2.42, 0,
-    0.31, 0.22, 0.18
-  );
-
-  // Blue chest armor
-  ellipsoid(
-    rook, blue,
-    0, 2.32, 0.125,
-    0.28, 0.29, 0.085
-  );
-
-  // Upper chest armor plate
-  box(
-    rook, blue,
-    0, 2.47, 0.15,
-    0.46, 0.18, 0.075
-  );
-
-  // Central chest plate
-  ellipsoid(
-    rook, blueLight,
-    0, 2.19, 0.19,
-    0.16, 0.23, 0.045
-  );
-
-  // Chest plate lower border
-  box(
-    rook, black,
-    0, 2.00, 0.16,
-    0.27, 0.07, 0.07
-  );
-
-  // Neck
-  const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.105, 0.12, 0.25, 16),
-    skin
-  );
-  neck.position.set(0, 2.78, 0);
-  neck.castShadow = true;
-  rook.add(neck);
-
-  // Black neck suit
-  ellipsoid(
-    rook, black,
-    0, 2.68, 0,
-    0.17, 0.11, 0.15
-  );
-
-  // -------------------------
-  // SHOULDERS
-  // -------------------------
-
-  for (const side of [-1, 1]) {
-    // Black shoulder base
-    ellipsoid(
-      rook, black,
-      side * 0.31, 2.44, 0,
-      0.16, 0.16, 0.16
+    // White sneaker sole.
+    box(
+      foot, sole,
+      [0, -0.075, 0.10],
+      [0.35, 0.10, 0.52]
     );
 
-    // Blue shoulder plates
-    ellipsoid(
-      rook, blue,
-      side * 0.37, 2.43, 0.025,
-      0.17, 0.15, 0.17
+    // Sneaker upper.
+    sphere(
+      foot, shoe,
+      [0, 0, 0.10],
+      [0.17, 0.12, 0.25]
     );
 
-    // Shoulder armor highlight
-    ellipsoid(
-      rook, blueLight,
-      side * 0.39, 2.47, 0.10,
-      0.11, 0.09, 0.07
+    // White toe.
+    sphere(
+      foot, white,
+      [0, -0.015, 0.25],
+      [0.16, 0.085, 0.12]
+    );
+
+    // Green sneaker accent.
+    box(
+      foot, green,
+      [0, 0.055, 0.09],
+      [0.22, 0.025, 0.24]
     );
   }
 
-  // -------------------------
-  // ARMS
-  // -------------------------
+  // --------------------------------------------------
+  // CHARACTER CONTROL / PROCEDURAL ANIMATION.
+  // --------------------------------------------------
 
-  for (const side of [-1, 1]) {
-    const shoulderX = side * 0.40;
-    const elbowX = side * 0.46;
-    const wristX = side * 0.49;
-
-    // Upper arm
-    limb(
-      rook, black,
-      [shoulderX, 2.39, 0],
-      [elbowX, 1.88, 0],
-      0.105, 0.075
-    );
-
-    // Elbow
-    ellipsoid(
-      rook, black,
-      elbowX, 1.87, 0,
-      0.085, 0.09, 0.08
-    );
-
-    // Forearm
-    limb(
-      rook, black,
-      [elbowX, 1.86, 0],
-      [wristX, 1.24, 0],
-      0.08, 0.06
-    );
-
-    // Blue forearm armor
-    ellipsoid(
-      rook, blue,
-      side * 0.48, 1.53, 0.025,
-      0.09, 0.25, 0.10
-    );
-
-    // Metallic forearm plate
-    ellipsoid(
-      rook, armor,
-      side * 0.48, 1.52, 0.09,
-      0.065, 0.20, 0.045
-    );
-
-    // Wrist
-    ellipsoid(
-      rook, skinShade,
-      wristX, 1.20, 0,
-      0.07, 0.07, 0.065
-    );
-
-    // Hand palm
-    ellipsoid(
-      rook, skinShade,
-      wristX, 1.12, 0.025,
-      0.085, 0.11, 0.07
-    );
-
-    // Three long fingers
-    for (let f = 0; f < 3; f++) {
-      const offset = (f - 1) * 0.065;
-
-      limb(
-        rook, skinShade,
-        [wristX + offset, 1.08, 0.045],
-        [wristX + offset * 1.35, 0.94, 0.065],
-        0.025, 0.016
-      );
-    }
-
-    // Opposing thumb
-    limb(
-      rook, skinShade,
-      [wristX - side * 0.075, 1.13, 0.025],
-      [wristX - side * 0.14, 1.04, 0.06],
-      0.03, 0.018
-    );
-  }
-
-  // -------------------------
-  // HEAD
-  // -------------------------
-
-  // Main blank alien head
-  ellipsoid(
-    rook, skin,
-    0, 3.08, 0,
-    0.20, 0.27, 0.17
-  );
-
-  // Lower jaw shape
-  ellipsoid(
-    rook, skin,
-    0, 2.94, 0.025,
-    0.17, 0.14, 0.15
-  );
-
-  // Dark side head markings
-  for (const side of [-1, 1]) {
-    ellipsoid(
-      rook, black,
-      side * 0.16, 3.09, 0.035,
-      0.045, 0.19, 0.055
-    );
-  }
-
-  // Rear head structure
-  ellipsoid(
-    rook, skinShade,
-    0, 3.12, -0.12,
-    0.19, 0.23, 0.075
-  );
-
-  // Top head markings
-  ellipsoid(
-    rook, black,
-    0, 3.29, -0.005,
-    0.12, 0.065, 0.13
-  );
-
-  // Side head fins
-  for (const side of [-1, 1]) {
-    const fin = new THREE.Mesh(
-      new THREE.ConeGeometry(0.105, 0.27, 8),
-      skinShade
-    );
-
-    fin.position.set(side * 0.20, 3.06, -0.025);
-    fin.rotation.z = -side * Math.PI / 2.7;
-    fin.castShadow = true;
-    rook.add(fin);
-  }
-
-  // -------------------------
-  // PROTO-TOOL ON BACK
-  // -------------------------
-
-  // Main tool housing
-  const tool = new THREE.Group();
-  tool.name = 'ProtoTool';
-  tool.position.set(0.30, 2.67, -0.19);
-  tool.rotation.z = -0.12;
-  tool.rotation.x = -0.08;
-  rook.add(tool);
-
-  // Long main casing
-  box(
-    tool, toolBlack,
-    0, 0.31, 0,
-    0.23, 1.00, 0.23
-  );
-
-  // Upper casing
-  ellipsoid(
-    tool, toolBlack,
-    0, 0.79, 0,
-    0.16, 0.22, 0.15
-  );
-
-  // Main metallic side panel
-  box(
-    tool, toolMetal,
-    0.12, 0.27, 0.025,
-    0.045, 0.67, 0.16
-  );
-
-  // Lower metallic panel
-  box(
-    tool, armorDark,
-    0.13, -0.15, 0.025,
-    0.045, 0.19, 0.17
-  );
-
-  // Tool upper tip
-  const toolTip = new THREE.Mesh(
-    new THREE.ConeGeometry(0.13, 0.25, 6),
-    toolBlack
-  );
-  toolTip.position.set(0, 0.93, 0);
-  toolTip.castShadow = true;
-  tool.add(toolTip);
-
-  // Side mechanical ridges
-  for (let i = 0; i < 3; i++) {
-    const ridge = box(
-      tool,
-      blackLight,
-      0.03,
-      0.48 - i * 0.16,
-      0.13,
-      0.18,
-      0.07,
-      0.045
-    );
-    ridge.rotation.z = -0.3;
-  }
-
-  // Tool bottom connector
-  ellipsoid(
-    tool, armorDark,
-    0, -0.22, 0,
-    0.13, 0.09, 0.13
-  );
-
-  // Shoulder mounting bracket
-  box(
-    rook, blackLight,
-    0.28, 2.42, -0.14,
-    0.18, 0.32, 0.12
-  );
-
-  // Final scale
-  rook.position.set(...dimensions.rook.position);
-  rook.scale.set(...dimensions.rook.scale);
-  // Ben-style procedural walk cycle, implemented directly in this model.
-  let animation = "idle";
+  let animation = 'idle';
   let elapsed = 0;
-  const baseY = rook.position.y;
-  const animated = rook.children.filter(part => {
-    if (!part.isMesh || part.userData.static) return false;
-    const x = Math.abs(part.position.x);
-    const y = part.position.y;
-    return y < 1.5 || (x > 0.35 && y >= 1.08 && y < 2.3);
-  }).map(part => ({ part, rotation: part.rotation.clone() }));
+  let verticalVelocity = 0;
+  let grounded = true;
 
-  rook.setAnimation = value => { animation = value; };
-  rook.update = dt => {
-    dt = Math.min(dt, 0.05);
-    elapsed += dt;
-    const walking = animation === "walk" || animation === "run";
-    const speed = animation === "run" ? 12 : 7;
-    const swing = walking ? Math.sin(elapsed * speed) : 0;
-    for (const item of animated) {
-      const side = item.part.position.x < 0 ? -1 : 1;
-      const isLeg = item.part.position.y < 1.5;
-      const target = walking ? swing * (isLeg ? 0.55 : 0.45) * side : 0;
-      item.part.rotation.x = THREE.MathUtils.damp(
-        item.part.rotation.x, item.rotation.x + target, 10, dt
+  root.position.set(...dimensions.rook.position);
+  root.scale.set(...dimensions.rook.scale);
+  const baseY = dimensions.rook.position[1];
+  root.position.y = baseY;
+
+  root.userData.setAnimation = function (name) {
+    const allowed = ['idle', 'walk', 'run', 'jump'];
+
+    if (!allowed.includes(name)) {
+      throw new Error(
+        `Unknown Rook animation "${name}". Use: ${allowed.join(', ')}`
       );
     }
-    rook.position.y = baseY + (walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.018 : 0);
+
+    animation = name;
   };
 
-  return rook;
+  root.userData.jump = function (strength = 4.8) {
+    if (!grounded) return;
+
+    verticalVelocity = strength;
+    grounded = false;
+    animation = 'jump';
+  };
+
+  root.userData.update = function (deltaTime) {
+    const dt = Math.min(deltaTime, 0.05);
+    elapsed += dt;
+
+    const walking = animation === 'walk' || animation === 'run';
+    const speed = animation === 'run' ? 12 : 7;
+    const swing = walking ? Math.sin(elapsed * speed) : 0;
+
+    // Arm swing.
+    arms.forEach((arm, index) => {
+      const side = index === 0 ? -1 : 1;
+
+      arm.rotation.x = walking
+        ? swing * 0.45 * side
+        : THREE.MathUtils.damp(arm.rotation.x, 0, 8, dt);
+
+      arm.userData.elbow.rotation.x = walking
+        ? Math.max(0, -swing * side) * 0.45
+        : THREE.MathUtils.damp(
+            arm.userData.elbow.rotation.x, 0, 8, dt
+          );
+    });
+
+    // Leg swing.
+    legs.forEach((leg, index) => {
+      const side = index === 0 ? -1 : 1;
+
+      leg.rotation.x = walking
+        ? swing * 0.55 * side
+        : THREE.MathUtils.damp(leg.rotation.x, 0, 8, dt);
+
+      leg.userData.foot.rotation.x = walking
+        ? Math.max(0, swing * side) * 0.35
+        : THREE.MathUtils.damp(
+            leg.userData.foot.rotation.x, 0, 8, dt
+          );
+    });
+
+    // Slight torso movement while walking.
+    torso.rotation.z = walking ? swing * 0.025 : 0;
+    torso.position.y = 2.12 + (
+      walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.025 : 0
+    );
+
+    // Basic gravity and jump.
+    if (!grounded) {
+      verticalVelocity -= 12 * dt;
+      root.position.y += verticalVelocity * dt;
+
+      if (root.position.y <= baseY) {
+        root.position.y = baseY;
+        verticalVelocity = 0;
+        grounded = true;
+        animation = 'idle';
+      }
+    }
+  };
+
+  // Convenience methods.
+  root.setAnimation = root.userData.setAnimation;
+  root.jump = root.userData.jump;
+  root.update = root.userData.update;
+
+  return root;
 }
