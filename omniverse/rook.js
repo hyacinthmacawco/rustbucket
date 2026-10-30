@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/state.js';
-import { installCharacterAnimation } from './character-animation.js';
 
 export function createRook() {
   const rook = new THREE.Group();
@@ -495,7 +494,34 @@ export function createRook() {
   // Final scale
   rook.position.set(...dimensions.rook.position);
   rook.scale.set(...dimensions.rook.scale);
-  installCharacterAnimation(rook);
+  // Ben-style procedural walk cycle, implemented directly in this model.
+  let animation = "idle";
+  let elapsed = 0;
+  const baseY = rook.position.y;
+  const animated = rook.children.filter(part => {
+    if (!part.isMesh || part.userData.static) return false;
+    const x = Math.abs(part.position.x);
+    const y = part.position.y;
+    return y < 1.5 || (x > 0.35 && y >= 1.08 && y < 2.3);
+  }).map(part => ({ part, rotation: part.rotation.clone() }));
+
+  rook.setAnimation = value => { animation = value; };
+  rook.update = dt => {
+    dt = Math.min(dt, 0.05);
+    elapsed += dt;
+    const walking = animation === "walk" || animation === "run";
+    const speed = animation === "run" ? 12 : 7;
+    const swing = walking ? Math.sin(elapsed * speed) : 0;
+    for (const item of animated) {
+      const side = item.part.position.x < 0 ? -1 : 1;
+      const isLeg = item.part.position.y < 1.5;
+      const target = walking ? swing * (isLeg ? 0.55 : 0.45) * side : 0;
+      item.part.rotation.x = THREE.MathUtils.damp(
+        item.part.rotation.x, item.rotation.x + target, 10, dt
+      );
+    }
+    rook.position.y = baseY + (walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.018 : 0);
+  };
 
   return rook;
 }
