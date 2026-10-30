@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/config.js';
+import { installCharacterAnimation } from './character-animation.js';
 
 export function createGwen() {
   const gwen = new THREE.Group();
@@ -239,6 +240,7 @@ export function createGwen() {
   // Final positioning
   gwen.position.set(...dimensions.gwen.position);
   gwen.scale.set(...dimensions.gwen.scale);
+  installCharacterAnimation(gwen);
 
   return gwen;
 }
