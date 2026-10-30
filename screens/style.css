@@ -57,12 +57,8 @@ button {
    ========================================= */
 
 #title-screen {
-  background:
-    radial-gradient(
-      ellipse at 50% 50%,
-      #101827 0%,
-      #02040a 75%
-    );
+  background: transparent;
+  pointer-events: none;
 }
 
 #space-background {
@@ -79,6 +75,7 @@ button {
 }
 
 #title-menu {
+  pointer-events: auto;
   position: absolute;
   top: 50%;
   left: 50%;
