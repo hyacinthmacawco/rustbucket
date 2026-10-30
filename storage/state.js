@@ -471,6 +471,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
       document.removeEventListener("pointerdown", unlockAudio);
       document.removeEventListener("keydown", unlockAudio);
       document.removeEventListener("pointerdown", requestFullscreenOnGesture);
+      document.removeEventListener("touchend", requestFullscreenOnGesture);
       document.removeEventListener("keydown", requestFullscreenOnGesture);
       disposeRegion();
       titleScreen.destroy();
