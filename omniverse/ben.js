@@ -1,4 +1,4 @@
-import { dimensions } from '../storage/state.js';
+import { dimensions } from '../storage/config.js';
 export default function createBen(THREE) {
   const root = new THREE.Group();
   root.name = 'Ben';
