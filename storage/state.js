@@ -27,7 +27,7 @@ export const dimensions = {
     },
     tutorial: {
       position: [0, 5.3, 18.5],
-      target: [0, 3.3, 0],
+      target: [0, 1.8, 0],
       fov: 43,
       near: 0.1,
       far: 250,
