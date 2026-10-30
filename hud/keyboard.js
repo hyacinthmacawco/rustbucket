@@ -1,11 +1,24 @@
 import * as THREE from "three";
 
 // Shared camera-relative movement controller for the selected team member or Rustbucket.
-export function createKeyboard({ entities, camera, joystick, teamstick, updateCamera }) {
+export function createKeyboard({ entities, camera, joystick, teamstick, updateCamera, isMobile = false, onMove = () => {} }) {
   const keys = new Set();
 
+  const switchTargets = ["ben", "rook", "gwen", "kevin", "rustbucket"];
+  const switchKeys = ["w", "a", "s", "d", "f"];
+  let hasMoved = false;
   function onKeyDown(event) {
     const key = event.key.toLowerCase();
+    if (event.shiftKey) {
+      const index = switchKeys.indexOf(key);
+      const arrowIndex = ["arrowup", "arrowleft", "arrowdown", "arrowright", "."].indexOf(key);
+      const targetIndex = index >= 0 ? index : arrowIndex;
+      if (targetIndex >= 0) {
+        event.preventDefault();
+        teamstick.select(switchTargets[targetIndex]);
+        return;
+      }
+    }
     if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(key)) {
       event.preventDefault();
       keys.add(key);
@@ -23,7 +36,7 @@ export function createKeyboard({ entities, camera, joystick, teamstick, updateCa
     const selected = entities[teamstick.selected];
     if (!selected) return;
 
-    const input = joystick.input;
+    const input = isMobile ? joystick.input : { x: 0, y: 0 };
     const forwardInput =
       (keys.has("w") || keys.has("arrowup") ? 1 : 0) -
       (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
@@ -54,6 +67,7 @@ export function createKeyboard({ entities, camera, joystick, teamstick, updateCa
       selected.position.z += moveZ * speed * dt;
       selected.rotation.y = Math.atan2(moveX, moveZ);
       if (typeof selected.setAnimation === "function") selected.setAnimation("walk");
+      if (!hasMoved) { hasMoved = true; onMove(); }
     } else if (typeof selected.setAnimation === "function") {
       selected.setAnimation("idle");
     }
