@@ -140,6 +140,25 @@ import { dimensions, state } from "./config.js";
         music.play().catch(() => {});
       }
     }
+    let fullscreenAttempted = false;
+    function requestFullscreenOnFirstGesture() {
+      if (fullscreenAttempted) return;
+      fullscreenAttempted = true;
+      const target = document.documentElement;
+      const request = target.requestFullscreen || target.webkitRequestFullscreen;
+      if (request) {
+        try {
+          const result = request.call(target);
+          result?.catch?.(() => {});
+        } catch (error) {
+          console.warn("Automatic full-screen is unavailable in this browser:", error);
+        }
+      }
+      document.removeEventListener("pointerdown", requestFullscreenOnFirstGesture);
+      document.removeEventListener("keydown", requestFullscreenOnFirstGesture);
+    }
+    document.addEventListener("pointerdown", requestFullscreenOnFirstGesture, { once: true });
+    document.addEventListener("keydown", requestFullscreenOnFirstGesture, { once: true });
     document.addEventListener("pointerdown", unlockAudio);
     document.addEventListener("keydown", unlockAudio);
 
@@ -400,6 +419,8 @@ import { dimensions, state } from "./config.js";
       document.removeEventListener("pointerdown", unlockAudio);
       document.removeEventListener("pointerdown", requestInitialFullscreen);
       document.removeEventListener("keydown", unlockAudio);
+      document.removeEventListener("pointerdown", requestFullscreenOnFirstGesture);
+      document.removeEventListener("keydown", requestFullscreenOnFirstGesture);
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
