@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/config.js';
+import { installCharacterAnimation } from './character-animation.js';
 
 export function createKevin() {
   const kevin = new THREE.Group();
@@ -366,6 +367,7 @@ export function createKevin() {
   // Final scale
   kevin.position.set(...dimensions.kevin.position);
   kevin.scale.set(...dimensions.kevin.scale);
+  installCharacterAnimation(kevin);
 
   return kevin;
 }
