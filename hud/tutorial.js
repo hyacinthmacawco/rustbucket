@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 // Player movement logic shared by the tutorial gameplay stage.
 // Camera orbit and joystick DOM/input handling are owned by index.html
 // and hud/joystick.js respectively.
@@ -37,7 +39,7 @@ export function createTutorialController({ ben, camera, joystick, updateCamera }
     }
 
     if (magnitude > 0.08) {
-      const direction = camera.getWorldDirection(new camera.position.constructor());
+      const direction = camera.getWorldDirection(new THREE.Vector3());
       const length = Math.hypot(direction.x, direction.z) || 1;
       const fx = direction.x / length;
       const fz = direction.z / length;
