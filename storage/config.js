@@ -2,9 +2,9 @@
 // Individual mesh geometry remains inside each model module.
 export const dimensions = {
   ben: { position: [-3, 0, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, 0, -7], scale: [0.78, 0.78, 0.78] },
-  kevin: { position: [0, 0, -9], scale: [0.70, 0.73, 0.70] },
-  rook: { position: [7, 0, -7], scale: [0.64, 0.67, 0.64] },
+  gwen: { position: [-7, 0, -7], scale: [0.68, 0.68, 0.68] },
+  kevin: { position: [0, 0, -9], scale: [0.67, 0.67, 0.67] },
+  rook: { position: [7, 0, -7], scale: [0.60, 0.60, 0.60] },
   rustbucket: { position: [0, 2, 0], scale: [1, 1, 1] },
   kevinStorageUnit: { position: [0, 0, 0], scale: [1, 1, 1] },
   bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
