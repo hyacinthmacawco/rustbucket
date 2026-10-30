@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Rustbucket</title>
-  <link rel="stylesheet" href="./screens/style.css">
+  <link rel="stylesheet" href="./hud/style.css">
   <style>
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-    #omniverse { position: fixed; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; }
+    #omniverse { position:fixed; inset:0; display:block; width:100%; height:100%; touch-action:none; }
   </style>
   <script type="importmap">
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" } }
@@ -19,42 +19,13 @@
   <script type="module">
     import * as THREE from "three";
     import { dimensions, state } from "./storage/state.js";
-    import { createSun } from "./omniverse/sun.js";
-    import { createEarth } from "./omniverse/earth.js";
-    import { createMoon } from "./omniverse/moon.js";
     import { createTitleScreen } from "./hud/title.js";
+    import { createJoystick } from "./hud/joystick.js";
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
     scene.name = "omniverse";
     scene.background = new THREE.Color(0x02040a);
-
-    // All camera placement and drag tuning comes from state.js.
-    const cameraConfig = dimensions.camera;
-    const initialAspect = window.innerWidth / window.innerHeight;
-    const camera = new THREE.PerspectiveCamera(
-      initialAspect < 0.8 ? 75 : cameraConfig.fov,
-      initialAspect,
-      cameraConfig.near,
-      cameraConfig.far
-    );
-
-    const cameraTarget = new THREE.Vector3(...cameraConfig.target);
-    let cameraYaw = cameraConfig.initialYaw;
-    let cameraPitch = cameraConfig.initialPitch;
-    let cameraDistance = cameraConfig.distance;
-
-    function updateCamera() {
-      const horizontal = Math.cos(cameraPitch) * cameraDistance;
-      camera.position.set(
-        cameraTarget.x + Math.sin(cameraYaw) * horizontal,
-        cameraTarget.y + Math.sin(cameraPitch) * cameraDistance,
-        cameraTarget.z + Math.cos(cameraYaw) * horizontal
-      );
-      camera.lookAt(cameraTarget);
-    }
-
-    updateCamera();
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -67,82 +38,119 @@
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
 
-    // Title-space lighting and celestial models.
-    scene.add(new THREE.AmbientLight(0x52617f, 0.45));
-    const sunlight = new THREE.PointLight(0xffb65c, 1800, 160, 1.5);
-    sunlight.position.set(...dimensions.sun.position);
-    scene.add(sunlight);
+    const camera = new THREE.PerspectiveCamera(
+      dimensions.camera.title.fov,
+      window.innerWidth / window.innerHeight,
+      dimensions.camera.title.near,
+      dimensions.camera.title.far
+    );
+    scene.add(camera);
 
-    const { sun, sunAura, sunOuterGlow } = createSun(scene);
-    const { earth } = createEarth(scene);
-    const { moon } = createMoon(scene);
+    let activeStage = null;
+    let cameraTarget = new THREE.Vector3();
+    let cameraYaw = 0;
+    let cameraPitch = 0;
+    let cameraDistance = 1;
+    let cameraPreset = dimensions.camera.title;
+    let ben = null;
+    let tutorialController = null;
 
-    // Starfield remains part of the shared Omniverse scene.
-    const starCount = 6500;
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-      const radius = 45 + Math.random() * 110;
-      const theta = Math.random() * Math.PI * 2;
-      const z = Math.random() * 2 - 1;
-      const planar = Math.sqrt(1 - z * z);
-      const brightness = 0.55 + Math.random() * 0.45;
-      const blueStar = Math.random() > 0.84;
-      starPositions[i * 3] = radius * planar * Math.cos(theta);
-      starPositions[i * 3 + 1] = radius * z;
-      starPositions[i * 3 + 2] = radius * planar * Math.sin(theta);
-      starColors[i * 3] = brightness * (blueStar ? 0.65 : 1);
-      starColors[i * 3 + 1] = brightness * (blueStar ? 0.82 : 1);
-      starColors[i * 3 + 2] = brightness;
+    function updateCamera() {
+      const target = activeStage === "tutorial" && ben
+        ? new THREE.Vector3(ben.position.x, ben.position.y + 1.8, ben.position.z)
+        : cameraTarget;
+
+      const horizontal = Math.cos(cameraPitch) * cameraDistance;
+      camera.position.set(
+        target.x + Math.sin(cameraYaw) * horizontal,
+        target.y + Math.sin(cameraPitch) * cameraDistance,
+        target.z + Math.cos(cameraYaw) * horizontal
+      );
+      camera.lookAt(target);
     }
 
-    const starGeometry = new THREE.BufferGeometry();
-    starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
-    starGeometry.setAttribute("color", new THREE.BufferAttribute(starColors, 3));
-    const stars = new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({
-        size: 0.12,
-        sizeAttenuation: true,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.95,
-        depthWrite: false
-      })
-    );
-    scene.add(stars);
+    function setCameraPreset(preset) {
+      cameraPreset = preset;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8
+        ? Math.max(preset.fov, 65)
+        : preset.fov;
+      camera.near = preset.near;
+      camera.far = preset.far;
+      camera.updateProjectionMatrix();
 
-    // Title controls are created by title.js, but shown only while stage === "title".
+      cameraTarget.set(...preset.target);
+      const position = new THREE.Vector3(...preset.position);
+      const offset = position.sub(cameraTarget);
+      cameraDistance = offset.length();
+      cameraYaw = Math.atan2(offset.x, offset.z);
+      cameraPitch = Math.atan2(offset.y, Math.hypot(offset.x, offset.z));
+      updateCamera();
+    }
+
+    setCameraPreset(dimensions.camera.title);
+
+    // UI overlays are created once; the animation loop controls visibility.
     const titleScreen = createTitleScreen({
       onNewGame() {
-        state.stage = "tutorial";
+        state.stage = "prelude";
       }
     });
 
-    // Global title music. Browsers require a user gesture before playback.
-    const music = new Audio("./hud/senji-v2-ov.mp3");
-    music.loop = true;
-    music.volume = 0.5;
-    music.preload = "auto";
+    const preludeScreen = document.createElement("div");
+    preludeScreen.id = "prelude-screen";
+    preludeScreen.innerHTML = '<div id="prelude-title">A NEW DAWN</div>';
+    document.body.appendChild(preludeScreen);
+
+    const joystick = createJoystick();
+    joystick.setVisible(false);
+
+    // One audio handle is reused for the active stage's soundtrack/dialogue.
+    let music = null;
     let audioUnlocked = false;
-    let activeStage = null;
+    let preludeEndedHandler = null;
+
+    function stopMusic() {
+      if (!music) return;
+      if (preludeEndedHandler) {
+        music.removeEventListener("ended", preludeEndedHandler);
+        preludeEndedHandler = null;
+      }
+      music.pause();
+      music.currentTime = 0;
+      music.src = "";
+      music = null;
+    }
+
+    function playStageMusic(src, loop = false, onEnded = null) {
+      stopMusic();
+      music = new Audio(src);
+      music.loop = loop;
+      music.volume = 0.55;
+      music.preload = "auto";
+      if (onEnded) {
+        preludeEndedHandler = onEnded;
+        music.addEventListener("ended", onEnded, { once: true });
+      }
+      if (audioUnlocked) {
+        music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
+      }
+    }
 
     function unlockAudio() {
-      audioUnlocked = true;
-      if (state.stage === "title" && music.paused) {
-        music.play().catch(error => console.warn("Title music playback failed:", error));
+      if (!audioUnlocked) audioUnlocked = true;
+      if (state.stage === "title" && (!music || music.src !== new URL("./hud/senji-v2-ov.mp3", location.href).href)) {
+        playStageMusic("./hud/senji-v2-ov.mp3", true);
+      } else if (state.stage === "prelude" && music?.paused) {
+        music.play().catch(() => {});
       }
-      document.removeEventListener("pointerdown", unlockAudio);
-      document.removeEventListener("keydown", unlockAudio);
     }
-    document.addEventListener("pointerdown", unlockAudio, { once: true });
-    document.addEventListener("keydown", unlockAudio, { once: true });
+    document.addEventListener("pointerdown", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
 
-    // Dragging the canvas rotates the shared camera; there is no automatic orbit.
+    // Drag-to-look is shared by every 3D stage. No automatic camera orbit.
     let draggingCamera = false;
     let lastPointerX = 0;
     let lastPointerY = 0;
-    canvas.style.touchAction = "none";
 
     function onPointerDown(event) {
       draggingCamera = true;
@@ -150,40 +158,174 @@
       lastPointerY = event.clientY;
       canvas.setPointerCapture(event.pointerId);
     }
-
     function onPointerMove(event) {
       if (!draggingCamera) return;
       const dx = event.clientX - lastPointerX;
       const dy = event.clientY - lastPointerY;
       lastPointerX = event.clientX;
       lastPointerY = event.clientY;
-
-      cameraYaw -= dx * cameraConfig.dragSensitivity;
+      cameraYaw -= dx * dimensions.camera.dragSensitivity;
       cameraPitch = THREE.MathUtils.clamp(
-        cameraPitch + dy * cameraConfig.pitchSensitivity,
-        cameraConfig.minPitch,
-        cameraConfig.maxPitch
+        cameraPitch + dy * dimensions.camera.pitchSensitivity,
+        dimensions.camera.minPitch,
+        dimensions.camera.maxPitch
       );
       updateCamera();
     }
-
-    function onPointerUp() {
-      draggingCamera = false;
-    }
+    function onPointerUp() { draggingCamera = false; }
 
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointercancel", onPointerUp);
 
-    function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.fov = window.innerWidth / window.innerHeight < 0.8 ? 75 : cameraConfig.fov;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Region objects are imported and instantiated only after the camera is
+    // found to be near that region. Each region is held in one removable group.
+    let loadedRegion = null;
+    let loadingRegion = null;
+    let regionGroup = null;
+    let titleObjects = null;
+
+    function regionNearCamera() {
+      const cameraPosition = camera.position;
+      if (state.stage === "title") {
+        const earth = new THREE.Vector3(...dimensions.earth.position);
+        const sun = new THREE.Vector3(...dimensions.sun.position);
+        const nearEarth = cameraPosition.distanceTo(earth) < 180;
+        const nearSun = cameraPosition.distanceTo(sun) < 180;
+        return nearEarth || nearSun ? "space" : null;
+      }
+      if (state.stage === "tutorial") {
+        const bellwood = new THREE.Vector3(...dimensions.bellwood.position);
+        return cameraPosition.distanceTo(bellwood) < 350 ? "bellwood" : null;
+      }
+      return null;
     }
-    window.addEventListener("resize", onResize);
+
+    function disposeRegion() {
+      if (tutorialController) {
+        tutorialController.destroy();
+        tutorialController = null;
+      }
+      ben = null;
+      if (!regionGroup) return;
+      scene.remove(regionGroup);
+      regionGroup.traverse(object => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) {
+            for (const value of Object.values(material)) {
+              if (value?.isTexture) value.dispose();
+            }
+            material.dispose();
+          }
+        }
+      });
+      regionGroup = null;
+      titleObjects = null;
+    }
+
+    async function loadRegion(name) {
+      if (loadingRegion === name || loadedRegion === name) return;
+      loadingRegion = name;
+      disposeRegion();
+
+      if (!name) {
+        loadedRegion = null;
+        loadingRegion = null;
+        return;
+      }
+
+      const group = new THREE.Group();
+      group.name = name === "space" ? "SpaceRegion" : "BellwoodRegion";
+
+      try {
+        if (name === "space") {
+          // Lazy imports: celestial models are not loaded on the initial module pass.
+          const [sunModule, earthModule, moonModule, starModule] = await Promise.all([
+            import("./omniverse/sun.js"),
+            import("./omniverse/earth.js"),
+            import("./omniverse/moon.js"),
+            import("./omniverse/starfield.js")
+          ]);
+          group.add(new THREE.AmbientLight(0x52617f, 0.45));
+          const sun = sunModule.createSun(group);
+          const earth = earthModule.createEarth(group);
+          const moon = moonModule.createMoon(group);
+          const starfield = starModule.createStarfield(group);
+          titleObjects = { ...sun, ...earth, ...moon, ...starfield };
+        } else if (name === "bellwood") {
+          // Only Bellwood's nearby environment and tutorial models are loaded.
+          const [bellwoodModule, unitModule, shipModule, benModule, controllerModule] = await Promise.all([
+            import("./omniverse/bellwood.js"),
+            import("./omniverse/kevin-storage-unit.js"),
+            import("./omniverse/rustbucket.js"),
+            import("./omniverse/ben.js"),
+            import("./hud/tutorial.js")
+          ]);
+          bellwoodModule.createBellwood(group);
+          const { unit } = unitModule.createKevinStorageUnit(group);
+          const { ship } = shipModule.createRustbucket(group);
+          ben = benModule.default(THREE);
+          ben.position.set(...dimensions.ben.position);
+          ben.scale.set(...dimensions.ben.scale);
+          group.add(ben);
+          regionGroup = group;
+          scene.add(regionGroup);
+          tutorialController = controllerModule.createTutorialController({
+            ben,
+            camera,
+            joystick,
+            updateCamera
+          });
+          loadedRegion = name;
+          loadingRegion = null;
+          return;
+        }
+
+        regionGroup = group;
+        scene.add(regionGroup);
+        loadedRegion = name;
+      } catch (error) {
+        console.error("Could not load nearby region:", name, error);
+        loadedRegion = null;
+      } finally {
+        loadingRegion = null;
+      }
+    }
+
+    function updateStage() {
+      if (activeStage === state.stage) return;
+      activeStage = state.stage;
+
+      if (activeStage === "title") {
+        preludeScreen.style.display = "none";
+        titleScreen.setVisible(true);
+        joystick.setVisible(false);
+        setCameraPreset(dimensions.camera.title);
+        playStageMusic("./hud/senji-v2-ov.mp3", true);
+      } else if (activeStage === "prelude") {
+        titleScreen.setVisible(false);
+        joystick.setVisible(false);
+        preludeScreen.style.display = "flex";
+        stopMusic();
+        playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
+          if (state.stage === "prelude") state.stage = "tutorial";
+        });
+      } else if (activeStage === "tutorial") {
+        titleScreen.setVisible(false);
+        preludeScreen.style.display = "none";
+        joystick.setVisible(true);
+        setCameraPreset(dimensions.camera.tutorial);
+        stopMusic();
+      } else {
+        titleScreen.setVisible(false);
+        preludeScreen.style.display = "none";
+        joystick.setVisible(true);
+        stopMusic();
+      }
+    }
 
     const clock = new THREE.Clock();
     let animationFrame = 0;
@@ -191,39 +333,42 @@
     function animate() {
       animationFrame = requestAnimationFrame(animate);
 
-      const isTitle = state.stage === "title";
-      titleScreen.setVisible(isTitle);
+      updateStage();
 
-      if (activeStage !== state.stage) {
-        activeStage = state.stage;
-        if (activeStage === "title") {
-          cameraTarget.set(...cameraConfig.target);
-          cameraYaw = cameraConfig.initialYaw;
-          cameraPitch = cameraConfig.initialPitch;
-          cameraDistance = cameraConfig.distance;
-          updateCamera();
-          if (audioUnlocked) {
-            music.play().catch(error => console.warn("Title music playback failed:", error));
-          }
-        } else {
-          music.pause();
-          music.currentTime = 0;
-        }
+      // Decide what to instantiate from the camera's current world position.
+      const wantedRegion = regionNearCamera();
+      if (wantedRegion !== loadedRegion && wantedRegion !== loadingRegion) {
+        loadRegion(wantedRegion);
       }
 
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
 
-      if (isTitle) {
-        earth.rotation.y += delta * 0.07;
-        moon.rotation.y += delta * 0.04;
-        sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
-        sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
-        stars.rotation.y += delta * 0.0008;
+      if (state.stage === "tutorial" && tutorialController) {
+        tutorialController.update(delta);
+      }
+
+      if (state.stage === "title" && titleObjects) {
+        titleObjects.earth.rotation.y += delta * 0.07;
+        titleObjects.moon.rotation.y += delta * 0.04;
+        titleObjects.sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
+        titleObjects.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
+        titleObjects.stars.rotation.y += delta * 0.0008;
       }
 
       renderer.render(scene, camera);
     }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8
+        ? Math.max(cameraPreset.fov, 65)
+        : cameraPreset.fov;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    }
+    window.addEventListener("resize", onResize);
 
     animate();
 
@@ -234,8 +379,13 @@
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
+      document.removeEventListener("pointerdown", unlockAudio);
+      document.removeEventListener("keydown", unlockAudio);
+      disposeRegion();
       titleScreen.destroy();
-      music.pause();
+      preludeScreen.remove();
+      joystick.destroy();
+      stopMusic();
       renderer.dispose();
     }, { once: true });
   </script>
