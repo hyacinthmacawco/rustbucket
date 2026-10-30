@@ -1,71 +1,53 @@
-import * as THREE from 'three';
-import { dimensions } from '../storage/state.js';
+import * as THREE from "three";
+import { dimensions } from "../storage/state.js";
 
-export function createSun(scene) {
+export function createSun(parent) {
   const sunPosition = dimensions.sun.position;
 
-  // Sun surface
-  const sunMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffffff
-  });
-
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const sun = new THREE.Mesh(
     new THREE.SphereGeometry(dimensions.sun.radius, 64, 48),
     sunMaterial
   );
-
   sun.position.set(...sunPosition);
-  scene.add(sun);
+  parent.add(sun);
 
-  // Load local Sun texture
   const textureLoader = new THREE.TextureLoader();
-
   textureLoader.load(
-    "./models/sun.jpg",
+    "./omniverse/sun.jpg",
     texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
       sunMaterial.map = texture;
       sunMaterial.needsUpdate = true;
     },
     undefined,
-    error => {
-      console.warn("Could not load Sun texture:", error);
-    }
+    error => console.warn("Could not load Sun texture:", error)
   );
 
-  // Inner glow
   const sunAura = new THREE.Mesh(
-    new THREE.SphereGeometry(d[6], d[7], d[8]),
+    new THREE.SphereGeometry(dimensions.sun.radius * 1.06, 48, 32),
     new THREE.MeshBasicMaterial({
-      color: 0xff8a2a,
-      transparent: true,
-      opacity: d[9],
-      side: THREE.BackSide,
-      depthWrite: false
+      color: 0xff8a2a, transparent: true, opacity: 0.11,
+      side: THREE.BackSide, depthWrite: false
     })
   );
-
   sunAura.position.set(...sunPosition);
-  scene.add(sunAura);
+  parent.add(sunAura);
 
-  // Outer glow
   const sunOuterGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(d[10], d[11], d[12]),
+    new THREE.SphereGeometry(dimensions.sun.radius * 1.22, 48, 32),
     new THREE.MeshBasicMaterial({
-      color: 0xff671f,
-      transparent: true,
-      opacity: d[13],
-      side: THREE.BackSide,
-      depthWrite: false
+      color: 0xff671f, transparent: true, opacity: 0.05,
+      side: THREE.BackSide, depthWrite: false
     })
   );
-
   sunOuterGlow.position.set(...sunPosition);
-  scene.add(sunOuterGlow);
+  parent.add(sunOuterGlow);
 
-  return {
-    sun,
-    sunAura,
-    sunOuterGlow
-  };
+  // The Sun owns its light source; consumers only need to add the Sun model.
+  const sunlight = new THREE.PointLight(0xffb65c, 1800, 160, 1.5);
+  sunlight.position.set(...sunPosition);
+  parent.add(sunlight);
+
+  return { sun, sunAura, sunOuterGlow, sunlight };
 }
