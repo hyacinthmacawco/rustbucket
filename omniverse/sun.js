@@ -1,5 +1,4 @@
-import * as THREE from
-  "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import * as THREE from 'three';
 
 export function createSun(scene) {
   const sunPosition = [-50, 0, 0];
