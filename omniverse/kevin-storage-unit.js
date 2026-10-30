@@ -1,12 +1,14 @@
+import { dimensions } from '../storage/state.js';
+const d = dimensions.kevin-storage-unit.values;
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
 export function createKevinStorageUnit(scene) {
-  function standardMaterial(color, roughness = 0.9, extra = {}) {
+  function standardMaterial(color, roughness = d[0], extra = {}) {
     return new THREE.MeshStandardMaterial({
       color,
       roughness,
-      metalness: 0.05,
+      metalness: d[1],
       ...extra
     });
   }
@@ -15,15 +17,15 @@ export function createKevinStorageUnit(scene) {
   const wall = standardMaterial(0x464b46);
   const darkWall = standardMaterial(0x202731);
   const roof = standardMaterial(0x151923);
-  const metal = standardMaterial(0x323b46, 0.65);
-  const trim = standardMaterial(0x171b21, 0.65);
+  const metal = standardMaterial(0x323b46, d[2]);
+  const trim = standardMaterial(0x171b21, d[3]);
 
   const windowMaterial = new THREE.MeshStandardMaterial({
     color: 0x7c9a99,
     emissive: 0x233e42,
-    emissiveIntensity: 0.3,
-    roughness: 0.45,
-    metalness: 0.1
+    emissiveIntensity: d[4],
+    roughness: d[5],
+    metalness: d[6]
   });
 
   const unit = new THREE.Group();
@@ -61,9 +63,9 @@ export function createKevinStorageUnit(scene) {
       material
     );
 
-    beam.position.copy(a).add(b).multiplyScalar(0.5);
+    beam.position.copy(a).add(b).multiplyScalar(d[7]);
     beam.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(d[8], d[9], d[10]),
       direction.normalize()
     );
 
@@ -75,77 +77,77 @@ export function createKevinStorageUnit(scene) {
   }
 
   // Concrete floor and top surface.
-  addBox(34, 0.35, 32, concrete, 0, -0.2, -1);
+  addBox(d[11], d[12], d[13], concrete, d[14], -d[15], -d[16]);
 
   addBox(
-    33.8, 0.04, 31.8,
+    d[17], d[18], d[19],
     standardMaterial(0x5c5f64),
-    0, -0.015, -1
+    d[20], -d[21], -d[22]
   );
 
   // Back wall and side walls.
-  addBox(34, 12, 0.6, wall, 0, 5.8, -16);
-  addBox(0.6, 12, 31, darkWall, -17, 5.8, -0.5);
-  addBox(0.6, 12, 31, darkWall, 17, 5.8, -0.5);
+  addBox(d[23], d[24], d[25], wall, d[26], d[27], -d[28]);
+  addBox(d[29], d[30], d[31], darkWall, -d[32], d[33], -d[34]);
+  addBox(d[35], d[36], d[37], darkWall, d[38], d[39], -d[40]);
 
   // Roof.
-  addBox(34, 0.45, 32, roof, 0, 11.9, -1);
+  addBox(d[41], d[42], d[43], roof, d[44], d[45], -d[46]);
 
-  for (let z = -14; z <= 10; z += 6) {
+  for (let z = -d[47]; z <= d[48]; z += d[49]) {
     addBeam(
-      [-16.5, 11.3, z],
-      [16.5, 11.3, z],
-      0.22,
+      [-d[50], d[51], z],
+      [d[52], d[53], z],
+      d[54],
       metal
     );
   }
 
   // Front structural pillars.
-  addBox(0.65, 11.5, 0.75, trim, -16.3, 5.65, 14.2);
-  addBox(0.65, 11.5, 0.75, trim, 16.3, 5.65, 14.2);
+  addBox(d[55], d[56], d[57], trim, -d[58], d[59], d[60]);
+  addBox(d[61], d[62], d[63], trim, d[64], d[65], d[66]);
 
   // Upper front wall above the entrance.
-  addBox(25.5, 3.1, 0.55, darkWall, 0, 10.05, 14.2);
+  addBox(d[67], d[68], d[69], darkWall, d[70], d[71], d[72]);
 
   // Front facade side sections.
-  addBox(4.2, 7.8, 0.55, wall, -14.2, 4.1, 14.2);
-  addBox(4.2, 7.8, 0.55, wall, 14.2, 4.1, 14.2);
+  addBox(d[73], d[74], d[75], wall, -d[76], d[77], d[78]);
+  addBox(d[79], d[80], d[81], wall, d[82], d[83], d[84]);
 
   // High windows on the back wall, with dividers.
-  for (let x = -12; x <= 12; x += 6) {
-    addBox(3.4, 1.55, 0.08, windowMaterial, x, 8.9, -15.65);
+  for (let x = -d[85]; x <= d[86]; x += d[87]) {
+    addBox(d[88], d[89], d[90], windowMaterial, x, d[91], -d[92]);
 
-    for (let dx = -1; dx <= 1; dx++) {
+    for (let dx = -d[93]; dx <= d[94]; dx++) {
       addBox(
-        0.055, 1.65, 0.1,
+        d[95], d[96], d[97],
         trim,
-        x + dx * 1.05, 8.9, -15.55
+        x + dx * d[98], d[99], -d[100]
       );
     }
 
-    addBox(3.5, 0.06, 0.1, trim, x, 8.9, -15.55);
+    addBox(d[101], d[102], d[103], trim, x, d[104], -d[105]);
   }
 
   // Windows along the left side wall.
-  for (let z = -10; z <= 8; z += 4) {
-    addBox(0.08, 1.5, 3.2, windowMaterial, -16.65, 8.6, z);
+  for (let z = -d[106]; z <= d[107]; z += d[108]) {
+    addBox(d[109], d[110], d[111], windowMaterial, -d[112], d[113], z);
   }
 
   // Industrial vertical wall supports.
-  for (let z = -14; z <= 10; z += 4) {
-    addBox(0.18, 10.8, 0.2, trim, -16.6, 5.5, z);
-    addBox(0.18, 10.8, 0.2, trim, 16.6, 5.5, z);
+  for (let z = -d[114]; z <= d[115]; z += d[116]) {
+    addBox(d[117], d[118], d[119], trim, -d[120], d[121], z);
+    addBox(d[122], d[123], d[124], trim, d[125], d[126], z);
   }
 
   // Concrete floor seams.
-  const floorLines = standardMaterial(0x292e35, 1);
+  const floorLines = standardMaterial(0x292e35, d[127]);
 
-  for (let z = -13; z <= 13; z += 4) {
-    addBox(33, 0.012, 0.025, floorLines, 0, 0.012, z);
+  for (let z = -d[128]; z <= d[129]; z += d[130]) {
+    addBox(d[131], d[132], d[133], floorLines, d[134], d[135], z);
   }
 
-  for (let x = -14; x <= 14; x += 5) {
-    addBox(0.025, 0.012, 29, floorLines, x, 0.013, -1);
+  for (let x = -d[136]; x <= d[137]; x += d[138]) {
+    addBox(d[139], d[140], d[141], floorLines, x, d[142], -d[143]);
   }
 
   return { unit };
