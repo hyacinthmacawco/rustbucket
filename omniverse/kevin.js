@@ -94,30 +94,15 @@ export function createKevin (THREE) {
     0.15
   );
 
-  // Hair cap and rear hair mass.
-  sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
-
-  // Side and back hair.
-  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
-  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
-  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
-
-  // Angular hair spikes, all made from simple cones.
-  function spike(parent, position, rotation, size) {
-    const part = mesh(
-      new THREE.ConeGeometry(size, size * 1.8, 5),
-      hair,
-      parent,
-      position,
-      [1, 1, 0.7]
-    );
-    part.rotation.set(...rotation);
-    return part;
+  // Kevin's dark hair with long side locks and a rear length.
+  sphere(head, hair, [0, 0.27, -0.025], [0.40, 0.25, 0.35]);
+  sphere(head, hair, [0, -0.12, -0.18], [0.34, 0.36, 0.18]);
+  sphere(head, hairLight, [-0.10, 0.39, 0.17], [0.15, 0.09, 0.08]);
+  for (const side of [-1, 1]) {
+    const lock = mesh(new THREE.ConeGeometry(0.12, 0.68, 8), hair, head, [side * 0.28, -0.18, 0.04]);
+    lock.rotation.z = side * -0.08;
+    sphere(head, hair, [side * 0.29, -0.25, -0.10], [0.11, 0.34, 0.13]);
   }
-
-  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
-  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
-  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
 
   // --------------------------------------------------
   // TORSO: black shirt with green center stripe.
@@ -293,6 +278,21 @@ export function createKevin (THREE) {
       [0.22, 0.025, 0.24]
     );
   }
+
+  // Kevin's signature suspenders, striped scarf, necklace and jean details.
+  for (const side of [-1, 1]) {
+    box(torso, green, [side * 0.20, -0.10, 0.215], [0.075, 0.72, 0.045]);
+    box(torso, greenDark, [side * 0.20, -0.39, 0.245], [0.15, 0.16, 0.025]);
+    sphere(torso, white, [side * 0.20, -0.39, 0.263], [0.018, 0.018, 0.012]);
+  }
+  const scarf = mesh(new THREE.TorusGeometry(0.17, 0.045, 8, 24), greenDark, torso, [0, 0.49, 0]);
+  scarf.rotation.x = Math.PI / 2;
+  box(torso, white, [0, 0.35, 0.23], [0.30, 0.035, 0.025]);
+  const necklace = mesh(new THREE.TorusGeometry(0.14, 0.012, 8, 24, Math.PI), white, torso, [0, 0.26, 0.18]);
+  necklace.rotation.x = Math.PI;
+  box(torso, white, [0, 0.08, 0.23], [0.13, 0.12, 0.035]);
+  box(body, pantsLight, [0, 1.10, 0.18], [0.48, 0.10, 0.025]);
+  box(body, pantsLight, [0.15, 0.68, 0.18], [0.16, 0.09, 0.025]);
 
   // --------------------------------------------------
   // CHARACTER CONTROL / PROCEDURAL ANIMATION.
