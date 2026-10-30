@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/state.js';
-import { installCharacterAnimation } from './character-animation.js';
 
 export function createKevin() {
   const kevin = new THREE.Group();
@@ -367,7 +366,34 @@ export function createKevin() {
   // Final scale
   kevin.position.set(...dimensions.kevin.position);
   kevin.scale.set(...dimensions.kevin.scale);
-  installCharacterAnimation(kevin);
+  // Ben-style procedural walk cycle, implemented directly in this model.
+  let animation = "idle";
+  let elapsed = 0;
+  const baseY = kevin.position.y;
+  const animated = kevin.children.filter(part => {
+    if (!part.isMesh || part.userData.static) return false;
+    const x = Math.abs(part.position.x);
+    const y = part.position.y;
+    return y < 1.5 || (x > 0.25 && y >= 1.08 && y < 2.3);
+  }).map(part => ({ part, rotation: part.rotation.clone() }));
+
+  kevin.setAnimation = value => { animation = value; };
+  kevin.update = dt => {
+    dt = Math.min(dt, 0.05);
+    elapsed += dt;
+    const walking = animation === "walk" || animation === "run";
+    const speed = animation === "run" ? 12 : 7;
+    const swing = walking ? Math.sin(elapsed * speed) : 0;
+    for (const item of animated) {
+      const side = item.part.position.x < 0 ? -1 : 1;
+      const isLeg = item.part.position.y < 1.5;
+      const target = walking ? swing * (isLeg ? 0.55 : 0.45) * side : 0;
+      item.part.rotation.x = THREE.MathUtils.damp(
+        item.part.rotation.x, item.rotation.x + target, 10, dt
+      );
+    }
+    kevin.position.y = baseY + (walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.018 : 0);
+  };
 
   return kevin;
 }
