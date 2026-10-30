@@ -21,6 +21,7 @@
     import { dimensions, state } from "./storage/state.js";
     import { createTitleScreen } from "./hud/title.js";
     import { createJoystick } from "./hud/joystick.js";
+    import { createTeamstick } from "./hud/teamstick.js";
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -56,6 +57,7 @@
     let cameraPreset = dimensions.camera.title;
     let ben = null;
     let keyboardController = null;
+    let entities = null;
 
     function updateCamera() {
       const target = activeStage === "tutorial" && ben
@@ -105,6 +107,8 @@
 
     const joystick = createJoystick();
     joystick.setVisible(false);
+    const teamstick = createTeamstick();
+    teamstick.setVisible(false);
 
     // One audio handle is reused for the active stage's soundtrack/dialogue.
     let music = null;
@@ -262,7 +266,7 @@
           titleObjects = { ...sun, ...earth, ...moon, ...starfield };
         } else if (name === "bellwood") {
           // Only Bellwood's nearby environment and tutorial models are loaded.
-          const [bellwoodModule, unitModule, shipModule, benModule, controllerModule] = await Promise.all([
+          const [bellwoodModule, unitModule, shipModule, benModule, gwenModule, kevinModule, rookModule, controllerModule] = await Promise.all([
             import("./omniverse/bellwood.js"),
             import("./omniverse/kevin-storage-unit.js"),
             import("./omniverse/rustbucket.js"),
@@ -341,7 +345,7 @@
       updateStage();
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
-      joystick.setVisible(state.stage !== "title" && state.stage !== "prelude");
+      joystick.setVisible(state.stage !== "title" && state.stage !== "prelude");\n      teamstick.setVisible(state.stage !== "title" && state.stage !== "prelude");
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
