@@ -31,9 +31,10 @@
 
     // All camera placement and drag tuning comes from state.js.
     const cameraConfig = dimensions.camera;
+    const initialAspect = window.innerWidth / window.innerHeight;
     const camera = new THREE.PerspectiveCamera(
-      cameraConfig.fov,
-      window.innerWidth / window.innerHeight,
+      initialAspect < 0.8 ? 75 : cameraConfig.fov,
+      initialAspect,
       cameraConfig.near,
       cameraConfig.far
     );
@@ -177,7 +178,7 @@
 
     function onResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
-      camera.fov = window.innerWidth / window.innerHeight < 0.8 ? 55 : 42;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8 ? 75 : cameraConfig.fov;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
