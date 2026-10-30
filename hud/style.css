@@ -494,3 +494,49 @@ button {
 @media (hover: hover) and (pointer: fine) {
   #movement-joystick, #teamstick { display: none !important; }
 }
+
+/* Revised tutorial prompt and four-segment team selector. */
+#tutorial-step-label {
+  z-index: 35;
+  bottom: max(176px, calc(env(safe-area-inset-bottom) + 176px));
+  width: min(680px, calc(100vw - 32px));
+  padding: 4px 8px;
+  color: rgb(255 255 255 / 94%);
+  background: transparent;
+  border: 0;
+  font-size: clamp(9px, 1.45vw, 12px);
+  line-height: 1.35;
+  text-shadow: 0 1px 4px #000;
+}
+.tutorial-step-number { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  #tutorial-step-label { bottom: max(28px, env(safe-area-inset-bottom)); }
+}
+#teamstick { background: rgb(12 20 28 / 24%); }
+.teamstick-option {
+  width: 72px;
+  height: 72px;
+  border-radius: 0;
+  font-size: 17px;
+}
+.teamstick-ben {
+  left: 0; top: 0;
+  clip-path: polygon(0 0,100% 0,100% 34%,76% 34%,76% 76%,34% 76%,34% 100%,0 100%);
+}
+.teamstick-gwen {
+  right: 0; top: 0;
+  clip-path: polygon(0 0,100% 0,100% 100%,66% 100%,66% 76%,24% 76%,24% 34%,0 34%);
+}
+.teamstick-kevin {
+  right: 0; bottom: 0;
+  clip-path: polygon(100% 100%,0 100%,0 66%,24% 66%,24% 24%,66% 24%,66% 0,100% 0);
+}
+.teamstick-rook {
+  left: 0; bottom: 0;
+  clip-path: polygon(0 100%,0 0,34% 0,34% 24%,76% 24%,76% 66%,100% 66%,100% 100%);
+}
+.teamstick-vehicle {
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 50%;
+}
+html, body { min-height: 100%; min-height: 100dvh; }
