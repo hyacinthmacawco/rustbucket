@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { dimensions } from '../storage/config.js';
+import { dimensions } from '../storage/state.js';
 import { installCharacterAnimation } from './character-animation.js';
 
 export function createKevin() {
