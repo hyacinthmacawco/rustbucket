@@ -55,7 +55,7 @@
     let cameraDistance = 1;
     let cameraPreset = dimensions.camera.title;
     let ben = null;
-    let tutorialController = null;
+    let keyboardController = null;
 
     function updateCamera() {
       const target = activeStage === "tutorial" && ben
@@ -206,9 +206,9 @@
     }
 
     function disposeRegion() {
-      if (tutorialController) {
-        tutorialController.destroy();
-        tutorialController = null;
+      if (keyboardController) {
+        keyboardController.destroy();
+        keyboardController = null;
       }
       ben = null;
       if (!regionGroup) return;
@@ -267,7 +267,7 @@
             import("./omniverse/kevin-storage-unit.js"),
             import("./omniverse/rustbucket.js"),
             import("./omniverse/ben.js"),
-            import("./hud/tutorial.js")
+            import("./hud/keyboard.js")
           ]);
           bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
@@ -278,7 +278,7 @@
           group.add(ben);
           regionGroup = group;
           scene.add(regionGroup);
-          tutorialController = controllerModule.createTutorialController({
+          keyboardController = controllerModule.createKeyboard({
             ben,
             camera,
             joystick,
@@ -352,8 +352,8 @@
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
 
-      if (state.stage === "tutorial" && tutorialController) {
-        tutorialController.update(delta);
+      if (state.stage === "tutorial" && keyboardController) {
+        keyboardController.update(delta);
       }
 
       if (state.stage === "title" && titleObjects) {
