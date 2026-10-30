@@ -1,50 +1,411 @@
-// Overall model placement, scale, and camera configurations.
-// Individual mesh geometry remains inside each model module.
-export const dimensions = {
-  ben: { position: [-3, 0, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, 0, -7], scale: [1, 1.15, 1] },
-  kevin: { position: [0, 0, -9], scale: [1, 1.15, 1] },
-  rook: { position: [7, 0, -7], scale: [1, 1.05, 1] },
-  rustbucket: { position: [0, 2, 0], scale: [1, 1, 1] },
-  kevinStorageUnit: { position: [0, 0, 0], scale: [1, 1, 1] },
-  bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
-  earth: { position: [4.5, 0, 0], radius: 2.05 },
-  moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
-  sun: { position: [-50, 0, 0], radius: 30 },
+import * as THREE from "three";
+import { dimensions, state } from "./config.js";
+    import { dimensions, state } from "./config.js";
+    import { createTitleScreen } from "../hud/title.js";
+    import { createJoystick } from "../hud/joystick.js";
+    import { createTeamstick } from "../hud/teamstick.js";
+    import { createTutorialLabel } from "../hud/tutorial.js";
 
-  camera: {
-    title: {
-      position: [-22.75, 6, 90],
-      target: [-22.75, 0, 0],
-      fov: 55,
-      near: 0.1,
-      far: 1000,
-      distance: 90,
-      minDistance: 45,
-      maxDistance: 140,
-      yaw: 0,
-      pitch: 0.13
-    },
-    tutorial: {
-      position: [0, 5.3, 18.5],
-      target: [0, 1.8, 0],
-      fov: 43,
-      near: 0.1,
-      far: 250,
-      distance: 18.5,
-      minDistance: 8,
-      maxDistance: 45,
-      yaw: 0,
-      pitch: 0.18
-    },
-    dragSensitivity: 0.006,
-    pitchSensitivity: 0.004,
-    minPitch: -0.15,
-    maxPitch: 1.0
-  }
-};
+    const canvas = document.getElementById("omniverse");
+    const scene = new THREE.Scene();
+    scene.name = "omniverse";
+    scene.background = new THREE.Color(0x02040a);
 
-// Runtime game state.
-export const state = {
-  stage: "title"
-};
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    const camera = new THREE.PerspectiveCamera(
+      dimensions.camera.title.fov,
+      window.innerWidth / window.innerHeight,
+      dimensions.camera.title.near,
+      dimensions.camera.title.far
+    );
+    scene.add(camera);
+
+    let activeStage = null;
+    let cameraTarget = new THREE.Vector3();
+    let cameraYaw = 0;
+    let cameraPitch = 0;
+    let cameraDistance = 1;
+    let cameraPreset = dimensions.camera.title;
+    let ben = null;
+    let keyboardController = null;
+    let entities = null;
+
+    function updateCamera() {
+      const selectedEntity = activeStage === "tutorial" && entities
+        ? entities[teamstick.selected]
+        : null;
+      const followedEntity = selectedEntity || ben;
+      const target = activeStage === "tutorial" && followedEntity
+        ? new THREE.Vector3(followedEntity.position.x, followedEntity.position.y + 1.8, followedEntity.position.z)
+        : cameraTarget;
+
+      const horizontal = Math.cos(cameraPitch) * cameraDistance;
+      camera.position.set(
+        target.x + Math.sin(cameraYaw) * horizontal,
+        target.y + Math.sin(cameraPitch) * cameraDistance,
+        target.z + Math.cos(cameraYaw) * horizontal
+      );
+      camera.lookAt(target);
+    }
+
+    function setCameraPreset(preset) {
+      cameraPreset = preset;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8
+        ? Math.max(preset.fov, 65)
+        : preset.fov;
+      camera.near = preset.near;
+      camera.far = preset.far;
+      camera.updateProjectionMatrix();
+
+      cameraTarget.set(...preset.target);
+      const position = new THREE.Vector3(...preset.position);
+      const offset = position.sub(cameraTarget);
+      cameraDistance = offset.length();
+      cameraYaw = Math.atan2(offset.x, offset.z);
+      cameraPitch = Math.atan2(offset.y, Math.hypot(offset.x, offset.z));
+      updateCamera();
+    }
+
+    setCameraPreset(dimensions.camera.title);
+
+    // UI overlays are created once; the animation loop controls visibility.
+    const titleScreen = createTitleScreen({
+      onNewGame() {
+        state.stage = "prelude";
+      }
+    });
+
+    const preludeScreen = document.createElement("div");
+    preludeScreen.id = "prelude-screen";
+    preludeScreen.innerHTML = '<div id="prelude-title">A NEW DAWN</div>';
+    document.body.appendChild(preludeScreen);
+
+    const joystick = createJoystick();
+    joystick.setVisible(false);
+    const teamstick = createTeamstick();
+    teamstick.setVisible(false);
+    const isMobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    const tutorialLabel = createTutorialLabel({ isMobile });
+
+    // One audio handle is reused for the active stage's soundtrack/dialogue.
+    let music = null;
+    let audioUnlocked = false;
+    let preludeEndedHandler = null;
+
+    function stopMusic() {
+      if (!music) return;
+      if (preludeEndedHandler) {
+        music.removeEventListener("ended", preludeEndedHandler);
+        preludeEndedHandler = null;
+      }
+      music.pause();
+      music.currentTime = 0;
+      music.src = "";
+      music = null;
+    }
+
+    function playStageMusic(src, loop = false, onEnded = null) {
+      stopMusic();
+      music = new Audio(src);
+      music.loop = loop;
+      music.volume = 0.55;
+      music.preload = "auto";
+      if (onEnded) {
+        preludeEndedHandler = onEnded;
+        music.addEventListener("ended", onEnded, { once: true });
+      }
+      if (audioUnlocked) {
+        music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
+      }
+    }
+
+    function unlockAudio() {
+      if (!audioUnlocked) audioUnlocked = true;
+      if (state.stage === "title") {
+        if (!music) playStageMusic("../hud/senji-v2-ov.mp3", true);
+        else if (music.paused) music.play().catch(() => {});
+      } else if (state.stage === "prelude" && music?.paused) {
+        music.play().catch(() => {});
+      }
+    }
+    document.addEventListener("pointerdown", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
+
+    // Drag-to-look is shared by every 3D stage. No automatic camera orbit.
+    let draggingCamera = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+
+    function onPointerDown(event) {
+      draggingCamera = true;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    }
+    function onPointerMove(event) {
+      if (!draggingCamera) return;
+      const dx = event.clientX - lastPointerX;
+      const dy = event.clientY - lastPointerY;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      cameraYaw -= dx * dimensions.camera.dragSensitivity;
+      cameraPitch = THREE.MathUtils.clamp(
+        cameraPitch + dy * dimensions.camera.pitchSensitivity,
+        dimensions.camera.minPitch,
+        dimensions.camera.maxPitch
+      );
+      updateCamera();
+    }
+    function onPointerUp() { draggingCamera = false; }
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
+
+    // Region objects are imported and instantiated only after the camera is
+    // found to be near that region. Each region is held in one removable group.
+    let loadedRegion = null;
+    let loadingRegion = null;
+    let regionGroup = null;
+    let titleObjects = null;
+
+    function regionNearCamera() {
+      const cameraPosition = camera.position;
+      if (state.stage === "title") {
+        const earth = new THREE.Vector3(...dimensions.earth.position);
+        const sun = new THREE.Vector3(...dimensions.sun.position);
+        const nearEarth = cameraPosition.distanceTo(earth) < 180;
+        const nearSun = cameraPosition.distanceTo(sun) < 180;
+        return nearEarth || nearSun ? "space" : null;
+      }
+      if (state.stage === "tutorial") {
+        const bellwood = new THREE.Vector3(...dimensions.bellwood.position);
+        return cameraPosition.distanceTo(bellwood) < 350 ? "bellwood" : null;
+      }
+      return null;
+    }
+
+    function disposeRegion() {
+      if (keyboardController) {
+        keyboardController.destroy();
+        keyboardController = null;
+      }
+      ben = null;
+      if (!regionGroup) return;
+      scene.remove(regionGroup);
+      regionGroup.traverse(object => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) {
+            for (const value of Object.values(material)) {
+              if (value?.isTexture) value.dispose();
+            }
+            material.dispose();
+          }
+        }
+      });
+      regionGroup = null;
+      titleObjects = null;
+    }
+
+    async function loadRegion(name) {
+      if (loadingRegion === name || loadedRegion === name) return;
+      loadingRegion = name;
+      disposeRegion();
+
+      if (!name) {
+        loadedRegion = null;
+        loadingRegion = null;
+        return;
+      }
+
+      const group = new THREE.Group();
+      group.name = name === "space" ? "SpaceRegion" : "BellwoodRegion";
+
+      try {
+        if (name === "space") {
+          // Lazy imports: celestial models are not loaded on the initial module pass.
+          const [sunModule, earthModule, moonModule, starModule] = await Promise.all([
+            import("../omniverse/sun.js"),
+            import("../omniverse/earth.js"),
+            import("../omniverse/moon.js"),
+            import("../omniverse/starfield.js")
+          ]);
+          scene.background = new THREE.Color(0x02040a);
+          scene.fog = null;
+          group.add(new THREE.AmbientLight(0x52617f, 0.45));
+          const sun = sunModule.createSun(group);
+          const earth = earthModule.createEarth(group);
+          const moon = moonModule.createMoon(group);
+          const starfield = starModule.createStarfield(group);
+          titleObjects = { ...sun, ...earth, ...moon, ...starfield };
+        } else if (name === "bellwood") {
+          // Only Bellwood's nearby environment and tutorial models are loaded.
+          const [bellwoodModule, unitModule, shipModule, benModule, gwenModule, kevinModule, rookModule, controllerModule] = await Promise.all([
+            import("../omniverse/bellwood.js"),
+            import("../omniverse/kevin-storage-unit.js"),
+            import("../omniverse/rustbucket.js"),
+            import("../omniverse/ben.js"),
+            import("../omniverse/gwen.js"),
+            import("../omniverse/kevin.js"),
+            import("../omniverse/rook.js"),
+            import("../hud/keyboard.js")
+          ]);
+          bellwoodModule.createBellwood(scene, group);
+          const { unit } = unitModule.createKevinStorageUnit(group);
+          const { ship } = shipModule.createRustbucket(group);
+          ben = benModule.default(THREE);
+          const gwen = gwenModule.createGwen();
+          const kevin = kevinModule.createKevin();
+          const rook = rookModule.createRook();
+          group.add(ben, gwen, kevin, rook);
+          entities = { ben, gwen, kevin, rook, rustbucket: ship };
+          regionGroup = group;
+          scene.add(regionGroup);
+          keyboardController = controllerModule.createKeyboard({
+            entities,
+            camera,
+            joystick,
+            teamstick,
+            updateCamera,
+            isMobile,
+            onMove() {
+              tutorialLabel.setStep(2);
+            }
+          });
+          loadedRegion = name;
+          loadingRegion = null;
+          return;
+        }
+
+        regionGroup = group;
+        scene.add(regionGroup);
+        loadedRegion = name;
+      } catch (error) {
+        console.error("Could not load nearby region:", name, error);
+        loadedRegion = null;
+      } finally {
+        loadingRegion = null;
+      }
+    }
+
+    function updateStage() {
+      if (activeStage === state.stage) return;
+      activeStage = state.stage;
+
+      if (activeStage === "title") {
+        preludeScreen.style.display = "none";
+        titleScreen.setVisible(true);
+        joystick.setVisible(false);
+        teamstick.setVisible(false);
+        setCameraPreset(dimensions.camera.title);
+        playStageMusic("../hud/senji-v2-ov.mp3", true);
+      } else if (activeStage === "prelude") {
+        titleScreen.setVisible(false);
+        joystick.setVisible(false);
+        teamstick.setVisible(false);
+        preludeScreen.style.display = "flex";
+        stopMusic();
+        playStageMusic("../hud/ov-final-dialogues.mp3", false, () => {
+          if (state.stage === "prelude") state.stage = "tutorial";
+        });
+      } else if (activeStage === "tutorial") {
+        titleScreen.setVisible(false);
+        preludeScreen.style.display = "none";
+        joystick.setVisible(isMobile);
+        teamstick.setVisible(isMobile);
+        tutorialLabel.setStep(1);
+        setCameraPreset(dimensions.camera.tutorial);
+        playStageMusic("../hud/neodevol-ov.mp3", true);
+      } else {
+        titleScreen.setVisible(false);
+        preludeScreen.style.display = "none";
+        joystick.setVisible(true);
+        teamstick.setVisible(true);
+        stopMusic();
+      }
+    }
+
+    const clock = new THREE.Clock();
+    let animationFrame = 0;
+
+    function animate() {
+      animationFrame = requestAnimationFrame(animate);
+
+      updateStage();
+      titleScreen.setVisible(state.stage === "title");
+      preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
+      joystick.setVisible(isMobile && state.stage === "tutorial");
+      teamstick.setVisible(isMobile && state.stage === "tutorial");
+      tutorialLabel.setVisible(state.stage === "tutorial");
+
+      // Decide what to instantiate from the camera's current world position.
+      const wantedRegion = regionNearCamera();
+      if (!loadingRegion && wantedRegion !== loadedRegion) {
+        loadRegion(wantedRegion);
+      }
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      if (state.stage === "tutorial" && keyboardController) {
+        keyboardController.update(delta);
+      }
+
+      if (state.stage === "title" && titleObjects) {
+        titleObjects.earth.rotation.y += delta * 0.07;
+        titleObjects.moon.rotation.y += delta * 0.04;
+        titleObjects.sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
+        titleObjects.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
+        titleObjects.stars.rotation.y += delta * 0.0008;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8
+        ? Math.max(cameraPreset.fov, 65)
+        : cameraPreset.fov;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    }
+    window.addEventListener("resize", onResize);
+
+    animate();
+
+    window.addEventListener("beforeunload", () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", onResize);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+      document.removeEventListener("pointerdown", unlockAudio);
+      document.removeEventListener("pointerdown", requestInitialFullscreen);
+      document.removeEventListener("keydown", unlockAudio);
+      disposeRegion();
+      titleScreen.destroy();
+      preludeScreen.remove();
+      joystick.destroy();
+      teamstick.destroy();
+      tutorialLabel.destroy();
+      stopMusic();
+      renderer.dispose();
+    }, { once: true });
