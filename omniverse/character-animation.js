@@ -7,6 +7,7 @@ export function installCharacterAnimation(root) {
   }));
   let mode = "idle";
   let elapsed = 0;
+  const baseY = root.position.y;
   root.setAnimation = name => { mode = name; };
   root.update = dt => {
     elapsed += Math.min(dt, 0.05);
@@ -22,6 +23,6 @@ export function installCharacterAnimation(root) {
       if (y < 1.55) part.rotation.x += swing * 0.22 * side;
       else if (y > 1.7 && y < 2.35) part.rotation.x -= swing * 0.12 * side;
     }
-    root.position.y += walking ? Math.abs(Math.sin(elapsed * 14)) * 0.003 : 0;
+    root.position.y = baseY + (walking ? Math.abs(Math.sin(elapsed * 14)) * 0.025 : 0);
   };
 }
