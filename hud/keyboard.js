@@ -1,31 +1,41 @@
 import * as THREE from "three";
 
-// Shared camera-relative movement controller for the selected team member or Rustbucket.
+// Camera-relative movement and team switching for desktop and mobile controls.
 export function createKeyboard({ entities, camera, joystick, teamstick, updateCamera, isMobile = false, onMove = () => {} }) {
   const keys = new Set();
-
   const switchTargets = ["ben", "rook", "gwen", "kevin", "rustbucket"];
   const switchKeys = ["w", "a", "s", "d", "f"];
   let hasMoved = false;
+
   function onKeyDown(event) {
     const key = event.key.toLowerCase();
+
+    // Shift + WASDF selects Ben, Rook, Gwen, Kevin, and the Rustbucket.
+    // Shift + arrow keys selects the first four; Shift + period selects the Rustbucket.
     if (event.shiftKey) {
       const index = switchKeys.indexOf(key);
-      const arrowIndex = ["arrowup", "arrowleft", "arrowdown", "arrowright", "."].indexOf(key);
-      const targetIndex = index >= 0 ? index : arrowIndex;
+      const arrowIndex = ["arrowup", "arrowleft", "arrowdown", "arrowright"].indexOf(key);
+      const targetIndex = index >= 0 ? index : arrowIndex >= 0 ? arrowIndex : event.code === "Period" ? 4 : -1;
       if (targetIndex >= 0) {
         event.preventDefault();
         teamstick.select(switchTargets[targetIndex]);
         return;
       }
     }
-    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(key)) {
+
+    if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
       event.preventDefault();
       keys.add(key);
     }
   }
-  function onKeyUp(event) { keys.delete(event.key.toLowerCase()); }
-  function onBlur() { keys.clear(); }
+
+  function onKeyUp(event) {
+    keys.delete(event.key.toLowerCase());
+  }
+
+  function onBlur() {
+    keys.clear();
+  }
 
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
@@ -67,7 +77,10 @@ export function createKeyboard({ entities, camera, joystick, teamstick, updateCa
       selected.position.z += moveZ * speed * dt;
       selected.rotation.y = Math.atan2(moveX, moveZ);
       if (typeof selected.setAnimation === "function") selected.setAnimation("walk");
-      if (!hasMoved) { hasMoved = true; onMove(); }
+      if (!hasMoved) {
+        hasMoved = true;
+        onMove();
+      }
     } else if (typeof selected.setAnimation === "function") {
       selected.setAnimation("idle");
     }
