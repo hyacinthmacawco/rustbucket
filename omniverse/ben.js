@@ -353,8 +353,9 @@ export default function createBen(THREE) {
   let verticalVelocity = 0;
   let grounded = true;
 
-  const baseY = 0;
-
+  root.position.set(...dimensions.ben.position);
+  root.scale.set(...dimensions.ben.scale);
+  const baseY = dimensions.ben.position[1];
   root.position.y = baseY;
 
   root.userData.setAnimation = function (name) {
