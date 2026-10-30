@@ -94,30 +94,14 @@ export function createRook (THREE) {
     0.15
   );
 
-  // Hair cap and rear hair mass.
-  sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
-
-  // Side and back hair.
-  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
-  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
-  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
-
-  // Angular hair spikes, all made from simple cones.
-  function spike(parent, position, rotation, size) {
-    const part = mesh(
-      new THREE.ConeGeometry(size, size * 1.8, 5),
-      hair,
-      parent,
-      position,
-      [1, 1, 0.7]
-    );
-    part.rotation.set(...rotation);
-    return part;
+  // Rook's distinctive alien head structure and side fins.
+  sphere(head, skin, [0, -0.10, 0.025], [0.34, 0.30, 0.28]);
+  sphere(head, hair, [0, 0.31, -0.015], [0.24, 0.12, 0.22]);
+  for (const side of [-1, 1]) {
+    const fin = mesh(new THREE.ConeGeometry(0.13, 0.55, 8), skinShadow, head, [side * 0.38, -0.03, -0.02]);
+    fin.rotation.z = -side * Math.PI / 2.7;
+    sphere(head, hair, [side * 0.30, 0.02, 0.08], [0.07, 0.25, 0.08]);
   }
-
-  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
-  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
-  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
 
   // --------------------------------------------------
   // TORSO: black shirt with green center stripe.
@@ -293,6 +277,29 @@ export function createRook (THREE) {
       [0.22, 0.025, 0.24]
     );
   }
+
+  // Rook's blue and metallic armor overlays the shared moving limbs.
+  for (const side of [-1, 1]) {
+    sphere(torso, green, [side * 0.34, 0.30, 0.015], [0.20, 0.18, 0.22]);
+    sphere(torso, greenDark, [side * 0.39, 0.32, 0.10], [0.12, 0.10, 0.07]);
+    sphere(torso, green, [side * 0.48, -0.48, 0.04], [0.11, 0.27, 0.12]);
+    sphere(torso, white, [side * 0.48, -0.48, 0.13], [0.07, 0.20, 0.045]);
+    sphere(body, green, [side * 0.22, 0.62, 0.04], [0.08, 0.22, 0.10]);
+    sphere(body, white, [side * 0.25, 0.62, 0.08], [0.045, 0.17, 0.045]);
+  }
+  box(torso, green, [0, -0.16, 0.23], [0.46, 0.52, 0.08]);
+  box(torso, greenDark, [0, -0.16, 0.28], [0.22, 0.40, 0.025]);
+  // Proto-tool mounted behind Rook's right shoulder.
+  const protoTool = new THREE.Group();
+  protoTool.name = 'ProtoTool';
+  protoTool.position.set(0.38, 0.20, -0.30);
+  protoTool.rotation.z = -0.12;
+  body.add(protoTool);
+  box(protoTool, hair, [0, 0.18, 0], [0.22, 1.05, 0.22]);
+  sphere(protoTool, white, [0, 0.68, 0], [0.15, 0.20, 0.15]);
+  box(protoTool, greenDark, [0.13, 0.12, 0.03], [0.045, 0.62, 0.16]);
+  const toolTip = mesh(new THREE.ConeGeometry(0.13, 0.25, 6), hair, protoTool, [0, 0.82, 0]);
+  toolTip.rotation.x = 0;
 
   // --------------------------------------------------
   // CHARACTER CONTROL / PROCEDURAL ANIMATION.
