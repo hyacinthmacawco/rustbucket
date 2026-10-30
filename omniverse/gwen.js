@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { dimensions } from '../storage/state.js';
-import { installCharacterAnimation } from './character-animation.js';
 
 export function createGwen() {
   const gwen = new THREE.Group();
@@ -124,6 +123,7 @@ export function createGwen() {
     skirtBlue
   );
   skirt.position.set(0, 1.30, 0);
+  skirt.userData.static = true;
   skirt.castShadow = true;
   skirt.receiveShadow = true;
   gwen.add(skirt);
@@ -131,11 +131,13 @@ export function createGwen() {
   // Skirt grid lines
   for (let x = -2; x <= 2; x++) {
     const px = x * 0.105;
-    box(gwen, skirtLine, px, 1.30, 0.255, 0.009, 0.43, 0.008);
+    const line = box(gwen, skirtLine, px, 1.30, 0.255, 0.009, 0.43, 0.008);
+    line.userData.static = true;
   }
 
   for (let y = 0; y < 3; y++) {
-    box(gwen, skirtLine, 0, 1.15 + y * 0.13, 0.30 - y * 0.02, 0.62 - y * 0.07, 0.009, 0.008);
+    const line = box(gwen, skirtLine, 0, 1.15 + y * 0.13, 0.30 - y * 0.02, 0.62 - y * 0.07, 0.009, 0.008);
+    line.userData.static = true;
   }
 
   // -------------------------
@@ -240,7 +242,32 @@ export function createGwen() {
   // Final positioning
   gwen.position.set(...dimensions.gwen.position);
   gwen.scale.set(...dimensions.gwen.scale);
-  installCharacterAnimation(gwen);
+  // Ben-style procedural walk cycle. The skirt and its trim are excluded.
+  let animation = "idle";
+  let elapsed = 0;
+  const animated = gwen.children.filter(part => {
+    if (!part.isMesh || part.userData.static) return false;
+    const x = Math.abs(part.position.x);
+    const y = part.position.y;
+    return y < 1.08 || (x > 0.22 && y >= 1.08 && y < 2.2);
+  }).map(part => ({ part, rotation: part.rotation.clone() }));
+
+  gwen.setAnimation = name => { animation = name; };
+  gwen.update = dt => {
+    dt = Math.min(dt, 0.05);
+    elapsed += dt;
+    const walking = animation === "walk" || animation === "run";
+    const speed = animation === "run" ? 12 : 7;
+    const swing = walking ? Math.sin(elapsed * speed) : 0;
+    for (const item of animated) {
+      const side = item.part.position.x < 0 ? -1 : 1;
+      const isLeg = item.part.position.y < 1.08;
+      const target = walking ? swing * (isLeg ? 0.55 : 0.45) * side : 0;
+      item.part.rotation.x = THREE.MathUtils.damp(
+        item.part.rotation.x, item.rotation.x + target, 10, dt
+      );
+    }
+  };
 
   return gwen;
 }
