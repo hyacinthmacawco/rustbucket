@@ -60,8 +60,12 @@
     let entities = null;
 
     function updateCamera() {
-      const target = activeStage === "tutorial" && ben
-        ? new THREE.Vector3(ben.position.x, ben.position.y + 1.8, ben.position.z)
+      const selectedEntity = activeStage === "tutorial" && entities
+        ? entities[teamstick.selected]
+        : null;
+      const followedEntity = selectedEntity || ben;
+      const target = activeStage === "tutorial" && followedEntity
+        ? new THREE.Vector3(followedEntity.position.x, followedEntity.position.y + 1.8, followedEntity.position.z)
         : cameraTarget;
 
       const horizontal = Math.cos(cameraPitch) * cameraDistance;
@@ -271,21 +275,27 @@
             import("./omniverse/kevin-storage-unit.js"),
             import("./omniverse/rustbucket.js"),
             import("./omniverse/ben.js"),
+            import("./omniverse/gwen.js"),
+            import("./omniverse/kevin.js"),
+            import("./omniverse/rook.js"),
             import("./hud/keyboard.js")
           ]);
           bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
           ben = benModule.default(THREE);
-          ben.position.set(...dimensions.ben.position);
-          ben.scale.set(...dimensions.ben.scale);
-          group.add(ben);
+          const gwen = gwenModule.createGwen();
+          const kevin = kevinModule.createKevin();
+          const rook = rookModule.createRook();
+          group.add(ben, gwen, kevin, rook);
+          entities = { ben, gwen, kevin, rook, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
           keyboardController = controllerModule.createKeyboard({
-            ben,
+            entities,
             camera,
             joystick,
+            teamstick,
             updateCamera
           });
           loadedRegion = name;
@@ -312,11 +322,13 @@
         preludeScreen.style.display = "none";
         titleScreen.setVisible(true);
         joystick.setVisible(false);
+        teamstick.setVisible(false);
         setCameraPreset(dimensions.camera.title);
         playStageMusic("./hud/senji-v2-ov.mp3", true);
       } else if (activeStage === "prelude") {
         titleScreen.setVisible(false);
         joystick.setVisible(false);
+        teamstick.setVisible(false);
         preludeScreen.style.display = "flex";
         stopMusic();
         playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
@@ -326,12 +338,14 @@
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(true);
+        teamstick.setVisible(true);
         setCameraPreset(dimensions.camera.tutorial);
-        stopMusic();
+        playStageMusic("./hud/neodevol-ov.mp3", true);
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(true);
+        teamstick.setVisible(true);
         stopMusic();
       }
     }
