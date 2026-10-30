@@ -1,7 +1,7 @@
 import { dimensions } from '../storage/state.js';
-const d = dimensions.moon.values;
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+const d = dimensions.moon.values;
 
 export function createMoon(scene) {
   const moon = new THREE.Mesh(
