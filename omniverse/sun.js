@@ -1,9 +1,8 @@
-import { dimensions } from '../storage/state.js';
-const d = dimensions.sun.values;
 import * as THREE from 'three';
+import { dimensions } from '../storage/state.js';
 
 export function createSun(scene) {
-  const sunPosition = [-d[0], d[1], d[2]];
+  const sunPosition = dimensions.sun.position;
 
   // Sun surface
   const sunMaterial = new THREE.MeshBasicMaterial({
@@ -11,7 +10,7 @@ export function createSun(scene) {
   });
 
   const sun = new THREE.Mesh(
-    new THREE.SphereGeometry(d[3], d[4], d[5]),
+    new THREE.SphereGeometry(dimensions.sun.radius, 64, 48),
     sunMaterial
   );
 
