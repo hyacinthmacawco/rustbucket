@@ -1,11 +1,10 @@
-import { dimensions } from '../storage/state.js';
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-const d = dimensions.earth.values;
+import { dimensions } from '../storage/state.js';
 
 export function createEarth(scene) {
-  const earthPosition = [d[0], d[1], d[2]];
-  const earthRadius = d[3];
+  const earthPosition = dimensions.earth.position;
+  const earthRadius = dimensions.earth.radius;
 
   const earthMaterial = new THREE.MeshStandardMaterial({
     color: 0xffffff,
