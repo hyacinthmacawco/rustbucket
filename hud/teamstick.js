@@ -5,11 +5,11 @@ export function createTeamstick() {
   element.id = "teamstick";
   element.setAttribute("aria-label", "Select controlled character or vehicle");
   element.innerHTML = `
-    <button class="teamstick-option teamstick-ben" data-target="ben" aria-label="Control Ben" title="Ben">B</button>
-    <button class="teamstick-option teamstick-gwen" data-target="gwen" aria-label="Control Gwen" title="Gwen">G</button>
-    <button class="teamstick-option teamstick-kevin" data-target="kevin" aria-label="Control Kevin" title="Kevin">K</button>
-    <button class="teamstick-option teamstick-rook" data-target="rook" aria-label="Control Rook" title="Rook">R</button>
-    <button class="teamstick-vehicle" data-target="rustbucket" aria-label="Control Rustbucket" title="Rustbucket">✦</button>
+    <button class="teamstick-option teamstick-ben" data-target="ben" aria-label="Control Ben" title="Ben">⚡</button>
+    <button class="teamstick-option teamstick-gwen" data-target="gwen" aria-label="Control Gwen" title="Gwen">✦</button>
+    <button class="teamstick-option teamstick-kevin" data-target="kevin" aria-label="Control Kevin" title="Kevin">◆</button>
+    <button class="teamstick-option teamstick-rook" data-target="rook" aria-label="Control Rook" title="Rook">⬟</button>
+    <button class="teamstick-vehicle" data-target="rustbucket" aria-label="Control Rustbucket" title="Rustbucket">🚀</button>
   `;
   document.body.appendChild(element);
 
