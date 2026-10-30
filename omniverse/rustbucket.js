@@ -1,7 +1,7 @@
 import { dimensions } from '../storage/state.js';
-const d = dimensions.rustbucket.values;
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+const d = dimensions.rustbucket.values;
 
 export function createRustbucket(scene) {
   function material(color, roughness = d[0], extra = {}) {
