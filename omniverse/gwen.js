@@ -303,12 +303,15 @@ export function createGwen (THREE) {
     const line = box(body, greenDark, [0, 1.12 + i * 0.13, 0.30 - i * 0.02], [0.62 - i * 0.07, 0.009, 0.008]);
     line.userData.static = true;
   }
-  for (const side of [-1, 1]) {
-    const sock = mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.52, 12), white, body, [side * 0.17, 0.38, 0]);
-    sphere(body, white, [side * 0.17, 0.64, 0], [0.08, 0.05, 0.08]);
-    sphere(body, shoe, [side * 0.17, 0.12, 0.10], [0.16, 0.12, 0.24]);
-    box(body, white, [side * 0.17, 0.035, 0.10], [0.31, 0.045, 0.40]);
-  }
+  legs.forEach((hip, index) => {
+    const side = index === 0 ? -1 : 1;
+    mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.52, 12), white, hip, [0, -0.58, 0]);
+    sphere(hip, white, [0, -0.34, 0], [0.08, 0.05, 0.08]);
+    const foot = hip.userData.foot;
+    sphere(foot, shoe, [0, 0, 0.10], [0.17, 0.12, 0.25]);
+    box(foot, white, [0, -0.075, 0.10], [0.35, 0.045, 0.52]);
+    box(foot, greenDark, [0, 0.055, 0.09], [0.22, 0.025, 0.24]);
+  });
 
   // --------------------------------------------------
   // CHARACTER CONTROL / PROCEDURAL ANIMATION.
