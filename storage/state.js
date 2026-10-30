@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { dimensions, state } from "./config.js";
-    import { dimensions, state } from "./config.js";
     import { createTitleScreen } from "../hud/title.js";
     import { createJoystick } from "../hud/joystick.js";
     import { createTeamstick } from "../hud/teamstick.js";
@@ -417,7 +416,6 @@ import { dimensions, state } from "./config.js";
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
       document.removeEventListener("pointerdown", unlockAudio);
-      document.removeEventListener("pointerdown", requestInitialFullscreen);
       document.removeEventListener("keydown", unlockAudio);
       document.removeEventListener("pointerdown", requestFullscreenOnFirstGesture);
       document.removeEventListener("keydown", requestFullscreenOnFirstGesture);
