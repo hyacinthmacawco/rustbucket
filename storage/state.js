@@ -1,9 +1,9 @@
 import * as THREE from "three";
 export const dimensions = {
   ben: { position: [-3, 0, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, 0, -7], scale: [0.69, 0.69, 0.69] },
-  kevin: { position: [0, 0, -9], scale: [0.65, 0.65, 0.65] },
-  rook: { position: [7, 0, -7], scale: [0.58, 0.58, 0.58] },
+  gwen: { position: [-7, 0, -7], scale: [0.5, 0.5, 0.5] },
+  kevin: { position: [0, 0, -9], scale: [0.52, 0.52, 0.52] },
+  rook: { position: [7, 0, -7], scale: [0.52, 0.52, 0.52] },
   rustbucket: { position: [0, 2, 0], scale: [1, 1, 1] },
   kevinStorageUnit: { position: [0, 0, 0], scale: [1, 1, 1] },
   bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
