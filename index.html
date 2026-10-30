@@ -1,90 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#02040a" />
-  <title>Rustbucket</title>
-  <link rel="stylesheet" href="./screens/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rustbucket</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+        }
+    }
+    </script>
 </head>
 <body>
-  <div id="game-root"></div>
+    <canvas id="omniverse"></canvas>
+    <script type="module">
+        import * as THREE from 'three';
 
-  <script type="module">
-    const root = document.getElementById("game-root");
+        const canvas = document.getElementById('omniverse');
+        const omniverse = new THREE.Scene();
+        omniverse.name = 'omniverse';
+        omniverse.background = new THREE.Color(0x000000);
 
-    let activeScreen = null;
-    let transitionInProgress = false;
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            10000
+        );
+        camera.position.set(0, 5, 10);
 
-    async function loadTitleScreen() {
-      const response = await fetch("./screens/title.html");
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true
+        });
+        renderer.setPixelRatio(
+            Math.min(window.devicePixelRatio, 2)
+        );
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-      if (!response.ok) {
-        throw new Error("Could not load title.html");
-      }
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
 
-      root.innerHTML = await response.text();
+            renderer.setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
+        });
 
-      const { initTitleScreen } = await import("./screens/title.js");
-      activeScreen = initTitleScreen(root);
-    }
-
-    async function loadTutorialScreen() {
-      if (transitionInProgress) return;
-      transitionInProgress = true;
-
-      try {
-        if (activeScreen?.destroy) {
-          activeScreen.destroy();
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(omniverse, camera);
         }
-
-        activeScreen = null;
-
-        const response = await fetch("./screens/tutorial.html");
-
-        if (!response.ok) {
-          throw new Error("Could not load tutorial.html");
-        }
-
-        root.innerHTML = await response.text();
-
-        const { initTutorialScreen } = await import("./screens/tutorial.js");
-        activeScreen = initTutorialScreen(root);
-      } catch (error) {
-        console.error("Could not start the tutorial:", error);
-
-        root.innerHTML = `
-          <div class="game-error">
-            <p>Unable to load the tutorial.</p>
-            <button id="return-to-title" type="button">
-              RETURN TO TITLE
-            </button>
-          </div>
-        `;
-
-        root.querySelector("#return-to-title")
-          ?.addEventListener("click", async () => {
-            transitionInProgress = false;
-            await loadTitleScreen();
-          });
-      } finally {
-        transitionInProgress = false;
-      }
-    }
-
-    root.addEventListener("rustbucket:newgame", loadTutorialScreen);
-
-    try {
-      await loadTitleScreen();
-    } catch (error) {
-      console.error(error);
-
-      root.innerHTML = `
-        <div class="game-error">
-          Unable to load Rustbucket. Run the game using a local web server.
-        </div>
-      `;
-    }
-  </script>
+        animate();
+    </script>
 </body>
 </html>
