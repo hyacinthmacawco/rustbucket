@@ -1,268 +1,243 @@
-export default function createGwen(THREE) {
-    const root = new THREE.Group();
-    root.name = "Gwen";
+import * as THREE from 'three';
 
-    const mat = (color, roughness = 0.85) =>
-        new THREE.MeshStandardMaterial({ color, roughness });
+export function createGwen() {
+  const gwen = new THREE.Group();
+  gwen.name = 'Gwen';
 
-    const skin = mat(0xe8b9a7);
-    const hair = mat(0xc95b19);
-    const hairLight = mat(0xe77b28);
-    const shirt = mat(0x9bd5ed);
-    const blue = mat(0x376b9e);
-    const darkBlue = mat(0x244c77);
-    const white = mat(0xe5edf0);
-    const skirtMat = mat(0x315d91);
-    const black = mat(0x172333);
-    const glasses = mat(0x173c68);
-    const eye = mat(0x245a85);
-    const mouth = mat(0x873d4b);
+  const mat = (color, roughness = 0.88) =>
+    new THREE.MeshStandardMaterial({ color, roughness });
 
-    function mesh(geo, material, parent, x, y, z) {
-        const m = new THREE.Mesh(geo, material);
-        m.position.set(x, y, z);
-        m.castShadow = true;
-        m.receiveShadow = true;
-        parent.add(m);
-        return m;
-    }
+  const skin = mat(0xe9b6a5);
+  const hair = mat(0xd95720);
+  const hairLight = mat(0xf17a35);
+  const blue = mat(0x72b6d5);
+  const darkBlue = mat(0x315c88);
+  const skirtBlue = mat(0x426b9a);
+  const skirtLine = mat(0x91b6d0);
+  const white = mat(0xe5e9e9);
+  const shoeBlue = mat(0x315c92);
+  const shoeDark = mat(0x172d4b);
 
-    function ellipsoid(parent, material, x, y, z, sx, sy, sz) {
-        const m = mesh(
-            new THREE.SphereGeometry(1, 16, 12),
-            material, parent, x, y, z
-        );
-        m.scale.set(sx, sy, sz);
-        return m;
-    }
+  function ellipsoid(parent, material, x, y, z, sx, sy, sz) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 20, 16),
+      material
+    );
+    mesh.position.set(x, y, z);
+    mesh.scale.set(sx, sy, sz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
 
-    function box(parent, material, x, y, z, sx, sy, sz) {
-        const m = mesh(
-            new THREE.BoxGeometry(sx, sy, sz),
-            material, parent, x, y, z
-        );
-        return m;
-    }
+  function box(parent, material, x, y, z, sx, sy, sz) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(sx, sy, sz),
+      material
+    );
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
 
-    function limb(parent, material, a, b, radius) {
-        const start = new THREE.Vector3(...a);
-        const end = new THREE.Vector3(...b);
-        const direction = new THREE.Vector3().subVectors(end, start);
-        const m = mesh(
-            new THREE.CylinderGeometry(radius * 0.85, radius, direction.length(), 12),
-            material,
-            parent,
-            ...(start.clone().add(end).multiplyScalar(0.5).toArray())
-        );
-        m.quaternion.setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0),
-            direction.normalize()
-        );
-        return m;
-    }
+  function cylinder(parent, material, x, y, z, radiusTop, radiusBottom, height) {
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 16),
+      material
+    );
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
 
-    // Legs
-    const leftLeg = new THREE.Group();
-    const rightLeg = new THREE.Group();
+  function limb(parent, material, a, b, radiusA, radiusB) {
+    const start = new THREE.Vector3(...a);
+    const end = new THREE.Vector3(...b);
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(radiusB, radiusA, direction.length(), 12),
+      material
+    );
+    mesh.position.copy(start).add(end).multiplyScalar(0.5);
+    mesh.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.normalize()
+    );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
 
-    leftLeg.position.set(-0.19, 1.75, 0);
-    rightLeg.position.set(0.19, 1.75, 0);
+  // -------------------------
+  // LEGS
+  // -------------------------
 
-    root.add(leftLeg, rightLeg);
+  // Left and right legs
+  for (const side of [-1, 1]) {
+    const x = side * 0.105;
 
-    for (const leg of [leftLeg, rightLeg]) {
-        ellipsoid(leg, skin, 0, -0.34, 0, 0.115, 0.37, 0.12);
+    // Upper legs
+    limb(gwen, skin, [x, 1.48, 0], [x, 0.92, 0], 0.105, 0.075);
 
-        // White knee-high socks
-        ellipsoid(leg, white, 0, -0.83, 0, 0.12, 0.43, 0.13);
+    // Knees
+    ellipsoid(gwen, skin, x, 0.91, 0, 0.075, 0.09, 0.075);
 
-        // Blue shoes
-        ellipsoid(leg, blue, 0, -1.25, 0.09, 0.17, 0.12, 0.28);
-        ellipsoid(leg, darkBlue, 0, -1.33, 0.09, 0.17, 0.035, 0.28);
-    }
+    // Lower legs
+    limb(gwen, skin, [x, 0.90, 0], [x, 0.40, 0], 0.075, 0.06);
 
-    // Torso
-    const torso = new THREE.Group();
-    torso.position.y = 2.45;
-    root.add(torso);
+    // White knee-high socks
+    cylinder(gwen, white, x, 0.40, 0, 0.065, 0.075, 0.52);
+    ellipsoid(gwen, white, x, 0.66, 0, 0.075, 0.045, 0.075);
 
-    ellipsoid(torso, shirt, 0, 0, 0, 0.34, 0.48, 0.19);
+    // Sock upper edge
+    cylinder(gwen, white, x, 0.64, 0, 0.077, 0.077, 0.045);
 
-    // Shirt collar
-    ellipsoid(torso, blue, 0, 0.40, 0, 0.16, 0.07, 0.17);
+    // Shoes
+    ellipsoid(gwen, shoeBlue, x, 0.12, 0.065, 0.105, 0.09, 0.20);
+    ellipsoid(gwen, shoeDark, x, 0.075, 0.13, 0.105, 0.045, 0.15);
 
-    // Gwen's shirt emblem
-    const emblem = mat(0x294f80);
-    ellipsoid(torso, emblem, -0.105, 0.12, 0.193, 0.085, 0.11, 0.025);
-    ellipsoid(torso, emblem, 0.105, 0.12, 0.193, 0.085, 0.11, 0.025);
+    // Shoe soles
+    box(gwen, white, x, 0.035, 0.08, 0.22, 0.045, 0.32);
 
-    box(torso, white, 0, 0.11, 0.217, 0.035, 0.12, 0.012);
+    // Shoe upper straps
+    box(gwen, darkBlue, x, 0.15, 0.04, 0.17, 0.035, 0.09);
+  }
 
-    // Neck
-    ellipsoid(root, skin, 0, 2.94, 0, 0.105, 0.18, 0.11);
+  // -------------------------
+  // SKIRT
+  // -------------------------
 
-    // Head
-    const head = new THREE.Group();
-    head.position.set(0, 3.17, 0);
-    root.add(head);
+  // Waist
+  cylinder(gwen, darkBlue, 0, 1.53, 0, 0.19, 0.19, 0.12);
 
-    ellipsoid(head, skin, 0, 0, 0, 0.23, 0.30, 0.19);
+  // Main skirt
+  const skirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.31, 0.43, 0.48, 8, 1),
+    skirtBlue
+  );
+  skirt.position.set(0, 1.30, 0);
+  skirt.castShadow = true;
+  skirt.receiveShadow = true;
+  gwen.add(skirt);
 
-    // Jaw and chin
-    ellipsoid(head, skin, 0, -0.16, 0.025, 0.17, 0.13, 0.15);
+  // Skirt grid lines
+  for (let x = -2; x <= 2; x++) {
+    const px = x * 0.105;
+    box(gwen, skirtLine, px, 1.30, 0.255, 0.009, 0.43, 0.008);
+  }
 
-    // Nose
-    ellipsoid(head, skin, 0, -0.015, 0.185, 0.035, 0.065, 0.035);
+  for (let y = 0; y < 3; y++) {
+    box(gwen, skirtLine, 0, 1.15 + y * 0.13, 0.30 - y * 0.02, 0.62 - y * 0.07, 0.009, 0.008);
+  }
 
-    // Eyes
-    for (const x of [-0.095, 0.095]) {
-        ellipsoid(head, white, x, 0.045, 0.165, 0.065, 0.045, 0.035);
-        ellipsoid(head, eye, x, 0.045, 0.197, 0.035, 0.032, 0.015);
-        ellipsoid(head, black, x, 0.045, 0.208, 0.012, 0.023, 0.008);
-    }
+  // -------------------------
+  // TORSO
+  // -------------------------
 
-    // Blue glasses
-    for (const x of [-0.095, 0.095]) {
-        const frame = mesh(
-            new THREE.TorusGeometry(0.075, 0.012, 6, 20),
-            glasses, head, x, 0.045, 0.205
-        );
-        frame.scale.y = 0.65;
-    }
+  // Shirt body
+  ellipsoid(gwen, blue, 0, 1.87, 0, 0.235, 0.34, 0.14);
 
-    box(head, glasses, 0, 0.045, 0.205, 0.055, 0.014, 0.018);
+  // Shirt lower edge
+  box(gwen, blue, 0, 1.58, 0, 0.34, 0.09, 0.22);
 
-    // Eyebrows
-    for (const x of [-0.095, 0.095]) {
-        const brow = box(head, hair, x, 0.115, 0.17, 0.075, 0.018, 0.025);
-        brow.rotation.z = x < 0 ? 0.12 : -0.12;
-    }
+  // Neck
+  cylinder(gwen, skin, 0, 2.23, 0, 0.075, 0.075, 0.20);
 
-    // Mouth
-    ellipsoid(head, mouth, 0, -0.14, 0.17, 0.055, 0.012, 0.012);
+  // Shirt collar
+  ellipsoid(gwen, darkBlue, 0, 2.17, 0.025, 0.105, 0.035, 0.12);
 
-    // Orange hair cap
-    ellipsoid(head, hair, 0, 0.235, -0.015, 0.27, 0.16, 0.22);
+  // Chest emblem (abstract blue symbol)
+  ellipsoid(gwen, darkBlue, 0, 1.99, 0.143, 0.105, 0.09, 0.018);
+  ellipsoid(gwen, blue, 0, 1.99, 0.162, 0.065, 0.055, 0.012);
 
-    // Side hair
-    for (const x of [-1, 1]) {
-        const side = ellipsoid(
-            head, hair, x * 0.22, 0.015, -0.005,
-            0.095, 0.23, 0.18
-        );
-        side.rotation.z = x * -0.15;
+  // -------------------------
+  // ARMS
+  // -------------------------
 
-        // Hair tips
-        const tip = ellipsoid(
-            head, hairLight, x * 0.24, -0.13, 0.015,
-            0.07, 0.12, 0.12
-        );
-        tip.rotation.z = x * -0.25;
-    }
+  for (const side of [-1, 1]) {
+    const x = side;
 
-    // Front hair fringe
-    ellipsoid(head, hairLight, -0.13, 0.19, 0.16, 0.12, 0.11, 0.08);
-    ellipsoid(head, hair, 0.035, 0.20, 0.17, 0.12, 0.09, 0.07);
+    // Shoulder
+    ellipsoid(gwen, blue, x * 0.235, 2.05, 0, 0.09, 0.12, 0.11);
 
-    // Back hair
-    ellipsoid(head, hair, 0, 0.02, -0.17, 0.25, 0.27, 0.10);
-
-    // Skirt
-    const skirt = mesh(
-        new THREE.CylinderGeometry(0.28, 0.38, 0.46, 12),
-        skirtMat, root, 0, 1.96, 0
+    // Upper arm
+    limb(
+      gwen, skin,
+      [x * 0.25, 2.00, 0],
+      [x * 0.30, 1.65, 0],
+      0.065, 0.052
     );
 
-    // Checked skirt pattern
-    const lineMat = mat(0x83a7c9);
-    for (let i = -2; i <= 2; i++) {
-        const line = box(
-            root, lineMat,
-            i * 0.11, 1.96, 0.355,
-            0.012, 0.42, 0.008
-        );
+    // Elbow
+    ellipsoid(gwen, skin, x * 0.30, 1.65, 0, 0.052, 0.06, 0.052);
+
+    // Forearm
+    limb(
+      gwen, skin,
+      [x * 0.30, 1.64, 0],
+      [x * 0.34, 1.22, 0.015],
+      0.052, 0.045
+    );
+
+    // Hands
+    ellipsoid(gwen, skin, x * 0.34, 1.15, 0.025, 0.055, 0.09, 0.045);
+
+    // Fingers
+    for (let f = 0; f < 3; f++) {
+      const fx = x * (0.34 + f * 0.025);
+      limb(
+        gwen, skin,
+        [x * 0.34, 1.12, 0.035],
+        [fx, 1.02, 0.045],
+        0.016, 0.012
+      );
     }
+  }
 
-    for (const y of [1.82, 1.96, 2.10]) {
-        box(root, lineMat, 0, y, 0.355, 0.65, 0.012, 0.008);
-    }
+  // -------------------------
+  // HEAD
+  // -------------------------
 
-    // Arms
-    const leftArm = new THREE.Group();
-    const rightArm = new THREE.Group();
+  // Blank head
+  ellipsoid(gwen, skin, 0, 2.48, 0, 0.145, 0.215, 0.135);
 
-    leftArm.position.set(-0.34, 2.72, 0);
-    rightArm.position.set(0.34, 2.72, 0);
+  // Hair cap
+  ellipsoid(gwen, hair, 0, 2.61, -0.015, 0.17, 0.14, 0.145);
 
-    torso.add(leftArm, rightArm);
+  // Hair at back
+  ellipsoid(gwen, hair, 0, 2.43, -0.095, 0.17, 0.24, 0.10);
 
-    for (const [arm, side] of [[leftArm, -1], [rightArm, 1]]) {
-        limb(arm, shirt, [0, 0, 0], [side * 0.08, -0.42, 0], 0.105);
-        limb(arm, skin, [side * 0.08, -0.42, 0], [side * 0.13, -0.91, 0.02], 0.075);
+  // Left and right side hair
+  for (const side of [-1, 1]) {
+    ellipsoid(gwen, hair, side * 0.135, 2.48, -0.005, 0.075, 0.19, 0.12);
+    ellipsoid(gwen, hairLight, side * 0.135, 2.56, 0.025, 0.045, 0.12, 0.09);
+  }
 
-        ellipsoid(arm, skin, side * 0.13, -1.0, 0.04, 0.09, 0.12, 0.07);
+  // Front fringe
+  ellipsoid(gwen, hair, -0.075, 2.62, 0.105, 0.075, 0.105, 0.055);
+  ellipsoid(gwen, hairLight, 0.045, 2.65, 0.11, 0.065, 0.075, 0.04);
 
-        // Fingers
-        for (let i = -1; i <= 1; i++) {
-            limb(
-                arm, skin,
-                [side * (0.13 + i * 0.035), -1.03, 0.04],
-                [side * (0.14 + i * 0.04), -1.15, 0.06],
-                0.018
-            );
-        }
-    }
+  // Long hair tips
+  for (const side of [-1, 1]) {
+    const tip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.065, 0.23, 8),
+      hair
+    );
+    tip.position.set(side * 0.14, 2.35, -0.025);
+    tip.rotation.z = side * -0.10;
+    tip.castShadow = true;
+    gwen.add(tip);
+  }
 
-    // Animation
-    let animation = "idle";
-    let elapsed = 0;
-    let jumpVelocity = 0;
-    let verticalOffset = 0;
+  // Final positioning
+  gwen.position.set(0, 0, 0);
+  gwen.scale.set(1, 1.15, 1);
 
-    root.userData.setAnimation = (name) => {
-        animation = name;
-    };
-
-    root.userData.jump = (strength = 4.8) => {
-        if (verticalOffset <= 0.001) jumpVelocity = strength;
-        animation = "jump";
-    };
-
-    root.userData.update = (dt) => {
-        elapsed += dt;
-
-        const moving = animation === "walk" || animation === "run";
-        const speed = animation === "run" ? 11 : 6;
-        const swing = moving ? Math.sin(elapsed * speed) * 0.55 : 0;
-
-        leftLeg.rotation.x = swing;
-        rightLeg.rotation.x = -swing;
-
-        leftArm.rotation.x = -swing * 0.55;
-        rightArm.rotation.x = swing * 0.55;
-
-        torso.position.y = 2.45 + (moving ? Math.abs(swing) * 0.025 : 0);
-
-        if (jumpVelocity !== 0 || verticalOffset > 0) {
-            jumpVelocity -= 12 * dt;
-            verticalOffset += jumpVelocity * dt;
-
-            if (verticalOffset <= 0) {
-                verticalOffset = 0;
-                jumpVelocity = 0;
-                animation = "idle";
-            }
-        }
-
-        root.position.y = verticalOffset;
-
-        if (!moving && animation === "idle") {
-            torso.rotation.z = Math.sin(elapsed * 1.5) * 0.015;
-        } else {
-            torso.rotation.z = 0;
-        }
-    };
-
-    root.userData.setAnimation("idle");
-    return root;
+  return gwen;
 }
