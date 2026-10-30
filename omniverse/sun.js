@@ -1,7 +1,9 @@
+import { dimensions } from '../storage/state.js';
+const d = dimensions.sun.values;
 import * as THREE from 'three';
 
 export function createSun(scene) {
-  const sunPosition = [-50, 0, 0];
+  const sunPosition = [-d[0], d[1], d[2]];
 
   // Sun surface
   const sunMaterial = new THREE.MeshBasicMaterial({
@@ -9,7 +11,7 @@ export function createSun(scene) {
   });
 
   const sun = new THREE.Mesh(
-    new THREE.SphereGeometry(30.0, 64, 48),
+    new THREE.SphereGeometry(d[3], d[4], d[5]),
     sunMaterial
   );
 
@@ -34,11 +36,11 @@ export function createSun(scene) {
 
   // Inner glow
   const sunAura = new THREE.Mesh(
-    new THREE.SphereGeometry(3.18, 64, 48),
+    new THREE.SphereGeometry(d[6], d[7], d[8]),
     new THREE.MeshBasicMaterial({
       color: 0xff8a2a,
       transparent: true,
-      opacity: 0.13,
+      opacity: d[9],
       side: THREE.BackSide,
       depthWrite: false
     })
@@ -49,11 +51,11 @@ export function createSun(scene) {
 
   // Outer glow
   const sunOuterGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(3.65, 64, 48),
+    new THREE.SphereGeometry(d[10], d[11], d[12]),
     new THREE.MeshBasicMaterial({
       color: 0xff671f,
       transparent: true,
-      opacity: 0.055,
+      opacity: d[13],
       side: THREE.BackSide,
       depthWrite: false
     })
