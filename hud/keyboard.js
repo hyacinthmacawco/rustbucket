@@ -1,9 +1,7 @@
 import * as THREE from "three";
 
-// Keyboard and joystick movement controller for gameplay stages.
-// Camera orbit and joystick DOM/input handling remain in index.html
-// and hud/joystick.js respectively.
-export function createKeyboard({ ben, camera, joystick, updateCamera }) {
+// Shared camera-relative movement controller for the selected team member or Rustbucket.
+export function createKeyboard({ entities, camera, joystick, teamstick, updateCamera }) {
   const keys = new Set();
 
   function onKeyDown(event) {
@@ -22,6 +20,9 @@ export function createKeyboard({ ben, camera, joystick, updateCamera }) {
 
   function update(deltaTime) {
     const dt = Math.min(deltaTime, 0.05);
+    const selected = entities[teamstick.selected];
+    if (!selected) return;
+
     const input = joystick.input;
     const forwardInput =
       (keys.has("w") || keys.has("arrowup") ? 1 : 0) -
@@ -47,17 +48,17 @@ export function createKeyboard({ ben, camera, joystick, updateCamera }) {
       const rz = fx;
       const moveX = fx * forward + rx * right;
       const moveZ = fz * forward + rz * right;
-      const speed = 3.5;
+      const speed = teamstick.selected === "rustbucket" ? 5 : 3.5;
 
-      ben.position.x += moveX * speed * dt;
-      ben.position.z += moveZ * speed * dt;
-      ben.rotation.y = Math.atan2(moveX, moveZ);
-      ben.setAnimation("walk");
-    } else {
-      ben.setAnimation("idle");
+      selected.position.x += moveX * speed * dt;
+      selected.position.z += moveZ * speed * dt;
+      selected.rotation.y = Math.atan2(moveX, moveZ);
+      if (typeof selected.setAnimation === "function") selected.setAnimation("walk");
+    } else if (typeof selected.setAnimation === "function") {
+      selected.setAnimation("idle");
     }
 
-    ben.update(dt);
+    if (typeof selected.update === "function") selected.update(dt);
     updateCamera();
   }
 
