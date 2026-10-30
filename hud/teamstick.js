@@ -1,6 +1,5 @@
-// Character/vehicle selector. The large ring contains four quadrant selectors;
-// the center selector switches control to the Rustbucket.
-export function createTeamstick() {
+// Four arc selectors surround the circular Rustbucket control.
+export function createTeamstick({ onSelect = () => {} } = {}) {
   const element = document.createElement("div");
   element.id = "teamstick";
   element.setAttribute("aria-label", "Select controlled character or vehicle");
@@ -12,10 +11,8 @@ export function createTeamstick() {
     <button class="teamstick-vehicle" data-target="rustbucket" aria-label="Control Rustbucket" title="Rustbucket">🚀</button>
   `;
   document.body.appendChild(element);
-
   const buttons = [...element.querySelectorAll("button")];
   let selected = "ben";
-
   function renderSelection() {
     for (const button of buttons) {
       const active = button.dataset.target === selected;
@@ -23,27 +20,23 @@ export function createTeamstick() {
       button.setAttribute("aria-pressed", String(active));
     }
   }
+  function choose(target) {
+    if (!["ben", "gwen", "kevin", "rook", "rustbucket"].includes(target) || target === selected) return;
+    selected = target;
+    renderSelection();
+    onSelect(target);
+  }
   function onClick(event) {
     const button = event.target.closest("button[data-target]");
-    if (!button) return;
-    selected = button.dataset.target;
-    renderSelection();
+    if (button) choose(button.dataset.target);
   }
   element.addEventListener("click", onClick);
   renderSelection();
-
   return {
     element,
     get selected() { return selected; },
-    select(target) {
-      if (!["ben", "gwen", "kevin", "rook", "rustbucket"].includes(target)) return;
-      selected = target;
-      renderSelection();
-    },
+    select: choose,
     setVisible(visible) { element.style.display = visible ? "" : "none"; },
-    destroy() {
-      element.removeEventListener("click", onClick);
-      element.remove();
-    }
+    destroy() { element.removeEventListener("click", onClick); element.remove(); }
   };
 }
