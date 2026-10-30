@@ -141,10 +141,14 @@ import { createTutorialLabel } from "../hud/tutorial.js";
 
     const joystick = createJoystick();
     joystick.setVisible(false);
-    const teamstick = createTeamstick();
-    teamstick.setVisible(false);
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const tutorialLabel = createTutorialLabel({ isMobile });
+    const teamstick = createTeamstick({
+      onSelect() {
+        if (state.stage === "tutorial") tutorialLabel.completeStep(2);
+      }
+    });
+    teamstick.setVisible(false);
 
     // One audio handle is reused for the active stage's soundtrack/dialogue.
     let music = null;
@@ -191,25 +195,22 @@ import { createTutorialLabel } from "../hud/tutorial.js";
         music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
       }
     }
-    let fullscreenAttempted = false;
-    function requestFullscreenOnFirstGesture() {
-      if (fullscreenAttempted) return;
-      fullscreenAttempted = true;
+    function requestFullscreenOnGesture() {
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
       const target = document.documentElement;
       const request = target.requestFullscreen || target.webkitRequestFullscreen;
-      if (request) {
-        try {
-          const result = request.call(target);
-          result?.catch?.(() => {});
-        } catch (error) {
-          console.warn("Automatic full-screen is unavailable in this browser:", error);
-        }
+      if (!request) return;
+      try {
+        const result = request.call(target);
+        result?.catch?.(() => {});
+      } catch (error) {
+        console.warn("Fullscreen request was rejected by the browser:", error);
       }
-      document.removeEventListener("pointerdown", requestFullscreenOnFirstGesture);
-      document.removeEventListener("keydown", requestFullscreenOnFirstGesture);
     }
-    document.addEventListener("pointerdown", requestFullscreenOnFirstGesture, { once: true });
-    document.addEventListener("keydown", requestFullscreenOnFirstGesture, { once: true });
+    // Fullscreen is restricted by browsers to a user gesture; retry until accepted.
+    document.addEventListener("pointerdown", requestFullscreenOnGesture);
+    document.addEventListener("touchend", requestFullscreenOnGesture, { passive: true });
+    document.addEventListener("keydown", requestFullscreenOnGesture);
     document.addEventListener("pointerdown", unlockAudio);
     document.addEventListener("keydown", unlockAudio);
 
@@ -354,7 +355,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
             updateCamera,
             isMobile,
             onMove() {
-              tutorialLabel.setStep(2);
+              tutorialLabel.completeStep(1);
             }
           });
           loadedRegion = name;
@@ -469,8 +470,8 @@ import { createTutorialLabel } from "../hud/tutorial.js";
       canvas.removeEventListener("pointercancel", onPointerUp);
       document.removeEventListener("pointerdown", unlockAudio);
       document.removeEventListener("keydown", unlockAudio);
-      document.removeEventListener("pointerdown", requestFullscreenOnFirstGesture);
-      document.removeEventListener("keydown", requestFullscreenOnFirstGesture);
+      document.removeEventListener("pointerdown", requestFullscreenOnGesture);
+      document.removeEventListener("keydown", requestFullscreenOnGesture);
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
