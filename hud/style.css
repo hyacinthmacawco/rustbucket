@@ -477,3 +477,20 @@ button {
   touch-action: manipulation;
 }
 #fullscreen-toggle:active { background: rgb(70 100 130 / 90%); }
+
+#tutorial-step-label {
+  position: fixed; z-index: 40; left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); width: min(760px, calc(100vw - 32px));
+  padding: 12px 18px; color: #fff; background: rgb(0 0 0 / 72%);
+  border: 1px solid rgb(255 255 255 / 35%); text-align: center;
+  text-transform: uppercase; letter-spacing: .08em;
+  font-size: clamp(11px, 2.1vw, 15px); line-height: 1.5;
+  pointer-events: none;
+}
+.tutorial-step-number { font-weight: 800; margin-bottom: 4px; }
+.tutorial-step-content { font-weight: 600; }
+#fullscreen-toggle { display: none !important; }
+@media (hover: hover) and (pointer: fine) {
+  #movement-joystick, #teamstick { display: none !important; }
+}
