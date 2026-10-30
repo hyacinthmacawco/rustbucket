@@ -138,8 +138,9 @@
 
     function unlockAudio() {
       if (!audioUnlocked) audioUnlocked = true;
-      if (state.stage === "title" && (!music || music.src !== new URL("./hud/senji-v2-ov.mp3", location.href).href)) {
-        playStageMusic("./hud/senji-v2-ov.mp3", true);
+      if (state.stage === "title") {
+        if (!music) playStageMusic("./hud/senji-v2-ov.mp3", true);
+        else if (music.paused) music.play().catch(() => {});
       } else if (state.stage === "prelude" && music?.paused) {
         music.play().catch(() => {});
       }
@@ -337,7 +338,7 @@
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
-      if (wantedRegion !== loadedRegion && wantedRegion !== loadingRegion) {
+      if (!loadingRegion && wantedRegion !== loadedRegion) {
         loadRegion(wantedRegion);
       }
 
