@@ -186,6 +186,18 @@
         music.play().catch(() => {});
       }
     }
+    let attemptedAutoFullscreen = false;
+    function requestInitialFullscreen(event) {
+      if (attemptedAutoFullscreen || event.target.closest?.("#fullscreen-toggle")) return;
+      attemptedAutoFullscreen = true;
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {
+          // Some mobile browsers require the dedicated full-screen button.
+        });
+      }
+      document.removeEventListener("pointerdown", requestInitialFullscreen);
+    }
+    document.addEventListener("pointerdown", requestInitialFullscreen);
     document.addEventListener("pointerdown", unlockAudio);
     document.addEventListener("keydown", unlockAudio);
 
@@ -438,6 +450,7 @@
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
       document.removeEventListener("pointerdown", unlockAudio);
+      document.removeEventListener("pointerdown", requestInitialFullscreen);
       document.removeEventListener("keydown", unlockAudio);
       fullscreenButton.removeEventListener("click", toggleFullscreen);
       document.removeEventListener("fullscreenchange", syncFullscreenButton);
