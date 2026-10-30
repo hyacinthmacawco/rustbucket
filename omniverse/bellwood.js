@@ -3,7 +3,7 @@ import { dimensions } from "../storage/state.js";
 
 // Bellwood outdoor environment: sky, atmospheric fog, sunlight, roads,
 // sidewalks, low-rise buildings, and roadside trees.
-export function createBellwood(scene) {
+export function createBellwood(scene, parent = scene) {
   scene.background = new THREE.Color(0x78b9f5);
   scene.fog = new THREE.Fog(0xa6cbed, 75, 260);
 
@@ -11,7 +11,7 @@ export function createBellwood(scene) {
   root.name = "Bellwood";
   root.position.set(...dimensions.bellwood.position);
   root.scale.set(...dimensions.bellwood.scale);
-  scene.add(root);
+  parent.add(root);
 
   const sunlight = new THREE.DirectionalLight(0xffd39a, 3.0);
   sunlight.position.set(-35, 65, 45);
