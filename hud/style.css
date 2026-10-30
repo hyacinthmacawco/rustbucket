@@ -455,3 +455,25 @@ button {
   border-color: #fff;
   box-shadow: 0 0 12px rgb(255 190 105 / 75%);
 }
+
+
+/* Full-screen control; browser entry requires a direct user gesture. */
+#fullscreen-toggle {
+  position: fixed;
+  z-index: 100;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 10px;
+  color: #fff;
+  background: rgb(8 15 24 / 72%);
+  font-size: 27px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#fullscreen-toggle:active { background: rgb(70 100 130 / 90%); }
