@@ -435,10 +435,10 @@ button {
   height: 43px;
   font-size: 15px;
 }
-.teamstick-ben { left: 50%; top: 5px; transform: translateX(-50%); }
-.teamstick-gwen { right: 5px; top: 50%; transform: translateY(-50%); }
-.teamstick-kevin { left: 50%; bottom: 5px; transform: translateX(-50%); }
-.teamstick-rook { left: 5px; top: 50%; transform: translateY(-50%); }
+.teamstick-ben { left: 20px; top: 20px; }
+.teamstick-gwen { right: 20px; top: 20px; }
+.teamstick-kevin { right: 20px; bottom: 20px; }
+.teamstick-rook { left: 20px; bottom: 20px; }
 .teamstick-vehicle {
   width: 38px;
   height: 38px;
