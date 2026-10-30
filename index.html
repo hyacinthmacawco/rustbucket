@@ -24,6 +24,37 @@
     import { createTeamstick } from "./hud/teamstick.js";
 
     const canvas = document.getElementById("omniverse");
+    const fullscreenButton = document.createElement("button");
+    fullscreenButton.id = "fullscreen-toggle";
+    fullscreenButton.type = "button";
+    fullscreenButton.setAttribute("aria-label", "Enter full screen");
+    fullscreenButton.title = "Full screen";
+    fullscreenButton.textContent = "⛶";
+    document.body.appendChild(fullscreenButton);
+
+    async function toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) {
+          const target = document.documentElement;
+          if (target.requestFullscreen) await target.requestFullscreen();
+          else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen();
+        } else if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } catch (error) {
+        console.warn("Full-screen mode is not available in this browser:", error);
+      }
+    }
+    function syncFullscreenButton() {
+      const active = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+      fullscreenButton.textContent = active ? "⛶" : "⛶";
+      fullscreenButton.setAttribute("aria-label", active ? "Exit full screen" : "Enter full screen");
+      fullscreenButton.title = active ? "Exit full screen" : "Full screen";
+    }
+    fullscreenButton.addEventListener("click", toggleFullscreen);
+    document.addEventListener("fullscreenchange", syncFullscreenButton);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenButton);
+
     const scene = new THREE.Scene();
     scene.name = "omniverse";
     scene.background = new THREE.Color(0x02040a);
@@ -359,7 +390,8 @@
       updateStage();
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
-      joystick.setVisible(state.stage !== "title" && state.stage !== "prelude");\n      teamstick.setVisible(state.stage !== "title" && state.stage !== "prelude");
+      joystick.setVisible(state.stage !== "title" && state.stage !== "prelude");
+      teamstick.setVisible(state.stage !== "title" && state.stage !== "prelude");
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
@@ -407,6 +439,10 @@
       canvas.removeEventListener("pointercancel", onPointerUp);
       document.removeEventListener("pointerdown", unlockAudio);
       document.removeEventListener("keydown", unlockAudio);
+      fullscreenButton.removeEventListener("click", toggleFullscreen);
+      document.removeEventListener("fullscreenchange", syncFullscreenButton);
+      document.removeEventListener("webkitfullscreenchange", syncFullscreenButton);
+      fullscreenButton.remove();
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
