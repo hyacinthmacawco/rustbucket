@@ -1,18 +1,17 @@
-import { dimensions } from '../storage/state.js';
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-const d = dimensions.moon.values;
+import { dimensions } from '../storage/state.js';
 
 export function createMoon(scene) {
   const moon = new THREE.Mesh(
-    new THREE.SphereGeometry(d[0], d[1], d[2]),
+    new THREE.SphereGeometry(dimensions.moon.radius, 48, 32),
     new THREE.MeshStandardMaterial({
       color: 0x9ca3af,
       roughness: d[3]
     })
   );
 
-  moon.position.set(d[4], d[5], -d[6]);
+  moon.position.set(...dimensions.moon.position);
   scene.add(moon);
 
   return { moon };
