@@ -99,7 +99,9 @@ export async function createPhysics() {
       [RAPIER.ColliderDesc.cuboid(0.12,0.82,3.1).setTranslation(1.38,0,-1.9)],
       [RAPIER.ColliderDesc.cuboid(0.12,0.82,0.8).setTranslation(1.38,0,4.55)],
       [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,-5.0)],
-      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,5.0)]
+      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,5.0)],
+      [RAPIER.ColliderDesc.cuboid(1.68,0.08,0.73).setTranslation(-2.45,-0.08,-1.15)],
+      [RAPIER.ColliderDesc.cuboid(1.68,0.08,0.73).setTranslation(2.45,-0.08,-1.15)]
     ];
     for (const [descriptor] of vehiclePanels) world.createCollider(descriptor,body);
     for (let i=0;i<5;i++) {
@@ -112,12 +114,12 @@ export async function createPhysics() {
     const attitude = { yaw:0, pitch:0, roll:0 };
     const vehicleQuaternion = new THREE.Quaternion();
     object.userData.vehicleBody = body;
-    object.userData.moveVehicle = (dx,dz,lift,dt) => {
+    object.userData.moveVehicle = (dx,dz,lift,dt,steerInput=0) => {
       const current = body.translation();
       controller.computeColliderMovement(collider,{x:dx,y:lift*9.2*dt,z:dz});
       const movement = controller.computedMovement();
       body.setNextKinematicTranslation({x:current.x+movement.x,y:current.y+movement.y,z:current.z+movement.z});
-      const steer = THREE.MathUtils.clamp(dx / Math.max(dt,0.001) / 18,-1,1);
+      const steer = THREE.MathUtils.clamp(steerInput,-1,1);
       attitude.yaw = THREE.MathUtils.clamp(attitude.yaw + steer * 0.42 * dt,-0.58,0.58);
       attitude.roll = THREE.MathUtils.damp(attitude.roll,-steer*0.32,5,dt);
       attitude.pitch = THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
