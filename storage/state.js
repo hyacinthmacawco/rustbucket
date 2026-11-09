@@ -243,18 +243,53 @@ import { createJoystick } from "../hud/joystick.js";
     document.addEventListener("pointerdown", unlockAudio);
     document.addEventListener("keydown", unlockAudio);
 
-    // Drag-to-look is shared by every 3D stage. No automatic camera orbit.
+    // Pointer-based camera controls: one pointer rotates, two touch pointers
+    // exclusively pinch-zoom. A pinch can never leak into the rotate handler.
+    const cameraPointers = new Map();
     let draggingCamera = false;
     let lastPointerX = 0;
     let lastPointerY = 0;
+    let pinchDistance = 0;
 
     function onPointerDown(event) {
-      draggingCamera = true;
-      lastPointerX = event.clientX;
-      lastPointerY = event.clientY;
-      canvas.setPointerCapture(event.pointerId);
+      if (event.pointerType === "touch") {
+        cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (cameraPointers.size >= 2) {
+          draggingCamera = false;
+          const points = [...cameraPointers.values()];
+          pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        } else {
+          lastPointerX = event.clientX;
+          lastPointerY = event.clientY;
+          draggingCamera = true;
+        }
+      } else {
+        draggingCamera = true;
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+      }
+      if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
     }
     function onPointerMove(event) {
+      if (event.pointerType === "touch") {
+        if (!cameraPointers.has(event.pointerId)) return;
+        cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (cameraPointers.size >= 2) {
+          const points = [...cameraPointers.values()];
+          const next = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          if (pinchDistance > 0) {
+            cameraDistance = THREE.MathUtils.clamp(
+              cameraDistance - (next - pinchDistance) * 0.035,
+              cameraPreset.minDistance,
+              cameraPreset.maxDistance
+            );
+            updateCamera();
+          }
+          pinchDistance = next;
+          event.preventDefault();
+          return;
+        }
+      }
       if (!draggingCamera) return;
       const dx = event.clientX - lastPointerX;
       const dy = event.clientY - lastPointerY;
@@ -268,17 +303,34 @@ import { createJoystick } from "../hud/joystick.js";
       );
       updateCamera();
     }
-    function onPointerUp() { draggingCamera = false; }
+    function onPointerUp(event) {
+      cameraPointers.delete(event.pointerId);
+      if (event.pointerType === "touch") {
+        draggingCamera = false;
+        pinchDistance = 0;
+        if (cameraPointers.size === 1) {
+          const remaining = [...cameraPointers.values()][0];
+          lastPointerX = remaining.x;
+          lastPointerY = remaining.y;
+        }
+      } else {
+        draggingCamera = false;
+      }
+    }
 
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointercancel", onPointerUp);
-    canvas.addEventListener("wheel", e => { e.preventDefault(); cameraDistance=THREE.MathUtils.clamp(cameraDistance+e.deltaY*.025,cameraPreset.minDistance,cameraPreset.maxDistance);updateCamera(); }, {passive:false});
-    let pinchDistance=0;
-    canvas.addEventListener("touchstart",e=>{if(e.touches.length===2)pinchDistance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
-    canvas.addEventListener("touchmove",e=>{if(e.touches.length!==2||!pinchDistance)return;const next=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cameraDistance=THREE.MathUtils.clamp(cameraDistance-(next-pinchDistance)*.035,cameraPreset.minDistance,cameraPreset.maxDistance);pinchDistance=next;updateCamera();e.preventDefault();},{passive:false});
-    canvas.addEventListener("touchend",()=>{pinchDistance=0;},{passive:true});
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      cameraDistance = THREE.MathUtils.clamp(
+        cameraDistance + e.deltaY * 0.025,
+        cameraPreset.minDistance,
+        cameraPreset.maxDistance
+      );
+      updateCamera();
+    }, { passive: false });
 
     // Region objects are imported and instantiated only after the camera is
     // found to be near that region. Each region is held in one removable group.
@@ -508,12 +560,12 @@ import { createJoystick } from "../hud/joystick.js";
       }
 
       const delta = Math.min(clock.getDelta(), 0.05);
-      if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
       const elapsed = clock.elapsedTime;
 
       if (!state.paused && state.stage === "gameplay" && keyboardController) {
         keyboardController.update(delta);
       }
+      if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
 
       if (state.stage === "title" && titleObjects) {
         titleObjects.earth.rotation.y += delta * 0.07;
