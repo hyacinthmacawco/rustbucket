@@ -104,9 +104,9 @@ export async function createPhysics() {
   function step(delta) {
     world.timestep = Math.min(delta, 1 / 30);
     world.step();
-    for (const { object, body } of bodies) {
+    for (const { object, body, vehicle = false } of bodies) {
       const position = body.translation();
-      object.position.set(position.x, position.y - (bodies.find(entry => entry.body === body)?.vehicle ? 0 : 0.75), position.z);
+      object.position.set(position.x, position.y - (vehicle ? 0 : 0.75), position.z);
     }
   }
 
