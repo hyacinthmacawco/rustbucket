@@ -64,7 +64,8 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       antialias: !(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)),
       powerPreference: "high-performance",
       stencil: false,
-      depth: true
+      depth: true,
+      preserveDrawingBuffer: true
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -93,14 +94,25 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     let entities = null;
 
     function updateCamera() {
-      const selectedEntity = activeStage === "gameplay" && entities
-        ? entities[keyboardController?.selected || "ben"]
-        : null;
+      const selectedName = keyboardController?.selected || "ben";
+      const selectedEntity = activeStage === "gameplay" && entities ? entities[selectedName] : null;
+      const ship = activeStage === "gameplay" ? entities?.rustbucket : null;
+      if (ship && selectedEntity && selectedName !== "rustbucket") {
+        ship.updateMatrixWorld(true);
+        const local = ship.worldToLocal(selectedEntity.position.clone());
+        const insideCabin = local.x > -1.18 && local.x < 1.18 && local.z > 1.65 && local.z < 4.65 && local.y > -2.9 && local.y < 0.8;
+        if (insideCabin) {
+          const cameraPoint = ship.localToWorld(new THREE.Vector3(0,0.25,0.2));
+          const targetPoint = ship.localToWorld(new THREE.Vector3(0,0.35,3.1));
+          camera.position.copy(cameraPoint);
+          camera.lookAt(targetPoint);
+          return;
+        }
+      }
       const followedEntity = selectedEntity || ben;
       const target = activeStage === "gameplay" && followedEntity
         ? new THREE.Vector3(followedEntity.position.x, followedEntity.position.y + 1.8, followedEntity.position.z)
         : cameraTarget;
-
       const horizontal = Math.cos(cameraPitch) * cameraDistance;
       camera.position.set(
         target.x + Math.sin(cameraYaw) * horizontal,
@@ -621,6 +633,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         keyboardController.update(delta);
       }
       if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
+      if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
       if (state.stage === "title" && titleObjects) {
         titleObjects.earth.rotation.y += delta * 0.07;
