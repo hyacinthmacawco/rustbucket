@@ -52,15 +52,15 @@ export function createBellwood(scene, parent = scene) {
   }
 
   // Broad ground and the street running in front of the storage facility.
-  box(root, [520, 1, 520], [0, -1.2, 0], groundMat);
-  box(root, [520, 0.12, 34], [0, -0.62, 70], asphaltMat);
-  box(root, [520, 0.18, 5], [0, -0.48, 50], sidewalkMat);
-  box(root, [520, 0.18, 5], [0, -0.48, 90], sidewalkMat);
+  box(root, [520, 1, 520], [0, -0.5, 0], groundMat);
+  box(root, [520, 0.12, 34], [0, -0.06, 70], asphaltMat);
+  box(root, [520, 0.18, 5], [0, -0.09, 50], sidewalkMat);
+  box(root, [520, 0.18, 5], [0, -0.09, 90], sidewalkMat);
 
   // Road center markings.
   const markingMat = new THREE.MeshBasicMaterial({ color: 0xd8d1a5 });
   for (let x = -245; x < 245; x += 18) {
-    box(root, [9, 0.025, 0.22], [x, -0.54, 70], markingMat);
+    box(root, [9, 0.025, 0.22], [x, 0.005, 70], markingMat);
   }
 
   // Urban blocks on both sides of the road, kept away from the camera's
@@ -75,7 +75,7 @@ export function createBellwood(scene, parent = scene) {
       const building = box(
         root,
         [width, height, depth],
-        [x, height / 2 - 0.65, z],
+        [x, height / 2, z],
         buildingMats[i % buildingMats.length]
       );
       building.name = "BellwoodBuilding";
@@ -102,7 +102,7 @@ export function createBellwood(scene, parent = scene) {
         new THREE.CylinderGeometry(0.35, 0.48, 4.2, 8),
         trunkMat
       );
-      trunk.position.set(x, 1.5, z);
+      trunk.position.set(x, 2.1, z);
       trunk.castShadow = true;
       root.add(trunk);
 
@@ -110,7 +110,7 @@ export function createBellwood(scene, parent = scene) {
         new THREE.SphereGeometry(2.6, 10, 8),
         leafMats[i % leafMats.length]
       );
-      crown.position.set(x, 4.5, z);
+      crown.position.set(x, 5.1, z);
       crown.castShadow = true;
       root.add(crown);
     }
