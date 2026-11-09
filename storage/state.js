@@ -326,10 +326,11 @@ import { createTutorialLabel } from "../hud/tutorial.js";
           titleObjects = { ...sun, ...earth, ...moon, ...starfield };
         } else if (name === "bellwood") {
           // Only Bellwood's nearby environment and tutorial models are loaded.
-          const [bellwoodModule, unitModule, shipModule, benModule, gwenModule, kevinModule, rookModule, controllerModule] = await Promise.all([
+          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule] = await Promise.all([
             import("../omniverse/bellwood.js"),
             import("../omniverse/kevin-storage-unit.js"),
             import("../omniverse/rustbucket.js"),
+            import("../omniverse/human-rig.js"),
             import("../omniverse/ben.js"),
             import("../omniverse/gwen.js"),
             import("../omniverse/kevin.js"),
@@ -339,12 +340,35 @@ import { createTutorialLabel } from "../hud/tutorial.js";
           bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
-          ben = benModule.default(THREE);
-          const gwen = gwenModule.createGwen(THREE);
-          const kevin = kevinModule.createKevin(THREE);
-          const rook = rookModule.createRook(THREE);
-          group.add(ben, gwen, kevin, rook);
-          entities = { ben, gwen, kevin, rook, rustbucket: ship };
+          const { createHumanRig } = rigModule;
+          const benCharacter = benModule.createBen({ createHumanRig });
+          const gwenCharacter = gwenModule.createGwen({ createHumanRig });
+          const kevinCharacter = kevinModule.createKevin({ createHumanRig });
+          const rookCharacter = rookModule.createRook({ createHumanRig });
+          const characterEntries = [
+            ["ben", benCharacter],
+            ["gwen", gwenCharacter],
+            ["kevin", kevinCharacter],
+            ["rook", rookCharacter]
+          ];
+          const characterEntities = {};
+          for (const [name, character] of characterEntries) {
+            const config = dimensions[name];
+            character.group.position.set(...config.position);
+            character.group.scale.set(...config.scale);
+            character.group.setAnimation = animation => {
+              character.rig.setWalking(animation === "walk");
+            };
+            character.group.update = delta => {
+              character.animationTime = (character.animationTime || 0) + delta;
+              character.rig.updateWalk(character.animationTime);
+            };
+            character.group.setAnimation("idle");
+            characterEntities[name] = character.group;
+            group.add(character.group);
+          }
+          ben = benCharacter.group;
+          entities = { ...characterEntities, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
           keyboardController = controllerModule.createKeyboard({
