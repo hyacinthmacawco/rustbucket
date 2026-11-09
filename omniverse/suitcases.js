@@ -6,7 +6,7 @@ export function createSuitcases(parent) {
   const suitcases = owners.map((owner, index) => {
     const group = new THREE.Group();
     group.name = `${owner[0].toUpperCase()}${owner.slice(1)}Suitcase`;
-    group.position.set(-5.4 + index * 3.6, 0.38, 5.5);
+    group.position.set(19.5, -0.19, -9 + index * 6);
     group.userData.pickable = true;
     group.userData.owner = owner;
     group.userData.carriedBy = null;
