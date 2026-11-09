@@ -88,7 +88,24 @@ export async function createPhysics() {
   function addVehicle(object) {
     const p = object.position;
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y,p.z));
-    const collider = world.createCollider(RAPIER.ColliderDesc.cuboid(1.65,0.85,5.5).setFriction(0.75),body);
+    // A thin deck collider drives vehicle movement; surrounding panels and stair
+    // colliders let characters physically board through the open starboard doorway.
+    const collider = world.createCollider(
+      RAPIER.ColliderDesc.cuboid(1.32,0.12,5.0).setTranslation(0,-1.18,0).setFriction(0.75), body
+    );
+    const vehiclePanels = [
+      [RAPIER.ColliderDesc.cuboid(0.12,0.82,5.0).setTranslation(-1.38,0,0)],
+      [RAPIER.ColliderDesc.cuboid(0.12,0.82,3.1).setTranslation(1.38,0,-1.9)],
+      [RAPIER.ColliderDesc.cuboid(0.12,0.82,0.8).setTranslation(1.38,0,4.55)],
+      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,-5.0)],
+      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,5.0)]
+    ];
+    for (const [descriptor] of vehiclePanels) world.createCollider(descriptor,body);
+    for (let i=0;i<5;i++) {
+      const stair = RAPIER.ColliderDesc.cuboid(0.52,0.09,0.24)
+        .setTranslation(2.05,-1.75+i*0.34,3.45-i*0.48).setFriction(0.9);
+      world.createCollider(stair,body);
+    }
     const controller = world.createCharacterController(0.04);
     controller.setSlideEnabled(true);
     object.userData.vehicleBody = body;
