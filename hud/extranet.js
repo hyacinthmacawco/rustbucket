@@ -4,7 +4,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   root.innerHTML = `
     <div id="extranet-window">
       <header id="extranet-header"><div><span class="extranet-mark">◉</span><strong>EXTRANET</strong><small>BEN 10 NETWORK</small></div><button id="extranet-close" aria-label="Close">×</button></header>
-      <nav id="extranet-toolbar"><button id="extranet-back">‹</button><div id="extranet-address">extranet://home</div><button id="extranet-home">⌂</button></nav>
+      <nav id="extranet-toolbar"><button id="extranet-back">‹</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home">⌂</button></nav>
       <main id="extranet-page"></main>
     </div>`;
   document.body.appendChild(root);
@@ -24,7 +24,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   let completionValues = [];
 
   function home() {
-    current = "home"; address.textContent = "extranet://home";
+    current = "home"; address.value = "extranet://home";
     page.innerHTML = `<div class="extranet-welcome"><div class="extranet-orbit">◉</div><h1>Extranet</h1><p>Connected to the Plumber network</p></div>
       <div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b><small>ottps://bgkr.omnicloud.com</small></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b><small>ottps://en.omnidata.org</small></span></button></div>`;
     page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
@@ -82,7 +82,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   }
   function updateTask(count = storedCount + 1) {
     storedCount = Math.max(storedCount, count);
-    tasks();
+    if (current === "tasks") tasks();
     if (storedCount >= 4 && !completed) {
       completed = true;
       showCompletion();
@@ -100,6 +100,17 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   root.querySelector("#extranet-close").addEventListener("click",close);
   root.querySelector("#extranet-back").addEventListener("click",()=>current==="home"?close():current==="private"||current==="omnidata"?home():privateCloud());
   root.querySelector("#extranet-home").addEventListener("click",home);
+  address.addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+    const url = address.value.trim().toLowerCase();
+    if (url.includes("bgkr.omnicloud.com")) {
+      if (url.endsWith("/tasks")) tasks();
+      else if (url.endsWith("/relationships")) showRelationships();
+      else if (url.endsWith("/memories")) memories();
+      else privateCloud();
+    } else if (url.includes("en.omnidata.org")) omnidata();
+    else if (url === "extranet://home") home();
+  });
   function open() { root.style.display="flex"; home(); }
   function close() { root.style.display="none"; }
   home();
