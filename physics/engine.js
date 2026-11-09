@@ -106,7 +106,7 @@ export async function createPhysics() {
     for (const [descriptor] of vehiclePanels) world.createCollider(descriptor,body);
     for (let i=0;i<5;i++) {
       const stair = RAPIER.ColliderDesc.cuboid(0.52,0.09,0.24)
-        .setTranslation(2.05,-1.75+i*0.34,3.45-i*0.48).setFriction(0.9);
+        .setTranslation(2.05,-1.85+i*0.32,3.45-i*0.48).setFriction(0.9);
       world.createCollider(stair,body);
     }
     const controller = world.createCharacterController(0.04);
