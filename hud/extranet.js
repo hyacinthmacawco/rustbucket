@@ -27,8 +27,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
 
   function home() {
     current = "home"; address.value = "extranet://home";
-    page.innerHTML = `<div class="extranet-welcome"><div class="extranet-orbit">◉</div><h1>Extranet</h1><p>Connected to the Plumber network</p></div>
-      <div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b><small>ottps://bgkr.omnicloud.com</small></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b><small>ottps://en.omnidata.org</small></span></button></div>`;
+    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b><small>ottps://bgkr.omnicloud.com</small></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b><small>ottps://en.omnidata.org</small></span></button></div>`;
     page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
   }
   function privateCloud() {
@@ -68,7 +67,44 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   }
   function omnidata() {
     current = "omnidata"; address.value = "ottps://en.omnidata.org";
-    page.innerHTML = `<div class="cloud-heading"><div>OMNIDATA</div><small>INTERGALACTIC KNOWLEDGE INDEX</small></div><p class="extranet-copy">Welcome to Omnidata. The public knowledge portal is available from this terminal.</p>`;
+    const systems = {
+      solar: {name:"SOLAR SYSTEM", body:"Earth, the Moon, Mars and other known worlds orbit the Sun. Earth is the team's homeworld.", worlds:"Earth • Moon • Mars • Saturn • Pluto", status:"ACTIVE / HOME SYSTEM", source:"https://ben10.fandom.com/wiki/Solar_System"},
+      highbreed: {name:"HIGHBREED SYSTEM", body:"Augstaka is the Highbreed homeworld. It is described as a temperate world with rolling green hills, coastal waters and large cities. At least one moon is known.", worlds:"Augstaka • at least one moon", status:"ACTIVE / AUGSTAKA", source:"https://ben10.fandom.com/wiki/Augstaka"},
+      incursean: {name:"INCURSEAN SYSTEM", body:"Incursia was the Incursean homeworld. It was destroyed after an attempt to use Ascalon to end a civil war.", worlds:"Incursia (destroyed)", status:"DESTROYED / HISTORICAL", source:"https://ben10.fandom.com/wiki/Incursia"},
+      anodite: {name:"ANODITE SYSTEM", body:"Anodyne is the home planet of the Anodites. From space it appears dark red, with orange rings.", worlds:"Anodyne", status:"ACTIVE / ANODYNE", source:"https://ben10.fandom.com/wiki/Anodyne"},
+      galvan: {name:"GALVAN STAR SYSTEM", body:"Galvan is the system's star. Galvan Prime is the Galvan homeworld; Galvan B is its moon and home of the Galvanic Mechamorphs.", worlds:"Galvan • Galvan Prime • Galvan B", status:"ACTIVE / GALVAN PRIME", source:"https://ben10.fandom.com/wiki/Galvan_Star_System_(Classic)"}
+    };
+    page.innerHTML = `<div class="cloud-heading"><div>OMNIDATA</div><small>CELESTIAL NAVIGATION CHART • MILKY WAY</small></div>
+      <div id="omnidata-layout">
+        <div id="omnidata-map-wrap"><div id="omnidata-map-title">KNOWN SYSTEM NETWORK <span>5 SYSTEMS INDEXED</span></div>
+          <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Connected map of five Ben 10 star systems">
+            <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
+            <rect width="900" height="520" rx="14" fill="#06140e"/>
+            <ellipse cx="455" cy="255" rx="420" ry="245" fill="url(#omni-nebula)"/>
+            <g class="omni-routes"><path d="M130 370 L335 155 L560 105 L770 280 L565 425 L130 370"/><path d="M335 155 L565 425"/><path d="M560 105 L770 280"/></g>
+            <g class="omni-stars"><circle cx="65" cy="65" r="1.5"/><circle cx="250" cy="70" r="2"/><circle cx="430" cy="65" r="1.4"/><circle cx="700" cy="70" r="1.6"/><circle cx="840" cy="150" r="1.5"/><circle cx="90" cy="250" r="1.4"/><circle cx="430" cy="300" r="1.4"/><circle cx="830" cy="440" r="2"/><circle cx="300" cy="450" r="1.5"/></g>
+            <g class="omni-node" data-system="solar" tabindex="0" role="button" aria-label="Solar System"><circle class="omni-halo" cx="130" cy="370" r="30"/><circle class="omni-core solar" cx="130" cy="370" r="10"/><text x="130" y="414" text-anchor="middle">SOLAR</text></g>
+            <g class="omni-node" data-system="highbreed" tabindex="0" role="button" aria-label="Highbreed System"><circle class="omni-halo" cx="335" cy="155" r="30"/><circle class="omni-core highbreed" cx="335" cy="155" r="10"/><text x="335" y="199" text-anchor="middle">HIGHBREED</text></g>
+            <g class="omni-node" data-system="incursean" tabindex="0" role="button" aria-label="Incursean System"><circle class="omni-halo" cx="560" cy="105" r="30"/><circle class="omni-core incursean" cx="560" cy="105" r="10"/><text x="560" y="149" text-anchor="middle">INCURSEAN</text></g>
+            <g class="omni-node" data-system="galvan" tabindex="0" role="button" aria-label="Galvan Star System"><circle class="omni-halo" cx="770" cy="280" r="30"/><circle class="omni-core galvan" cx="770" cy="280" r="10"/><text x="770" y="324" text-anchor="middle">GALVAN</text></g>
+            <g class="omni-node" data-system="anodite" tabindex="0" role="button" aria-label="Anodite System"><circle class="omni-halo" cx="565" cy="425" r="30"/><circle class="omni-core anodite" cx="565" cy="425" r="10"/><text x="565" y="469" text-anchor="middle">ANODITE</text></g>
+          </svg>
+          <div class="omni-map-legend"><span>● ACTIVE SYSTEM</span><span>— NAVIGATION LINK (SCHEMATIC)</span></div>
+        </div>
+        <aside id="omnidata-detail"><div class="omni-detail-kicker">SELECT A STAR SYSTEM</div><h2>GALACTIC DATABASE</h2><p>Choose a node on the chart to inspect its known worlds and status.</p></aside>
+      </div>
+      <div class="omni-attribution">Reference: <a href="https://ben10.fandom.com/wiki/Category:Celestial_Bodies" target="_blank" rel="noopener">Ben 10 Wiki — Celestial Bodies</a>. Route lines are illustrative, not measured distances.</div>`;
+    const detail = page.querySelector("#omnidata-detail");
+    const selectSystem = key => {
+      const item = systems[key]; if (!item) return;
+      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
+      detail.innerHTML = `<div class="omni-detail-kicker">${item.status}</div><h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds-label">KNOWN CELESTIAL BODIES</div><div class="omni-worlds">${item.worlds}</div><a class="omni-source" href="${item.source}" target="_blank" rel="noopener">OPEN WIKI ENTRY ↗</a>`;
+    };
+    page.querySelectorAll(".omni-node").forEach(node => {
+      node.addEventListener("click",()=>selectSystem(node.dataset.system));
+      node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectSystem(node.dataset.system);}});
+    });
+    selectSystem("solar");
   }
   function capturePhoto() {
     const canvas = document.querySelector("#omniverse");
@@ -100,7 +136,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     completionPresented = true;
     const panel = document.createElement("div");
     panel.id = "mission-complete";
-    panel.innerHTML = `<div class="mission-complete-title">TASK COMPLETED</div><div class="mission-complete-sub">RELATIONSHIP INCREASE</div><div class="mission-respect">${completionValues.map(v=>`<div>${v}</div>`).join("")}</div><button id="mission-continue">CONTINUE</button>`;
+    panel.innerHTML = `<div class="mission-complete-title">TASK COMPLETED</div><div class="mission-complete-sub">RELATIONSHIP INCREASE</div><div class="mission-respect">${completionValues.map(v=>`<div>${v}</div>`).join("")}</div><button id="mission-continue">DISMISS</button>`;
     document.body.appendChild(panel);
     panel.querySelector("#mission-continue").addEventListener("click",()=>{panel.remove();onContinue();});
   }
