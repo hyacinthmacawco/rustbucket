@@ -87,26 +87,27 @@ export async function createPhysics() {
 
   function addVehicle(object) {
     const p = object.position;
+    const scale = object.scale.x || 1;
+    const scaled = value => value * scale;
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y,p.z));
-    // A thin deck collider drives vehicle movement; surrounding panels and stair
-    // colliders let characters physically board through the open starboard doorway.
+    // The vehicle's Rapier shapes use the same two-times scale as its rendered model.
     const collider = world.createCollider(
-      RAPIER.ColliderDesc.cuboid(1.32,0.12,5.0).setTranslation(0,-1.4,0).setFriction(0.75), body
+      RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.06),scaled(5.0)).setTranslation(0,scaled(-0.55),0).setFriction(0.75), body
     );
     const vehiclePanels = [
-      [RAPIER.ColliderDesc.cuboid(1.25,0.10,4.8).setTranslation(0,-0.55,0)],
-      [RAPIER.ColliderDesc.cuboid(0.12,0.82,5.0).setTranslation(-1.38,0,0)],
-      [RAPIER.ColliderDesc.cuboid(0.12,0.82,3.1).setTranslation(1.38,0,-1.9)],
-      [RAPIER.ColliderDesc.cuboid(0.12,0.82,0.8).setTranslation(1.38,0,4.55)],
-      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,-5.0)],
-      [RAPIER.ColliderDesc.cuboid(1.32,0.12,0.12).setTranslation(0,0,5.0)],
-      [RAPIER.ColliderDesc.cuboid(1.68,0.08,0.73).setTranslation(-2.45,-0.08,-1.15)],
-      [RAPIER.ColliderDesc.cuboid(1.68,0.08,0.73).setTranslation(2.45,-0.08,-1.15)]
+      RAPIER.ColliderDesc.cuboid(scaled(1.25),scaled(0.10),scaled(4.8)).setTranslation(0,scaled(-0.55),0),
+      RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(5.0)).setTranslation(scaled(-1.38),0,0),
+      RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(3.1)).setTranslation(scaled(1.38),0,scaled(-1.9)),
+      RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(0.8)).setTranslation(scaled(1.38),0,scaled(4.55)),
+      RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.12),scaled(0.12)).setTranslation(0,0,scaled(-5.0)),
+      RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.12),scaled(0.12)).setTranslation(0,0,scaled(5.0)),
+      RAPIER.ColliderDesc.cuboid(scaled(2.35),scaled(0.08),scaled(0.98)).setTranslation(scaled(-2.85),scaled(-0.08),scaled(-1.15)),
+      RAPIER.ColliderDesc.cuboid(scaled(2.35),scaled(0.08),scaled(0.98)).setTranslation(scaled(2.85),scaled(-0.08),scaled(-1.15))
     ];
-    for (const [descriptor] of vehiclePanels) world.createCollider(descriptor,body);
+    for (const descriptor of vehiclePanels) world.createCollider(descriptor,body);
     for (let i=0;i<5;i++) {
-      const stair = RAPIER.ColliderDesc.cuboid(0.52,0.09,0.24)
-        .setTranslation(2.05,-1.85+i*0.32,3.45-i*0.48).setFriction(0.9);
+      const stair = RAPIER.ColliderDesc.cuboid(scaled(0.52),scaled(0.09),scaled(0.24))
+        .setTranslation(scaled(2.05),scaled(-1.2+i*0.16),scaled(3.45-i*0.48)).setFriction(0.9);
       world.createCollider(stair,body);
     }
     const controller = world.createCharacterController(0.04);
@@ -120,8 +121,8 @@ export async function createPhysics() {
       const movement = controller.computedMovement();
       body.setNextKinematicTranslation({x:current.x+movement.x,y:current.y+movement.y,z:current.z+movement.z});
       const steer = THREE.MathUtils.clamp(steerInput,-1,1);
-      attitude.yaw = THREE.MathUtils.clamp(attitude.yaw + steer * 0.42 * dt,-0.58,0.58);
-      attitude.roll = THREE.MathUtils.damp(attitude.roll,-steer*0.32,5,dt);
+      attitude.yaw = THREE.MathUtils.clamp(attitude.yaw - steer * 0.42 * dt,-0.58,0.58);
+      attitude.roll = THREE.MathUtils.damp(attitude.roll,steer*0.32,5,dt);
       attitude.pitch = THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
       vehicleQuaternion.setFromEuler(new THREE.Euler(attitude.pitch,attitude.yaw,attitude.roll,"YXZ"));
       body.setNextKinematicRotation(vehicleQuaternion);
