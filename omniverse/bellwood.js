@@ -51,17 +51,22 @@ export function createBellwood(scene, parent = scene) {
     return mesh;
   }
 
-  // Broad ground and the street running in front of the storage facility.
-  box(root, [520, 1, 520], [0, -0.5, 0], groundMat);
-  box(root, [520, 0.12, 34], [0, -0.06, 70], asphaltMat);
-  box(root, [520, 0.18, 5], [0, -0.09, 50], sidewalkMat);
-  box(root, [520, 0.18, 5], [0, -0.09, 90], sidewalkMat);
-
-  // Road center markings.
-  const markingMat = new THREE.MeshBasicMaterial({ color: 0xd8d1a5 });
-  for (let x = -245; x < 245; x += 18) {
-    box(root, [9, 0.025, 0.22], [x, 0.005, 70], markingMat);
-  }
+  // The road and sidewalks are painted into the ground texture.
+  const roadCanvas = document.createElement('canvas');
+  roadCanvas.width = 1024; roadCanvas.height = 1024;
+  const ctx = roadCanvas.getContext('2d');
+  ctx.fillStyle = '#64734f'; ctx.fillRect(0,0,1024,1024);
+  const roadY = 512 + (70 / 520) * 1024;
+  const roadH = (34 / 520) * 1024; const walkH = (5 / 520) * 1024;
+  ctx.fillStyle = '#9b9b91';
+  ctx.fillRect(0,roadY-roadH/2-walkH,1024,walkH);
+  ctx.fillRect(0,roadY+roadH/2,1024,walkH);
+  ctx.fillStyle = '#343a40'; ctx.fillRect(0,roadY-roadH/2,1024,roadH);
+  ctx.strokeStyle = '#d8d1a5'; ctx.lineWidth = 3; ctx.setLineDash([18,18]);
+  ctx.beginPath(); ctx.moveTo(0,roadY); ctx.lineTo(1024,roadY); ctx.stroke();
+  const roadTexture = new THREE.CanvasTexture(roadCanvas); roadTexture.colorSpace = THREE.SRGBColorSpace;
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(520,520), new THREE.MeshStandardMaterial({map:roadTexture,roughness:1}));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.5; ground.receiveShadow = true; ground.userData.noPhysics = true; root.add(ground);
 
   // Urban blocks on both sides of the road, kept away from the camera's
   // immediate view of Kevin's storage unit.
