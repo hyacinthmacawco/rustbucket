@@ -102,10 +102,16 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         const local = ship.worldToLocal(selectedEntity.position.clone());
         const insideCabin = local.x > -1.18 && local.x < 1.18 && local.z > 1.65 && local.z < 4.65 && local.y > -2.9 && local.y < 0.8;
         if (insideCabin) {
-          const cameraPoint = ship.localToWorld(new THREE.Vector3(0,0.25,0.2));
-          const targetPoint = ship.localToWorld(new THREE.Vector3(0,0.35,3.1));
-          camera.position.copy(cameraPoint);
-          camera.lookAt(targetPoint);
+          const anchor = new THREE.Vector3(0,0.3,0.15);
+          const orbitDistance = 3.2;
+          const horizontal = Math.cos(cameraPitch) * orbitDistance;
+          const offset = new THREE.Vector3(
+            Math.sin(cameraYaw) * horizontal,
+            Math.sin(cameraPitch) * orbitDistance,
+            Math.cos(cameraYaw) * horizontal
+          );
+          camera.position.copy(ship.localToWorld(anchor.clone().add(offset)));
+          camera.lookAt(ship.localToWorld(anchor));
           return;
         }
       }
@@ -180,9 +186,9 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       pauseOverlay.style.display = state.paused ? "flex" : "none";
       pauseButton.textContent = state.paused ? "▶" : "Ⅱ";
       pauseButton.setAttribute("aria-label", state.paused ? "Resume game" : "Pause game");
-      if (music) {
-        if (state.paused) music.pause();
-        else if (audioUnlocked) music.play().catch(() => {});
+      if (musicTrack) {
+        if (state.paused) musicTrack.pause();
+        else if (audioUnlocked) musicTrack.play().catch(() => {});
       }
     }
     pauseButton.addEventListener("click", () => setPaused(!state.paused));
@@ -191,7 +197,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     document.addEventListener("keydown", pauseKey);
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
-      onComplete: () => playStageMusic("./hud/ov-end-credits.mp3", false)
+      onComplete: () => playSfx("./hud/ov-end-credits.mp3")
     });
     const extranetButton = document.createElement("button");
     extranetButton.id = "extranet-button";
@@ -208,57 +214,63 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     
     
 
-    // One audio handle is reused for the active stage's soundtrack/dialogue.
-    let music = null;
+    // Music loops independently; SFX are one-shot and never replace music.
+    let musicTrack = null;
+    const sfxTracks = new Set();
     let audioUnlocked = false;
-    let preludeEndedHandler = null;
 
     function stopMusic() {
-      if (!music) return;
-      if (preludeEndedHandler) {
-        music.removeEventListener("ended", preludeEndedHandler);
-        preludeEndedHandler = null;
-      }
-      music.pause();
-      music.currentTime = 0;
-      music.src = "";
-      music = null;
+      if (!musicTrack) return;
+      musicTrack.pause();
+      musicTrack.currentTime = 0;
+      musicTrack.src = "";
+      musicTrack = null;
     }
 
-    function playStageMusic(src, loop = false, onEnded = null) {
+    function playMusic(src) {
       stopMusic();
-      music = new Audio(new URL(src, document.baseURI).href);
-      music.loop = loop;
-      music.volume = 0.55;
-      music.preload = "auto";
-      music.load();
-      music.addEventListener("error", () => {
-        console.error("Could not load soundtrack:", music?.src);
+      const track = new Audio(new URL(src, document.baseURI).href);
+      track.loop = true;
+      track.volume = 0.55;
+      track.preload = "auto";
+      track.addEventListener("error", () => console.error("Could not load music:", track.src), { once: true });
+      musicTrack = track;
+      if (audioUnlocked) track.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
+    }
+
+    function playSfx(src, onEnded = null) {
+      const track = new Audio(new URL(src, document.baseURI).href);
+      track.loop = false;
+      track.volume = 0.7;
+      track.preload = "auto";
+      sfxTracks.add(track);
+      const cleanup = () => {
+        sfxTracks.delete(track);
+        if (onEnded) onEnded();
+      };
+      track.addEventListener("ended", cleanup, { once: true });
+      track.addEventListener("error", () => {
+        sfxTracks.delete(track);
+        console.error("Could not load SFX:", track.src);
       }, { once: true });
-      const activeTrack = music;
-      if (onEnded) {
-        preludeEndedHandler = onEnded;
-        activeTrack.addEventListener("ended", onEnded, { once: true });
-      }
-      if (!loop) {
-        activeTrack.addEventListener("ended", () => {
-          if (music === activeTrack) music = null;
-          preludeEndedHandler = null;
-        }, { once: true });
-      }
-      if (audioUnlocked) {
-        music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
+      if (audioUnlocked) track.play().catch(error => console.warn("SFX playback is waiting for interaction:", error));
+      return track;
+    }
+
+    function stopSfx(track = null) {
+      const tracks = track ? [track] : [...sfxTracks];
+      for (const item of tracks) {
+        item.pause();
+        item.currentTime = 0;
+        item.src = "";
+        sfxTracks.delete(item);
       }
     }
 
     function unlockAudio() {
       if (!audioUnlocked) audioUnlocked = true;
-      if (state.stage === "title") {
-        if (!music) playStageMusic("./hud/senji-v2-ov.mp3", true);
-        else if (music.paused) music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
-      } else if (music?.paused) {
-        music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
-      }
+      if (state.stage === "title" && !musicTrack) playMusic("./hud/senji-v2-ov.mp3");
+      else if (musicTrack?.paused) musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
     }
     function requestFullscreenOnGesture() {
       if (document.fullscreenElement || document.webkitFullscreenElement) return;
@@ -384,10 +396,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         const nearSun = cameraPosition.distanceTo(sun) < 180;
         return nearEarth || nearSun ? "space" : null;
       }
-      if (state.stage === "gameplay" || state.stage === "prelude") {
-        const bellwood = new THREE.Vector3(...dimensions.bellwood.position);
-        return cameraPosition.distanceTo(bellwood) < 350 ? "bellwood" : null;
-      }
+      if (state.stage === "gameplay" || state.stage === "prelude") return "bellwood";
       return null;
     }
 
@@ -588,7 +597,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         joystick.setVisible(false);
         
         setCameraPreset(dimensions.camera.title);
-        playStageMusic("./hud/senji-v2-ov.mp3", true);
+        playMusic("./hud/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
         titleScreen.setVisible(false);
         joystick.setVisible(false);
@@ -596,8 +605,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         if (!loadedRegion && !loadingRegion) loadRegion("bellwood");
         
         preludeScreen.style.display = "flex";
-        stopMusic();
-        playStageMusic("./hud/ov-final-dialogues.mp3", false, startGameplay);
+        playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
@@ -605,7 +613,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         
         
         setCameraPreset(dimensions.camera.gameplay);
-        playStageMusic("./hud/neodevol-ov.mp3", true);
+        playMusic("./hud/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
