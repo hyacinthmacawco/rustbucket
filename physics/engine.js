@@ -95,7 +95,6 @@ export async function createPhysics() {
       RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.06),scaled(5.0)).setTranslation(0,scaled(-0.55),0).setFriction(0.75), body
     );
     const vehiclePanels = [
-      RAPIER.ColliderDesc.cuboid(scaled(1.25),scaled(0.10),scaled(4.8)).setTranslation(0,scaled(-0.55),0),
       RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(5.0)).setTranslation(scaled(-1.38),0,0),
       RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(3.1)).setTranslation(scaled(1.38),0,scaled(-1.9)),
       RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(0.8)).setTranslation(scaled(1.38),0,scaled(4.55)),
