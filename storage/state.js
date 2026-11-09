@@ -492,6 +492,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
           const earthVisuals = earthModule.createEarth(spaceEnvironment);
           const moonVisuals = moonModule.createMoon(spaceEnvironment);
           const starVisuals = starModule.createStarfield(spaceEnvironment);
+          spaceEnvironment.traverse(object => { object.userData.noPhysics = true; });
           spaceEnvironment.visible = false;
           physics = await physicsModule.createPhysics();
           physics.addStaticScene(group);
