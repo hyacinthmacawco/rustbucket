@@ -765,3 +765,12 @@ button:not(#title-buttons button){background-color:var(--ui-green-fill)}
 #title-buttons button:hover,#title-buttons button:focus-visible{background:rgba(30,150,75,.28);color:#effff3}
 #pause-panel,#extranet-window,#extranet-page,#omnidata-map-wrap,#omnidata-detail,.task-card{border-color:var(--ui-green-border)}
 #pause-panel,#extranet-window{background-color:var(--ui-green-panel)}
+
+/* Extend the green material language to every form control and HUD surface. */
+input,select,textarea{accent-color:var(--ui-green);border-color:var(--ui-green-border);color:#e1ffea;background-color:rgba(8,48,25,.48)}
+input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);outline-offset:1px}
+#prelude-screen{background:rgba(2,18,9,.96);color:#e1ffea}
+#skip-dialogue,#resume-button,#pause-button,#extranet-button,#vehicle-lift-control,#action-controls button{border-color:var(--ui-green-border);color:#e1ffea}
+#load-game-panel,.game-error{background:rgba(5,28,15,.88);border-color:var(--ui-green-border)}
+#mission-complete{background:rgba(5,36,18,.84);border-color:var(--ui-green-border)}
+#mission-continue{background:rgba(20,115,58,.52);border-color:var(--ui-green-border);color:#e1ffea}
