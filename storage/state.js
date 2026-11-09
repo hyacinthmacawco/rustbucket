@@ -326,7 +326,7 @@ import { createJoystick } from "../hud/joystick.js";
           const starfield = starModule.createStarfield(group);
           titleObjects = { ...sun, ...earth, ...moon, ...starfield };
         } else if (name === "bellwood") {
-          // Only Bellwood's nearby environment and tutorial models are loaded.
+          // Only Bellwood's nearby environment and gameplay models are loaded.
           const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule, physicsModule] = await Promise.all([
             import("../omniverse/bellwood.js"),
             import("../omniverse/kevin-storage-unit.js"),
@@ -418,13 +418,13 @@ import { createJoystick } from "../hud/joystick.js";
         joystick.setVisible(isMobile);
         
         
-        setCameraPreset(dimensions.camera.tutorial);
+        setCameraPreset(dimensions.camera.gameplay);
         playStageMusic("./hud/neodevol-ov.mp3", true);
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(isMobile && activeStage === "gameplay");
-        teamstick.setVisible(isMobile && activeStage === "tutorial");
+        
         stopMusic();
       }
     }
@@ -439,7 +439,7 @@ import { createJoystick } from "../hud/joystick.js";
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
-      teamstick.setVisible(isMobile && state.stage === "tutorial");
+      
       
 
       // Decide what to instantiate from the camera's current world position.
