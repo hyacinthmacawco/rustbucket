@@ -1,395 +1,87 @@
-import { dimensions } from '../storage/state.js';
-export function createKevin (THREE) {
-  const root = new THREE.Group();
-  root.name = 'Kevin';
+import * as THREE from "three";
 
-  const body = new THREE.Group();
-  body.name = 'KevinBody';
-  root.add(body);
+export function createKevin({ createHumanRig }) {
+  if (typeof createHumanRig !== "function") throw new TypeError("createKevin requires createHumanRig.");
+  const rig = createHumanRig();
+  const { group, joints } = rig;
+  group.name = "KevinLevin";
+  group.traverse(o => { if (o.isMesh) o.visible = false; });
 
-  const material = (color, roughness = 0.85) =>
-    new THREE.MeshStandardMaterial({ color, roughness });
-
-  const skin = material(0xd5a18e);
-  const skinShadow = material(0x986d63);
-  const hair = material(0x111019);
-  const hairLight = material(0x252b43);
-  const shirt = material(0x111114);
-  const green = material(0x416c82);
-  const greenDark = material(0x293c59);
-  const pants = material(0x293c59);
-  const pantsLight = material(0x465a78);
-  const pantsDark = material(0x17263c);
-  const shoe = material(0x515b6b);
-  const white = material(0x687b91);
-  const sole = material(0x303b4b);
-
-  function mesh(geometry, mat, parent, position, scale) {
-    const object = new THREE.Mesh(geometry, mat);
-    object.position.set(...position);
-
-    if (scale) object.scale.set(...scale);
-
-    object.castShadow = true;
-    object.receiveShadow = true;
-    parent.add(object);
-    return object;
-  }
-
-  function box(parent, mat, position, size) {
-    return mesh(
-      new THREE.BoxGeometry(...size),
-      mat,
-      parent,
-      position
-    );
-  }
-
-  function sphere(parent, mat, position, scale) {
-    return mesh(
-      new THREE.SphereGeometry(1, 16, 12),
-      mat,
-      parent,
-      position,
-      scale
-    );
-  }
-
-  function capsule(parent, mat, a, b, radius, segments = 8) {
-    const start = new THREE.Vector3(...a);
-    const end = new THREE.Vector3(...b);
-    const direction = end.clone().sub(start);
-
-    const object = mesh(
-      new THREE.CapsuleGeometry(radius, direction.length(), 4, segments),
-      mat,
-      parent,
-      start.clone().add(end).multiplyScalar(0.5).toArray()
-    );
-
-    object.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      direction.normalize()
-    );
-
-    return object;
-  }
-
-  // --------------------------------------------------
-  // HEAD: intentionally blank, with no facial features.
-  // --------------------------------------------------
-
-  const head = new THREE.Group();
-  head.name = 'Head';
-  head.position.set(0, 3.12, 0);
-  body.add(head);
-
-  sphere(head, skin, [0, 0, 0], [0.37, 0.46, 0.32]);
-
-  // Neck.
-  capsule(
-    body, skin,
-    [0, 2.48, 0],
-    [0, 2.83, 0],
-    0.15
-  );
-
-  // Kevin's dark hair with long side locks and a rear length.
-  sphere(head, hair, [0, 0.27, -0.025], [0.40, 0.25, 0.35]);
-  sphere(head, hair, [0, -0.12, -0.18], [0.34, 0.36, 0.18]);
-  sphere(head, hairLight, [-0.10, 0.39, 0.17], [0.15, 0.09, 0.08]);
-  for (const side of [-1, 1]) {
-    const lock = mesh(new THREE.ConeGeometry(0.12, 0.68, 8), hair, head, [side * 0.28, -0.18, 0.04]);
-    lock.rotation.z = side * -0.08;
-    sphere(head, hair, [side * 0.29, -0.25, -0.10], [0.11, 0.34, 0.13]);
-  }
-
-  // --------------------------------------------------
-  // TORSO: black shirt with green center stripe.
-  // --------------------------------------------------
-
-  const torso = new THREE.Group();
-  torso.name = 'Torso';
-  torso.position.y = 2.12;
-  body.add(torso);
-
-  sphere(torso, shirt, [0, 0.12, 0], [0.43, 0.61, 0.25]);
-
-  // Main shirt body.
-  box(torso, shirt, [0, -0.17, 0], [0.69, 0.90, 0.40]);
-
-  // Green vertical shirt stripe.
-  box(torso, green, [0, -0.16, 0.207], [0.19, 0.90, 0.018]);
-
-  // Green shoulder panels.
-  sphere(torso, green, [-0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
-  sphere(torso, green, [0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
-
-  // Collar.
-  const collar = mesh(
-    new THREE.TorusGeometry(0.17, 0.035, 6, 16),
-    green,
-    torso,
-    [0, 0.52, 0],
-    [1, 0.7, 0.8]
-  );
-  collar.rotation.x = Math.PI / 2;
-
-  // --------------------------------------------------
-  // ARMS: pivoted at the shoulders.
-  // --------------------------------------------------
-
-  const arms = [];
-
-  for (const side of [-1, 1]) {
-    const shoulder = new THREE.Group();
-    shoulder.name = side < 0 ? 'LeftArm' : 'RightArm';
-    shoulder.position.set(side * 0.39, 0.30, 0);
-    torso.add(shoulder);
-    arms.push(shoulder);
-
-    // Green-and-black short sleeve.
-    sphere(
-      shoulder, shirt,
-      [side * 0.035, -0.10, 0],
-      [0.16, 0.24, 0.19]
-    );
-
-    sphere(
-      shoulder, green,
-      [side * 0.04, -0.22, 0.015],
-      [0.15, 0.09, 0.19]
-    );
-
-    // Upper arm and forearm.
-    capsule(
-      shoulder, skin,
-      [0, -0.25, 0],
-      [side * 0.015, -0.61, 0],
-      0.105
-    );
-
-    const elbow = new THREE.Group();
-    elbow.position.set(side * 0.015, -0.61, 0);
-    shoulder.add(elbow);
-    shoulder.userData.elbow = elbow;
-
-    capsule(
-      elbow, skin,
-      [0, 0, 0],
-      [side * 0.015, -0.47, 0.015],
-      0.09
-    );
-
-    sphere(
-      elbow, skin,
-      [side * 0.015, -0.53, 0.015],
-      [0.105, 0.12, 0.10]
-    );
-
-    // Simple hands, without individual fingers.
-    sphere(
-      elbow, skin,
-      [side * 0.015, -0.62, 0.02],
-      [0.115, 0.14, 0.09]
-    );
-  }
-
-  // --------------------------------------------------
-  // PANTS AND LEGS.
-  // --------------------------------------------------
-
-  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
-
-  const legs = [];
-
-  for (const side of [-1, 1]) {
-    const hip = new THREE.Group();
-    hip.name = side < 0 ? 'LeftLeg' : 'RightLeg';
-    hip.position.set(side * 0.17, 1.10, 0);
-    body.add(hip);
-    legs.push(hip);
-
-    // Wide brown trouser legs.
-    capsule(
-      hip, pants,
-      [0, 0, 0],
-      [side * 0.015, -0.90, 0],
-      0.17,
-      10
-    );
-
-    // Outer trouser seam.
-    capsule(
-      hip, pantsDark,
-      [side * 0.10, -0.05, 0.12],
-      [side * 0.10, -0.85, 0.12],
-      0.025
-    );
-
-    // Cargo pocket on each outer thigh.
-    const pocket = box(
-      hip,
-      pantsLight,
-      [side * 0.15, -0.48, 0.10],
-      [0.19, 0.27, 0.08]
-    );
-    pocket.rotation.z = side * -0.10;
-
-    box(
-      hip,
-      pantsDark,
-      [side * 0.15, -0.36, 0.15],
-      [0.18, 0.045, 0.025]
-    );
-
-    // Shoe pivot.
-    const foot = new THREE.Group();
-    foot.name = 'Foot';
-    foot.position.set(0, -0.94, 0.08);
-    hip.add(foot);
-    hip.userData.foot = foot;
-
-    // White sneaker sole.
-    box(
-      foot, sole,
-      [0, -0.075, 0.10],
-      [0.35, 0.10, 0.52]
-    );
-
-    // Sneaker upper.
-    sphere(
-      foot, shoe,
-      [0, 0, 0.10],
-      [0.17, 0.12, 0.25]
-    );
-
-    // White toe.
-    sphere(
-      foot, white,
-      [0, -0.015, 0.25],
-      [0.16, 0.085, 0.12]
-    );
-
-    // Green sneaker accent.
-    box(
-      foot, green,
-      [0, 0.055, 0.09],
-      [0.22, 0.025, 0.24]
-    );
-  }
-
-  // Kevin's signature suspenders, striped scarf, necklace and jean details.
-  for (const side of [-1, 1]) {
-    box(torso, green, [side * 0.20, -0.10, 0.215], [0.075, 0.72, 0.045]);
-    box(torso, greenDark, [side * 0.20, -0.39, 0.245], [0.15, 0.16, 0.025]);
-    sphere(torso, white, [side * 0.20, -0.39, 0.263], [0.018, 0.018, 0.012]);
-  }
-  const scarf = mesh(new THREE.TorusGeometry(0.17, 0.045, 8, 24), greenDark, torso, [0, 0.49, 0]);
-  scarf.rotation.x = Math.PI / 2;
-  box(torso, white, [0, 0.35, 0.23], [0.30, 0.035, 0.025]);
-  const necklace = mesh(new THREE.TorusGeometry(0.14, 0.012, 8, 24, Math.PI), white, torso, [0, 0.26, 0.18]);
-  necklace.rotation.x = Math.PI;
-  box(torso, white, [0, 0.08, 0.23], [0.13, 0.12, 0.035]);
-  box(body, pantsLight, [0, 1.10, 0.18], [0.48, 0.10, 0.025]);
-  box(body, pantsLight, [0.15, 0.68, 0.18], [0.16, 0.09, 0.025]);
-
-  // --------------------------------------------------
-  // CHARACTER CONTROL / PROCEDURAL ANIMATION.
-  // --------------------------------------------------
-
-  let animation = 'idle';
-  let elapsed = 0;
-  let verticalVelocity = 0;
-  let grounded = true;
-
-  root.position.set(...dimensions.kevin.position);
-  root.scale.set(...dimensions.kevin.scale);
-  const baseY = dimensions.kevin.position[1];
-  root.position.y = baseY;
-
-  root.userData.setAnimation = function (name) {
-    const allowed = ['idle', 'walk', 'run', 'jump'];
-
-    if (!allowed.includes(name)) {
-      throw new Error(
-        `Unknown Kevin animation "${name}". Use: ${allowed.join(', ')}`
-      );
-    }
-
-    animation = name;
+  const mat = {
+    skin: new THREE.MeshStandardMaterial({ color: 0xd0a18d, roughness: 0.92 }),
+    hair: new THREE.MeshStandardMaterial({ color: 0x17151b, roughness: 0.95 }),
+    shirt: new THREE.MeshStandardMaterial({ color: 0x10131a, roughness: 0.92 }),
+    shirtBlue: new THREE.MeshStandardMaterial({ color: 0x263e56, roughness: 0.9 }),
+    sleeve: new THREE.MeshStandardMaterial({ color: 0x77786e, roughness: 0.94 }),
+    sleeveDark: new THREE.MeshStandardMaterial({ color: 0x45483f, roughness: 0.94 }),
+    pants: new THREE.MeshStandardMaterial({ color: 0x17233b, roughness: 0.94 }),
+    belt: new THREE.MeshStandardMaterial({ color: 0x303b42, roughness: 0.82 })
+  };
+  const faceMaterial = mat.skin;
+  const makeHairTexture = (front = false) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 384; canvas.height = 384;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#d0a18d"; ctx.fillRect(0, 0, 384, 384);
+    ctx.fillStyle = "#17151b";
+    if (front) {
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(384, 0); ctx.lineTo(384, 88);
+      ctx.lineTo(320, 116); ctx.lineTo(260, 82); ctx.lineTo(190, 122);
+      ctx.lineTo(120, 88); ctx.lineTo(55, 118); ctx.lineTo(0, 90);
+      ctx.closePath(); ctx.fill();
+    } else ctx.fillRect(0, 0, 384, 384);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    return texture;
+  };
+  const frontHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: makeHairTexture(true), transparent: false, roughness: 0.95 });
+  const sideHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: makeHairTexture(false), roughness: 0.95 });
+  const shirtCanvas = document.createElement("canvas");
+  shirtCanvas.width = 512; shirtCanvas.height = 640;
+  const shirtCtx = shirtCanvas.getContext("2d");
+  shirtCtx.fillStyle = "#10131a"; shirtCtx.fillRect(0, 0, 512, 640);
+  // Blue harness straps are part of the shirt artwork, not floating geometry.
+  shirtCtx.fillStyle = "#263e56";
+  shirtCtx.beginPath(); shirtCtx.moveTo(72, 0); shirtCtx.lineTo(142, 0);
+  shirtCtx.lineTo(265, 640); shirtCtx.lineTo(195, 640); shirtCtx.closePath(); shirtCtx.fill();
+  shirtCtx.beginPath(); shirtCtx.moveTo(370, 0); shirtCtx.lineTo(440, 0);
+  shirtCtx.lineTo(317, 640); shirtCtx.lineTo(247, 640); shirtCtx.closePath(); shirtCtx.fill();
+  const shirtTexture = new THREE.CanvasTexture(shirtCanvas);
+  shirtTexture.colorSpace = THREE.SRGBColorSpace;
+  shirtTexture.anisotropy = 4;
+  const shirtFront = new THREE.MeshStandardMaterial({ color: 0xffffff, map: shirtTexture, roughness: 0.92 });
+  const box = (p, n, s, pos, m) => {
+    const o = new THREE.Mesh(new THREE.BoxGeometry(...s), m);
+    o.name = n; o.position.set(...pos); o.castShadow = true; o.receiveShadow = true; p.add(o); return o;
   };
 
-  root.userData.jump = function (strength = 4.8) {
-    if (!grounded) return;
+  const torso = box(joints.spine, "KevinBlackShirt", [0.49, 0.96, 0.30], [0, 0.035, 0],
+    [mat.shirt, mat.shirt, mat.shirt, mat.shirt, shirtFront, mat.shirt]);
+  rig.fitToTorso(torso);
+  box(joints.spine, "KevinNeckBand", [0.30, 0.11, 0.30], [0, 0.49, 0], mat.sleeveDark);
+  // Hair is a set of painted head-surface maps; no separate hair meshes.
+  const headMesh = box(joints.head, "KevinHead", [0.37, 0.43, 0.32], [0, 0.055, 0],
+    [sideHairMat, sideHairMat, mat.hair, faceMaterial, frontHairMat, sideHairMat]);
+  rig.fitHeadToTorso(torso, headMesh);
 
-    verticalVelocity = strength;
-    grounded = false;
-    animation = 'jump';
-  };
-
-  root.userData.update = function (deltaTime) {
-    const dt = Math.min(deltaTime, 0.05);
-    elapsed += dt;
-
-    const walking = animation === 'walk' || animation === 'run';
-    const speed = animation === 'run' ? 12 : 7;
-    const swing = walking ? Math.sin(elapsed * speed) : 0;
-
-    // Arm swing.
-    arms.forEach((arm, index) => {
-      const side = index === 0 ? -1 : 1;
-
-      arm.rotation.x = walking
-        ? swing * 0.45 * side
-        : THREE.MathUtils.damp(arm.rotation.x, 0, 8, dt);
-
-      arm.userData.elbow.rotation.x = walking
-        ? Math.max(0, -swing * side) * 0.45
-        : THREE.MathUtils.damp(
-            arm.userData.elbow.rotation.x, 0, 8, dt
-          );
-    });
-
-    // Leg swing.
-    legs.forEach((leg, index) => {
-      const side = index === 0 ? -1 : 1;
-
-      leg.rotation.x = walking
-        ? swing * 0.55 * side
-        : THREE.MathUtils.damp(leg.rotation.x, 0, 8, dt);
-
-      leg.userData.foot.rotation.x = walking
-        ? Math.max(0, swing * side) * 0.35
-        : THREE.MathUtils.damp(
-            leg.userData.foot.rotation.x, 0, 8, dt
-          );
-    });
-
-    // Slight torso movement while walking.
-    torso.rotation.z = walking ? swing * 0.025 : 0;
-    torso.position.y = 2.12 + (
-      walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.025 : 0
-    );
-
-    // Basic gravity and jump.
-    if (!grounded) {
-      verticalVelocity -= 12 * dt;
-      root.position.y += verticalVelocity * dt;
-
-      if (root.position.y <= baseY) {
-        root.position.y = baseY;
-        verticalVelocity = 0;
-        grounded = true;
-        animation = 'idle';
-      }
-    }
-  };
-
-  // Convenience methods.
-  root.setAnimation = root.userData.setAnimation;
-  root.jump = root.userData.jump;
-  root.update = root.userData.update;
-
-  return root;
+  for (const side of ["left", "right"]) {
+    const sign = side === "left" ? -1 : 1;
+    const shoulder = joints[side + "Shoulder"];
+    const elbow = joints[side + "Elbow"];
+    const wrist = joints[side + "Wrist"];
+    box(shoulder, "KevinGrayShoulderArmor", [Math.abs(elbow.position.x) + 0.06, 0.24, 0.30],
+      [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], mat.sleeve);
+    box(shoulder, "KevinShoulderBand", [Math.abs(elbow.position.x) + 0.045, 0.065, 0.31],
+      [elbow.position.x * 0.5, 0.075, 0], mat.sleeveDark);
+    box(elbow, "KevinGrayForearm", [Math.abs(wrist.position.x) + 0.045, 0.17, 0.19],
+      [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], mat.sleeve);
+    box(elbow, "KevinForearmBand", [Math.abs(wrist.position.x) + 0.04, 0.055, 0.20],
+      [wrist.position.x * 0.5, -0.055, 0], mat.sleeveDark);
+    box(joints[side + "Wrist"], "KevinHand", [0.15, 0.14, 0.16], [sign * 0.075, 0, 0], mat.skin);
+    box(joints[side + "Thigh"], "KevinJeans", [0.21, 0.62, 0.22], [0, -0.30, 0], mat.pants);
+    box(joints[side + "Knee"], "KevinLowerJeans", [0.18, 0.44, 0.20], [0, -0.21, 0], mat.pants);
+    box(joints[side + "Ankle"], "KevinBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.shirt);
+  }
+  return { group, rig, joints };
 }
