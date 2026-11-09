@@ -677,7 +677,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
       if (state.stage === "gameplay" && spaceEnvironment && entities?.rustbucket) {
-        const altitude = entities.rustbucket.position.y;
+        const altitude = camera.position.y;
         const blend = THREE.MathUtils.smoothstep(altitude, 35, 155);
         spaceEnvironment.visible = blend > 0.5;
         environmentColor.lerpColors(bellwoodSkyColor, spaceSkyColor, blend);
