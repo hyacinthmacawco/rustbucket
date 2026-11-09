@@ -4,7 +4,7 @@ export function createJoystick() {
   const element = document.createElement("div");
   element.id = "movement-joystick";
   element.setAttribute("aria-label", "Movement and team selector");
-  element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben">B</span><span class="team-label team-gwen">G</span><span class="team-label team-kevin">K</span><span class="team-label team-rook">R</span><span class="team-label team-rustbucket">B</span></div><div id="joystick-knob"></div></div>';
+  element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben">B</span><span class="team-label team-gwen">G</span><span class="team-label team-kevin">K</span><span class="team-label team-rook">R</span><span class="team-label team-rustbucket">T</span></div><div id="joystick-knob"></div></div>';
   document.body.appendChild(element);
 
   const base = element.firstElementChild;
@@ -23,15 +23,13 @@ export function createJoystick() {
   const jump = buttons.querySelector("#jump-button");
   const pick = buttons.querySelector("#pick-button");
   const attack = buttons.querySelector("#attack-button");
-  const request = (name, event) => {
-    event.preventDefault();
-    input[name] = true;
-  };
+  const request = (name, event) => { event.preventDefault(); input[name] = true; };
   jump.addEventListener("pointerdown", event => request("jumpRequested", event));
   pick.addEventListener("pointerdown", event => request("pickRequested", event));
   attack.addEventListener("pointerdown", event => request("attackRequested", event));
 
   let lastCenterTap = 0;
+  let centerSelectionTimer = 0;
   function reset() {
     input.active = false;
     input.pointerId = null;
@@ -46,8 +44,7 @@ export function createJoystick() {
     const max = rect.width * 0.32;
     const distance = Math.hypot(dx, dy);
     const factor = distance > max ? max / distance : 1;
-    const x = dx * factor;
-    const y = dy * factor;
+    const x = dx * factor, y = dy * factor;
     input.x = x / max;
     input.y = -y / max;
     knob.style.transform = `translate(${x}px,${y}px)`;
@@ -68,16 +65,27 @@ export function createJoystick() {
   function up(event) {
     if (event.pointerId !== input.pointerId) return;
     const centered = Math.hypot(input.x, input.y) < 0.22;
-    if (input.mode === "switch") {
-      input.selection = centered ? { x: 0, y: 0 } : { x: input.x, y: input.y };
-    } else if (centered) {
+    if (centered) {
       const now = performance.now();
-      if (now - lastCenterTap <= 320) {
-        input.toggleRequested = true;
+      if (now - lastCenterTap <= 360) {
+        clearTimeout(centerSelectionTimer);
+        centerSelectionTimer = 0;
         lastCenterTap = 0;
+        input.toggleRequested = true;
       } else {
         lastCenterTap = now;
+        if (input.mode === "switch") {
+          centerSelectionTimer = window.setTimeout(() => {
+            input.selection = { x: 0, y: 0 };
+            centerSelectionTimer = 0;
+          }, 360);
+        }
       }
+    } else if (input.mode === "switch") {
+      clearTimeout(centerSelectionTimer);
+      centerSelectionTimer = 0;
+      lastCenterTap = 0;
+      input.selection = { x: input.x, y: input.y };
     }
     reset();
   }
@@ -88,9 +96,7 @@ export function createJoystick() {
   base.addEventListener("pointercancel", up);
 
   return {
-    input,
-    element,
-    buttons,
+    input, element, buttons,
     setVisible(visible) {
       element.style.display = visible ? "block" : "none";
       buttons.style.display = visible ? "flex" : "none";
@@ -99,19 +105,16 @@ export function createJoystick() {
     setMode(mode) {
       input.mode = mode;
       element.classList.toggle("team-mode", mode === "switch");
-      if (mode === "switch") knob.textContent = "B";
-      else knob.textContent = "";
+      knob.textContent = mode === "switch" ? "T" : "";
     },
     destroy() {
+      clearTimeout(centerSelectionTimer);
       base.removeEventListener("pointerdown", down);
       base.removeEventListener("pointermove", move);
       base.removeEventListener("pointerup", up);
       base.removeEventListener("pointercancel", up);
-      jump.remove();
-      pick.remove();
-      attack.remove();
-      element.remove();
-      buttons.remove();
+      jump.remove(); pick.remove(); attack.remove();
+      element.remove(); buttons.remove();
     }
   };
 }
@@ -146,13 +149,9 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   window.addEventListener("blur", blur);
 
   function choose(x, y) {
-    if (Math.hypot(x, y) < 0.22) {
-      selected = "rustbucket";
-    } else if (Math.abs(x) > Math.abs(y)) {
-      selected = x > 0 ? "gwen" : "rook";
-    } else {
-      selected = y > 0 ? "ben" : "kevin";
-    }
+    if (Math.hypot(x, y) < 0.22) selected = "rustbucket";
+    else if (Math.abs(x) > Math.abs(y)) selected = x > 0 ? "gwen" : "rook";
+    else selected = y > 0 ? "ben" : "kevin";
     onSelect(selected);
     updateCamera();
   }
@@ -172,10 +171,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     if (!isMobile && switchMode) {
       const x = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
       const y = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
-      if (x || y) {
-        choose(x, y);
-        keys.clear();
-      }
+      if (x || y) { choose(x, y); keys.clear(); }
       return;
     }
 
@@ -192,23 +188,15 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
     const speed = selected === "rustbucket" ? 5 : 3.5;
 
-    if (object.userData.moveWithCollisions) {
-      object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt, joy.jumpRequested);
-    } else if (magnitude > 0.08) {
+    if (object.userData.moveWithCollisions) object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt, joy.jumpRequested);
+    else if (magnitude > 0.08) {
       object.position.x += mx * speed * dt;
       object.position.z += mz * speed * dt;
     }
     joy.jumpRequested = false;
 
-    if (joy.pickRequested) {
-      object.userData.performPickup?.();
-      joy.pickRequested = false;
-    }
-    if (joy.attackRequested) {
-      object.userData.performAttack?.();
-      joy.attackRequested = false;
-    }
-
+    if (joy.pickRequested) { object.userData.performPickup?.(); joy.pickRequested = false; }
+    if (joy.attackRequested) { object.userData.performAttack?.(); joy.attackRequested = false; }
     object.setAnimation?.(magnitude > 0.08 ? "walk" : "idle");
     object.update?.(dt);
     updateCamera();
