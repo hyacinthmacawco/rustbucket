@@ -533,7 +533,7 @@ import { createJoystick } from "../hud/joystick.js";
         : cameraPreset.fov;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     }
     window.addEventListener("resize", onResize);
 
