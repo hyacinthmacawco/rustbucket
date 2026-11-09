@@ -15,10 +15,36 @@ export function createRustbucket(parent) {
   mesh(new THREE.ConeGeometry(1.52,2.6,12),hull,[0,0,6.45],[Math.PI/2,0,0]);
   mesh(new THREE.CylinderGeometry(1.52,1.52,.22,12),orange,[0,0,5.25],[Math.PI/2,0,0]);
   for(let i=0;i<3;i++)mesh(new THREE.BoxGeometry(.42,.62,.08),metal,[-.48+i*.48,.7,3.5-i*.32],[-.12,0,0]);
+
+  // Broad swept wings with orange tips.
+  for (const side of [-1,1]) {
+    mesh(new THREE.BoxGeometry(3.35,0.16,1.45),hull,[side*2.45,-0.08,-1.15],[0,0,side*0.035]);
+    mesh(new THREE.BoxGeometry(0.42,0.19,1.42),orange,[side*4.05,-0.08,-1.15],[0,0,side*0.035]);
+  }
+  // Twin forward laser emitters.
+  const laserMaterial = new THREE.MeshBasicMaterial({color:0x7dffbd});
+  const lasers = [];
+  let lastShot = -1;
+  ship.userData.performAttack = () => {
+    const now = performance.now();
+    if (now-lastShot < 260) return;
+    lastShot = now;
+    for (const x of [-0.62,0.62]) {
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,3.6,8),laserMaterial);
+      beam.rotation.x = Math.PI/2;
+      beam.position.set(x,0.12,7.35);
+      ship.add(beam);
+      lasers.push({mesh:beam,life:0.55});
+    }
+  };
+  ship.userData.updateVehicle = delta => {
+    for (let i=lasers.length-1;i>=0;i--) {
+      const shot=lasers[i]; shot.mesh.position.z += 46*delta; shot.life -= delta;
+      if (shot.life<=0) { ship.remove(shot.mesh); shot.mesh.geometry.dispose(); lasers.splice(i,1); }
+    }
+  };
   // Boarding steps beside the nose cone.
   for(let i=0;i<5;i++)mesh(new THREE.BoxGeometry(1.05,.18,.48),i===4?orange:metal,[2.05,-1.75+i*.34,3.45-i*.48]);
-  mesh(new THREE.BoxGeometry(.12,1.6,2.45),metal,[2.58,-.95,2.45]);
-  mesh(new THREE.BoxGeometry(.12,1.6,2.45),metal,[1.53,-.95,2.45]);
   for(const x of [-.9,.9]){
     mesh(new THREE.BoxGeometry(.16,.22,4.2),metal,[x,-1.45,-.1]);
     mesh(new THREE.BoxGeometry(.14,1.05,.16),metal,[x,-.9,1.1]);
