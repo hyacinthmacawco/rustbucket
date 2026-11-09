@@ -44,7 +44,7 @@ export function createRustbucket(parent) {
     }
   };
   // Boarding steps beside the nose cone.
-  for(let i=0;i<5;i++)mesh(new THREE.BoxGeometry(1.05,.18,.48),i===4?orange:metal,[2.05,-1.85+i*.32,3.45-i*.48]);
+  for(let i=0;i<5;i++)mesh(new THREE.BoxGeometry(1.05,.18,.48),i===4?orange:metal,[2.05,-1.2+i*.16,3.45-i*.48]);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(7.2,32),new THREE.MeshBasicMaterial({color:0x080a0e,transparent:true,opacity:.25,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.set(0,.025,0);shadow.scale.set(1.25,.62,1);shadow.userData.noPhysics=true;parent.add(shadow);
   return {ship,shadow};
