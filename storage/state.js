@@ -177,7 +177,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
-    const extranet = createExtranet();
+    const extranet = createExtranet({ onContinue: () => extranet.close() });
     const extranetButton = document.createElement("button");
     extranetButton.id = "extranet-button";
     extranetButton.type = "button";
