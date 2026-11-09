@@ -112,8 +112,9 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     currentLocation = nextLocation;
     const marker = page.querySelector("#omnidata-current-location");
     const label = currentLocation === "space" ? "SOLAR SYSTEM" : "EARTH • BELLWOOD";
-    if (marker && marker.textContent !== label) marker.textContent = label;
-    if (changed || page.querySelector(".omni-node:not(.current-location)")) {
+    const markerChanged = Boolean(marker && marker.textContent !== label);
+    if (markerChanged) marker.textContent = label;
+    if (changed || markerChanged) {
       page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === "solar"));
     }
   }
