@@ -161,9 +161,11 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     document.body.appendChild(preludeScreen);
     const preludeTitle = preludeScreen.querySelector("#prelude-title");
     let startRequested = false;
+    let dialogueSfx = null;
     function startGameplay() {
       if (state.stage !== "prelude") return;
       startRequested = true;
+      if (dialogueSfx) { stopSfx(dialogueSfx); dialogueSfx = null; }
       stopMusic();
       if (loadedRegion === "bellwood") state.stage = "gameplay";
       else preludeTitle.textContent = "LOADING";
@@ -386,6 +388,10 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     let loadingRegion = null;
     let regionGroup = null;
     let titleObjects = null;
+    let spaceEnvironment = null;
+    const bellwoodSkyColor = new THREE.Color(0x78b9f5);
+    const spaceSkyColor = new THREE.Color(0x02040a);
+    const environmentColor = new THREE.Color();
 
     function regionNearCamera() {
       const cameraPosition = camera.position;
@@ -422,6 +428,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       });
       regionGroup = null;
       titleObjects = null;
+      spaceEnvironment = null;
     }
 
     async function loadRegion(name) {
@@ -457,7 +464,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
           titleObjects = { ...sun, ...earth, ...moon, ...starfield };
         } else if (name === "bellwood") {
           // Only Bellwood's nearby environment and gameplay models are loaded.
-          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule, physicsModule] = await Promise.all([
+          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule, physicsModule, sunModule, earthModule, moonModule, starModule] = await Promise.all([
             import("../omniverse/bellwood.js"),
             import("../omniverse/kevin-storage-unit.js"),
             import("../omniverse/rustbucket.js"),
@@ -467,11 +474,24 @@ import { createSuitcases } from "../omniverse/suitcases.js";
             import("../omniverse/kevin.js"),
             import("../omniverse/rook.js"),
             import("../hud/joystick.js"),
-            import("../physics/engine.js")
+            import("../physics/engine.js"),
+            import("../omniverse/sun.js"),
+            import("../omniverse/earth.js"),
+            import("../omniverse/moon.js"),
+            import("../omniverse/starfield.js")
           ]);
           bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
+          spaceEnvironment = new THREE.Group();
+          spaceEnvironment.name = "SolarSystemTransition";
+          spaceEnvironment.position.y = 180;
+          group.add(spaceEnvironment);
+          const sunVisuals = sunModule.createSun(spaceEnvironment);
+          const earthVisuals = earthModule.createEarth(spaceEnvironment);
+          const moonVisuals = moonModule.createMoon(spaceEnvironment);
+          const starVisuals = starModule.createStarfield(spaceEnvironment);
+          spaceEnvironment.visible = false;
           physics = await physicsModule.createPhysics();
           physics.addStaticScene(group);
           const { suitcases } = createSuitcases(group);
@@ -605,7 +625,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         if (!loadedRegion && !loadingRegion) loadRegion("bellwood");
         
         preludeScreen.style.display = "flex";
-        playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
+        dialogueSfx = playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
@@ -652,6 +672,24 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       }
       if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
       if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
+
+      if (state.stage === "gameplay" && spaceEnvironment && entities?.rustbucket) {
+        const altitude = entities.rustbucket.position.y;
+        const blend = THREE.MathUtils.smoothstep(altitude, 35, 155);
+        spaceEnvironment.visible = blend > 0.5;
+        environmentColor.lerpColors(bellwoodSkyColor, spaceSkyColor, blend);
+        scene.background = environmentColor;
+        if (blend >= 0.999) {
+          scene.fog = null;
+        } else {
+          const fogFar = THREE.MathUtils.lerp(260, 28, blend);
+          if (!(scene.fog instanceof THREE.Fog)) scene.fog = new THREE.Fog(environmentColor, 75, fogFar);
+          scene.fog.color.copy(environmentColor);
+          scene.fog.near = THREE.MathUtils.lerp(75, 0, blend);
+          scene.fog.far = fogFar;
+        }
+        extranet.setLocation(altitude > 115 ? "space" : "earth");
+      }
 
       if (state.stage === "title" && titleObjects) {
         titleObjects.earth.rotation.y += delta * 0.07;
