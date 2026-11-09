@@ -12,7 +12,7 @@ export function createJoystick() {
   const input = {
     active: false, pointerId: null, x: 0, y: 0, mode: "move",
     selection: null, jumpRequested: false,
-    pickRequested: false, attackRequested: false
+    pickRequested: false, attackHeld: false
   };
 
   const buttons = document.createElement("div");
@@ -26,7 +26,18 @@ export function createJoystick() {
   const request = (name, event) => { event.preventDefault(); event.stopPropagation(); input[name] = true; };
   jump.addEventListener("pointerdown", event => request("jumpRequested", event));
   pick.addEventListener("pointerdown", event => request("pickRequested", event));
-  attack.addEventListener("pointerdown", event => request("attackRequested", event));
+  attack.addEventListener("pointerdown", event => {
+    event.preventDefault(); event.stopPropagation();
+    input.attackHeld = true;
+    attack.setPointerCapture?.(event.pointerId);
+  });
+  const releaseAttack = event => {
+    event.preventDefault(); event.stopPropagation();
+    input.attackHeld = false;
+  };
+  attack.addEventListener("pointerup", releaseAttack);
+  attack.addEventListener("pointercancel", releaseAttack);
+  attack.addEventListener("lostpointercapture", () => { input.attackHeld = false; });
 
   let lastCenterTap = 0;
   let centerSelectionTimer = 0;
@@ -128,6 +139,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   const keys = new Set();
   let selected = "ben";
   let switchMode = false;
+  let lastAttackAt = 0;
 
   function keydown(event) {
     const key = event.key.toLowerCase();
@@ -139,13 +151,12 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       event.preventDefault();
       return;
     }
-    if (["w", "a", "s", "d", " "].includes(key)) {
+    if (["w", "a", "s", "d", " ", "q"].includes(key)) {
       keys.add(key);
       event.preventDefault();
     }
     if (key === " " && !event.repeat) joystick.input.jumpRequested = true;
     if (key === "e" && !event.repeat) joystick.input.pickRequested = true;
-    if (key === "q" && !event.repeat) joystick.input.attackRequested = true;
   }
   function keyup(event) { keys.delete(event.key.toLowerCase()); }
   function blur() { keys.clear(); }
@@ -184,6 +195,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const length = Math.hypot(direction.x, direction.z) || 1;
     const fx = direction.x / length, fz = direction.z / length;
     const rx = -fz, rz = fx;
+    if (selected !== "rustbucket") object.rotation.y = Math.atan2(fx, fz);
     const mx = magnitude > 0.08 ? (fx * forward + rx * right) / Math.max(1, magnitude) : 0;
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
     const speed = selected === "rustbucket" ? 18 : 3.5;
@@ -202,7 +214,13 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     }
 
     if (joy.pickRequested) { object.userData.performPickup?.(); joy.pickRequested = false; }
-    if (joy.attackRequested) { object.userData.performAttack?.(); joy.attackRequested = false; }
+    const attackHeld = joy.attackHeld || keys.has("q");
+    const attackInterval = selected === "rustbucket" ? 280 : 720;
+    const now = performance.now();
+    if (attackHeld && now - lastAttackAt >= attackInterval) {
+      object.userData.performAttack?.();
+      lastAttackAt = now;
+    }
     object.setAnimation?.(magnitude > 0.08 ? "walk" : "idle");
     object.update?.(dt);
     updateCamera();
