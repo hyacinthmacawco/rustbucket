@@ -20,6 +20,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   let current = "home";
   let completed = false;
   let storedCount = 0;
+  let completionPresented = false;
   let completionValues = [];
 
   function home() {
@@ -88,10 +89,12 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     }
   }
   function showCompletion() {
+    if (completionPresented || document.getElementById("mission-complete")) return;
+    completionPresented = true;
     const panel = document.createElement("div");
     panel.id = "mission-complete";
     panel.innerHTML = `<div class="mission-complete-title">TASK COMPLETED</div><div class="mission-complete-sub">RELATIONSHIP INCREASE</div><div class="mission-respect">${completionValues.map(v=>`<div>${v}</div>`).join("")}</div><button id="mission-continue">CONTINUE</button>`;
-    root.appendChild(panel);
+    document.body.appendChild(panel);
     panel.querySelector("#mission-continue").addEventListener("click",()=>{panel.remove();onContinue();});
   }
   root.querySelector("#extranet-close").addEventListener("click",close);
