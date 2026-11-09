@@ -28,15 +28,15 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
 
   function home() {
     current = "home"; address.value = "extranet://home";
-    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b><small>ottps://bgkr.omnicloud.com</small></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b><small>ottps://en.omnidata.org</small></span></button></div>`;
+    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b></span></button></div>`;
     page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
   }
   function privateCloud() {
     current = "private"; address.value = "ottps://bgkr.omnicloud.com";
     page.innerHTML = `<div class="cloud-links">
-      <button data-page="tasks">▤ <span><b>Tasks</b><small>Current team objectives</small></span> ›</button>
-      <button data-page="relationships">♡ <span><b>Relationships</b><small>Team connection status</small></span> ›</button>
-      <button data-page="memories">▧ <span><b>Memories</b><small>Captured moments</small></span> ›</button></div>`;
+      <button data-page="tasks">▤ <span><b>Tasks</b></span> ›</button>
+      <button data-page="relationships">♡ <span><b>Relationships</b></span> ›</button>
+      <button data-page="memories">▧ <span><b>Memories</b></span> ›</button></div>`;
     page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => ({tasks,relationships:showRelationships,memories}[b.dataset.page])()));
   }
   function tasks() {
