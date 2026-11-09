@@ -47,19 +47,22 @@ export async function createPhysics() {
     let verticalVelocity = 0;
     let grounded = false;
     let jumpBuffer = 0;
+    let coyoteTime = 0;
     object.userData.physicsBody = body;
-    object.userData.moveWithCollisions = (dx, dz, dt, jumpPressed) => {
-      if (jumpPressed) jumpBuffer = 0.32;
-      else jumpBuffer = Math.max(0, jumpBuffer - dt);
-
-      if (jumpBuffer > 0 && grounded) {
-        verticalVelocity = 6.8;
+    object.userData.requestJump = () => { jumpBuffer = 0.24; };
+    object.userData.moveWithCollisions = (dx, dz, dt) => {
+      const stepDt = Math.min(Math.max(dt, 1 / 120), 1 / 20);
+      if (jumpBuffer > 0 && (grounded || coyoteTime > 0)) {
+        verticalVelocity = 7.2;
         grounded = false;
+        coyoteTime = 0;
         jumpBuffer = 0;
+      } else {
+        jumpBuffer = Math.max(0, jumpBuffer - stepDt);
       }
 
-      verticalVelocity = Math.max(-28, verticalVelocity - 9.81 * dt);
-      const desired = { x: dx, y: verticalVelocity * dt, z: dz };
+      verticalVelocity = Math.max(-24, verticalVelocity - 9.81 * stepDt);
+      const desired = { x: dx, y: verticalVelocity * stepDt, z: dz };
       controller.computeColliderMovement(collider, desired);
       const movement = controller.computedMovement();
       const current = body.translation();
@@ -70,7 +73,12 @@ export async function createPhysics() {
       });
 
       grounded = controller.computedGrounded();
-      if (grounded && verticalVelocity < 0) verticalVelocity = 0;
+      if (grounded) {
+        coyoteTime = 0.14;
+        if (verticalVelocity < 0) verticalVelocity = 0;
+      } else {
+        coyoteTime = Math.max(0, coyoteTime - stepDt);
+      }
     };
 
     bodies.push({ object, body });
