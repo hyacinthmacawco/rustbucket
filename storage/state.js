@@ -59,13 +59,14 @@ import { createJoystick } from "../hud/joystick.js";
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
-      powerPreference: "high-performance"
+      antialias: !(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)),
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: true
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
@@ -138,10 +139,42 @@ import { createJoystick } from "../hud/joystick.js";
     preludeScreen.id = "prelude-screen";
     preludeScreen.innerHTML = '<div id="prelude-title">A NEW DAWN</div><button id="skip-dialogue" type="button">SKIP</button>';
     document.body.appendChild(preludeScreen);
-    preludeScreen.querySelector("#skip-dialogue").addEventListener("click", () => { if (state.stage === "prelude") { stopMusic(); state.stage = "gameplay"; } });
+    const preludeTitle = preludeScreen.querySelector("#prelude-title");
+    let startRequested = false;
+    function startGameplay() {
+      if (state.stage !== "prelude") return;
+      startRequested = true;
+      stopMusic();
+      if (loadedRegion === "bellwood") state.stage = "gameplay";
+      else preludeTitle.textContent = "LOADING";
+    }
+    preludeScreen.querySelector("#skip-dialogue").addEventListener("click", startGameplay);
 
     const joystick = createJoystick();
     joystick.setVisible(false);
+    const pauseButton = document.createElement("button");
+    pauseButton.id = "pause-button";
+    pauseButton.type = "button";
+    pauseButton.setAttribute("aria-label", "Pause game");
+    pauseButton.textContent = "Ⅱ";
+    const pauseOverlay = document.createElement("div");
+    pauseOverlay.id = "pause-overlay";
+    pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><button id="resume-button" type="button">RESUME</button></div>';
+    document.body.append(pauseButton, pauseOverlay);
+    function setPaused(value) {
+      state.paused = Boolean(value);
+      pauseOverlay.style.display = state.paused ? "flex" : "none";
+      pauseButton.textContent = state.paused ? "▶" : "Ⅱ";
+      pauseButton.setAttribute("aria-label", state.paused ? "Resume game" : "Pause game");
+      if (music) {
+        if (state.paused) music.pause();
+        else if (audioUnlocked) music.play().catch(() => {});
+      }
+    }
+    pauseButton.addEventListener("click", () => setPaused(!state.paused));
+    pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
+    function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
+    document.addEventListener("keydown", pauseKey);
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     
     
@@ -263,7 +296,7 @@ import { createJoystick } from "../hud/joystick.js";
         const nearSun = cameraPosition.distanceTo(sun) < 180;
         return nearEarth || nearSun ? "space" : null;
       }
-      if (state.stage === "gameplay") {
+      if (state.stage === "gameplay" || state.stage === "prelude") {
         const bellwood = new THREE.Vector3(...dimensions.bellwood.position);
         return cameraPosition.distanceTo(bellwood) < 350 ? "bellwood" : null;
       }
@@ -402,12 +435,14 @@ import { createJoystick } from "../hud/joystick.js";
           keyboardController = controllerModule.createKeyboard({ entities, camera, joystick, updateCamera, isMobile });
           loadedRegion = name;
           loadingRegion = null;
+          if (name === "bellwood" && startRequested && state.stage === "prelude") state.stage = "gameplay";
           return;
         }
 
         regionGroup = group;
         scene.add(regionGroup);
         loadedRegion = name;
+        if (name === "bellwood" && startRequested && state.stage === "prelude") state.stage = "gameplay";
       } catch (error) {
         console.error("Could not load nearby region:", name, error);
         loadedRegion = null;
@@ -430,12 +465,12 @@ import { createJoystick } from "../hud/joystick.js";
       } else if (activeStage === "prelude") {
         titleScreen.setVisible(false);
         joystick.setVisible(false);
+        setCameraPreset(dimensions.camera.gameplay);
+        if (!loadedRegion && !loadingRegion) loadRegion("bellwood");
         
         preludeScreen.style.display = "flex";
         stopMusic();
-        playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
-          if (state.stage === "prelude") state.stage = "gameplay";
-        });
+        playStageMusic("./hud/ov-final-dialogues.mp3", false, startGameplay);
       } else if (activeStage === "gameplay") {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
@@ -463,8 +498,8 @@ import { createJoystick } from "../hud/joystick.js";
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
-      
-      
+      pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
+      if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
@@ -473,10 +508,10 @@ import { createJoystick } from "../hud/joystick.js";
       }
 
       const delta = Math.min(clock.getDelta(), 0.05);
-      if (physics && state.stage === "gameplay") physics.step(delta);
+      if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
       const elapsed = clock.elapsedTime;
 
-      if (state.stage === "gameplay" && keyboardController) {
+      if (!state.paused && state.stage === "gameplay" && keyboardController) {
         keyboardController.update(delta);
       }
 
@@ -516,6 +551,9 @@ import { createJoystick } from "../hud/joystick.js";
       document.removeEventListener("pointerdown", requestFullscreenOnGesture);
       document.removeEventListener("touchend", requestFullscreenOnGesture);
       document.removeEventListener("keydown", requestFullscreenOnGesture);
+      document.removeEventListener("keydown", pauseKey);
+      pauseButton.remove();
+      pauseOverlay.remove();
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
