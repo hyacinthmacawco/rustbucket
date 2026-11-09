@@ -53,7 +53,7 @@ export async function createPhysics() {
     object.userData.moveWithCollisions = (dx, dz, dt) => {
       const stepDt = Math.min(Math.max(dt, 1 / 120), 1 / 20);
       if (jumpBuffer > 0 && (grounded || coyoteTime > 0)) {
-        verticalVelocity = 7.2;
+        verticalVelocity = 4.8;
         grounded = false;
         coyoteTime = 0;
         jumpBuffer = 0;
@@ -85,17 +85,33 @@ export async function createPhysics() {
     return body;
   }
 
+  function addVehicle(object) {
+    const p = object.position;
+    const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y,p.z));
+    const collider = world.createCollider(RAPIER.ColliderDesc.cuboid(1.65,0.85,5.5).setFriction(0.75),body);
+    const controller = world.createCharacterController(0.04);
+    controller.setSlideEnabled(true);
+    object.userData.vehicleBody = body;
+    object.userData.moveVehicle = (dx,dz,lift,dt) => {
+      const current = body.translation();
+      controller.computeColliderMovement(collider,{x:dx,y:lift*5.5*dt,z:dz});
+      const movement = controller.computedMovement();
+      body.setNextKinematicTranslation({x:current.x+movement.x,y:current.y+movement.y,z:current.z+movement.z});
+    };
+    bodies.push({object,body,vehicle:true});
+    return body;
+  }
   function step(delta) {
     world.timestep = Math.min(delta, 1 / 30);
     world.step();
     for (const { object, body } of bodies) {
       const position = body.translation();
-      object.position.set(position.x, position.y - 0.75, position.z);
+      object.position.set(position.x, position.y - (bodies.find(entry => entry.body === body)?.vehicle ? 0 : 0.75), position.z);
     }
   }
 
   return {
-    world, addCharacter, addStaticScene, step,
+    world, addCharacter, addVehicle, addStaticScene, step,
     dispose() {
       for (const entry of bodies) world.removeRigidBody(entry.body);
       world.free();
