@@ -124,7 +124,7 @@ export function createJoystick() {
   };
 }
 
-export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {} }) {
+export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, getLift = () => 0 }) {
   const keys = new Set();
   let selected = "ben";
   let switchMode = false;
@@ -186,13 +186,15 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const rx = -fz, rz = fx;
     const mx = magnitude > 0.08 ? (fx * forward + rx * right) / Math.max(1, magnitude) : 0;
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
-    const speed = selected === "rustbucket" ? 5 : 3.5;
+    const speed = selected === "rustbucket" ? 12 : 3.5;
 
     if (joy.jumpRequested) {
       object.userData.requestJump?.();
       joy.jumpRequested = false;
     }
-    if (object.userData.moveWithCollisions) {
+    if (selected === "rustbucket" && object.userData.moveVehicle) {
+      object.userData.moveVehicle(mx * speed * dt, mz * speed * dt, getLift(), dt);
+    } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
       object.position.x += mx * speed * dt;
