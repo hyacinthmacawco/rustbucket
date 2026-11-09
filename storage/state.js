@@ -474,7 +474,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
             characterGroup.attach(nearest);
             nearest.position.set(0,0.18,0.68);
             carriedSuitcases.set(characterName,nearest);
-            extranet.addRelationship(characterName,nearest.userData.owner);
+            extranet.addRelationship(characterName,nearest.userData.owner.toLowerCase());
             characterGroup.userData.actionActive = true;
             characterGroup.userData.actionRemaining = 0.95;
             rig.playAnimation("pickup");
