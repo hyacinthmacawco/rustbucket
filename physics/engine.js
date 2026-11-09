@@ -17,7 +17,7 @@ export async function createPhysics(){
   });
  }
  function addCharacter(object){
-  const pos=object.position,body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(pos.x,pos.y+.97,pos.z));
+  const pos=object.position,body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(pos.x,pos.y+.75,pos.z));
   const collider=world.createCollider(RAPIER.ColliderDesc.capsule(.48,.27).setFriction(.8),body);
   const controller=world.createCharacterController(.025);controller.setSlideEnabled(true);controller.setMaxSlopeClimbAngle(Math.PI/4);controller.setMinSlopeSlideAngle(Math.PI/3);controller.enableAutostep(.35,.2,true);controller.enableSnapToGround(.18);
   let verticalVelocity=0,grounded=false;
@@ -33,6 +33,6 @@ export async function createPhysics(){
   };
   bodies.push({object,body});return body;
  }
- function step(dt){world.timestep=Math.min(dt,1/30);world.step();for(const {object,body} of bodies){const p=body.translation();object.position.set(p.x,p.y-.97,p.z);}}
+ function step(dt){world.timestep=Math.min(dt,1/30);world.step();for(const {object,body} of bodies){const p=body.translation();object.position.set(p.x,p.y-.75,p.z);}}
  return {world,addCharacter,addStaticScene,step,dispose(){for(const b of bodies)world.removeRigidBody(b.body);world.free();bodies.length=0;colliders.length=0;}};
 }
