@@ -117,16 +117,6 @@ export function createHumanRig(options = {}) {
 
   // Normalized keyframes are interpolated smoothly by updateWalk().
   const actionClips = {
-    jump: {
-      duration: 0.78,
-      frames: [
-        { at: 0, pose: {} },
-        { at: 0.12, pose: { rootY: 0.42, hip: { x: 0.12 } } },
-        { at: 0.42, pose: { rootY: 0.72, hip: { x: -0.10 } } },
-        { at: 0.72, pose: { rootY: 0.18, hip: { x: 0.04 } } },
-        { at: 1, pose: {} }
-      ]
-    },
     pickup: {
       duration: 0.9,
       frames: [
@@ -261,24 +251,6 @@ export function createHumanRig(options = {}) {
             }
           }
         }
-        // Jump keeps the ordinary walk gait running underneath the vertical
-        // root arc, rather than freezing the arms and legs in a separate pose.
-        if (activeAction.name === "jump") {
-          const cycle = timeSeconds * speed * 0.55 * Math.PI * 2;
-          for (const [side, phase] of [["left", cycle], ["right", cycle + Math.PI]]) {
-            const swing = Math.sin(phase);
-            const recovery = Math.max(0, Math.cos(phase));
-            const thigh = joints[side + "Thigh"];
-            const knee = joints[side + "Knee"];
-            const shoulder = joints[side + "Shoulder"];
-            const elbow = joints[side + "Elbow"];
-            thigh.rotation.x = (initialRotations.get(thigh)?.x || 0) + swing * 0.62 * amplitude;
-            knee.rotation.x = (initialRotations.get(knee)?.x || 0) + recovery * 0.52 * amplitude;
-            shoulder.rotation.x = (initialRotations.get(shoulder)?.x || 0) - swing * 1.05 * amplitude;
-            elbow.rotation.x = (initialRotations.get(elbow)?.x || 0) - (0.22 + recovery * 0.42) * amplitude;
-          }
-        }
-
         if (!clip.loop && t >= 1) {
           activeAction = null;
           rig.resetPose();
