@@ -1,11 +1,11 @@
 import * as THREE from "three";
 export const dimensions = {
-  ben: { position: [-3, 0, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, 0, -7], scale: [0.5, 0.5, 0.5] },
-  kevin: { position: [0, 0, -9], scale: [0.52, 0.52, 0.52] },
-  rook: { position: [7, 0, -7], scale: [0.52, 0.52, 0.52] },
-  rustbucket: { position: [0, 2, 0], scale: [1, 1, 1] },
-  kevinStorageUnit: { position: [0, 0, 0], scale: [1, 1, 1] },
+  ben: { position: [-3, -0.5, 5], scale: [0.5, 0.5, 0.5] },
+  gwen: { position: [-7, -0.5, -7], scale: [0.5, 0.5, 0.5] },
+  kevin: { position: [0, -0.5, -9], scale: [0.52, 0.52, 0.52] },
+  rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
+  rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
+  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1, 1, 1] },
   bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
   earth: { position: [4.5, 0, 0], radius: 2.05 },
   moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
@@ -235,9 +235,16 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       music.addEventListener("error", () => {
         console.error("Could not load soundtrack:", music?.src);
       }, { once: true });
+      const activeTrack = music;
       if (onEnded) {
         preludeEndedHandler = onEnded;
-        music.addEventListener("ended", onEnded, { once: true });
+        activeTrack.addEventListener("ended", onEnded, { once: true });
+      }
+      if (!loop) {
+        activeTrack.addEventListener("ended", () => {
+          if (music === activeTrack) music = null;
+          preludeEndedHandler = null;
+        }, { once: true });
       }
       if (audioUnlocked) {
         music.play().catch(error => console.warn("Audio playback is waiting for interaction:", error));
