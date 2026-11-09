@@ -9,19 +9,22 @@ export async function createPhysics() {
 
   const bodies = [];
   const colliders = [];
+  const bounds = new THREE.Box3();
+  const sizeVector = new THREE.Vector3();
+  const centerVector = new THREE.Vector3();
 
   function addStaticScene(root) {
     root.updateMatrixWorld(true);
     root.traverse(object => {
       if (!object.isMesh || !object.geometry || object.userData.noPhysics || object.material?.transparent) return;
-      const bounds = new THREE.Box3().setFromObject(object);
+      bounds.setFromObject(object);
       if (!Number.isFinite(bounds.min.x)) return;
-      const size = bounds.getSize(new THREE.Vector3());
-      const center = bounds.getCenter(new THREE.Vector3());
-      if (size.x < 0.08 || size.y < 0.08 || size.z < 0.08 || size.x > 600 || size.y > 150 || size.z > 600) return;
-      const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(center.x, center.y, center.z));
+      bounds.getSize(sizeVector);
+      bounds.getCenter(centerVector);
+      if (sizeVector.x < 0.3 || sizeVector.y < 0.3 || sizeVector.z < 0.3 || sizeVector.x > 600 || sizeVector.y > 150 || sizeVector.z > 600) return;
+      const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(centerVector.x, centerVector.y, centerVector.z));
       const collider = world.createCollider(
-        RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setFriction(0.85).setRestitution(0),
+        RAPIER.ColliderDesc.cuboid(sizeVector.x / 2, sizeVector.y / 2, sizeVector.z / 2).setFriction(0.85).setRestitution(0),
         body
       );
       colliders.push(collider);
@@ -39,18 +42,18 @@ export async function createPhysics() {
     controller.setMaxSlopeClimbAngle(Math.PI / 4);
     controller.setMinSlopeSlideAngle(Math.PI / 3);
     controller.enableAutostep(0.35, 0.2, true);
-    controller.enableSnapToGround(0.22);
+    controller.enableSnapToGround(0.32);
 
     let verticalVelocity = 0;
-    let grounded = true;
+    let grounded = false;
     let jumpBuffer = 0;
     object.userData.physicsBody = body;
     object.userData.moveWithCollisions = (dx, dz, dt, jumpPressed) => {
-      if (jumpPressed) jumpBuffer = 0.24;
+      if (jumpPressed) jumpBuffer = 0.32;
       else jumpBuffer = Math.max(0, jumpBuffer - dt);
 
       if (jumpBuffer > 0 && grounded) {
-        verticalVelocity = 6.2;
+        verticalVelocity = 6.8;
         grounded = false;
         jumpBuffer = 0;
       }
