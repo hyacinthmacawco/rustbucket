@@ -506,7 +506,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
               if (characterGroup.position.distanceTo(ship.position) > 9) return;
               ship.attach(carried);
               carried.position.set(0,-0.18,-1.65 + storedSuitcaseCount * 0.82);
-              carried.scale.set(0.25,0.25,0.25);
+              carried.scale.set(0.5,0.5,0.5);
               carried.rotation.set(0,0,0);
               carried.userData.carriedBy = null;
               carried.userData.stored = true;
