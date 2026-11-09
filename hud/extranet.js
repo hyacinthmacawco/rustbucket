@@ -69,14 +69,14 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     current = "omnidata"; address.value = "ottps://en.omnidata.org";
     const systems = {
       solar: {name:"SOLAR SYSTEM", body:"Earth, the Moon, Mars and other known worlds orbit the Sun. Earth is the team's homeworld.", worlds:"Earth • Moon • Mars • Saturn • Pluto", status:"ACTIVE / HOME SYSTEM", source:"https://ben10.fandom.com/wiki/Solar_System"},
-      highbreed: {name:"HIGHBREED SYSTEM", body:"Augstaka is the Highbreed homeworld. It is described as a temperate world with rolling green hills, coastal waters and large cities. At least one moon is known.", worlds:"Augstaka • at least one moon", status:"ACTIVE / AUGSTAKA", source:"https://ben10.fandom.com/wiki/Augstaka"},
-      incursean: {name:"INCURSEAN SYSTEM", body:"Incursia was the Incursean homeworld. It was destroyed after an attempt to use Ascalon to end a civil war.", worlds:"Incursia (destroyed)", status:"DESTROYED / HISTORICAL", source:"https://ben10.fandom.com/wiki/Incursia"},
-      anodite: {name:"ANODITE SYSTEM", body:"Anodyne is the home planet of the Anodites. From space it appears dark red, with orange rings.", worlds:"Anodyne", status:"ACTIVE / ANODYNE", source:"https://ben10.fandom.com/wiki/Anodyne"},
+      highbreed: {name:"HIGHBREED HOMEWORLD", body:"Augstaka is the Highbreed homeworld. It is described as a temperate world with rolling green hills, coastal waters and large cities. At least one moon is known; the wiki does not give this system a canonical name.", worlds:"Augstaka • at least one moon", status:"ACTIVE / AUGSTAKA", source:"https://ben10.fandom.com/wiki/Augstaka"},
+      incursean: {name:"INCURSEAN HOMEWORLD", body:"Incursia was the Incursean homeworld. It was destroyed after an attempt to use Ascalon to end a civil war. The wiki does not give this system a canonical name.", worlds:"Incursia (destroyed)", status:"DESTROYED / HISTORICAL", source:"https://ben10.fandom.com/wiki/Incursia"},
+      anodite: {name:"ANODITE HOMEWORLD", body:"Anodyne is the home planet of the Anodites. From space it appears dark red, with orange rings; the wiki does not give this system a canonical name.", worlds:"Anodyne", status:"ACTIVE / ANODYNE", source:"https://ben10.fandom.com/wiki/Anodyne"},
       galvan: {name:"GALVAN STAR SYSTEM", body:"Galvan is the system's star. Galvan Prime is the Galvan homeworld; Galvan B is its moon and home of the Galvanic Mechamorphs.", worlds:"Galvan • Galvan Prime • Galvan B", status:"ACTIVE / GALVAN PRIME", source:"https://ben10.fandom.com/wiki/Galvan_Star_System_(Classic)"}
     };
     page.innerHTML = `<div class="cloud-heading"><div>OMNIDATA</div><small>CELESTIAL NAVIGATION CHART • MILKY WAY</small></div>
       <div id="omnidata-layout">
-        <div id="omnidata-map-wrap"><div id="omnidata-map-title">KNOWN SYSTEM NETWORK <span>5 SYSTEMS INDEXED</span></div>
+        <div id="omnidata-map-wrap"><div id="omnidata-map-title">KNOWN SYSTEM NETWORK <span>5 DESTINATIONS INDEXED</span></div>
           <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Connected map of five Ben 10 star systems">
             <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
             <rect width="900" height="520" rx="14" fill="#06140e"/>
@@ -93,7 +93,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
         </div>
         <aside id="omnidata-detail"><div class="omni-detail-kicker">SELECT A STAR SYSTEM</div><h2>GALACTIC DATABASE</h2><p>Choose a node on the chart to inspect its known worlds and status.</p></aside>
       </div>
-      <div class="omni-attribution">Reference: <a href="https://ben10.fandom.com/wiki/Category:Celestial_Bodies" target="_blank" rel="noopener">Ben 10 Wiki — Celestial Bodies</a>. Route lines are illustrative, not measured distances.</div>`;
+      <div class="omni-attribution">Adapted from <a href="https://ben10.fandom.com/wiki/Category:Celestial_Bodies" target="_blank" rel="noopener">Ben 10 Wiki — Celestial Bodies</a> (CC BY-SA). Solar and Galvan are named systems; the other entries are homeworld destinations. Route lines are illustrative, not measured distances.</div>`;
     const detail = page.querySelector("#omnidata-detail");
     const selectSystem = key => {
       const item = systems[key]; if (!item) return;
