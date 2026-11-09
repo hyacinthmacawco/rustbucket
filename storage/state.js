@@ -360,15 +360,37 @@ import { createJoystick } from "../hud/joystick.js";
             const config = dimensions[name];
             character.group.position.set(...config.position);
             character.group.scale.set(...config.scale);
+            character.group.userData.actionActive = false;
+            character.group.userData.actionRemaining = 0;
+            character.group.userData.moving = false;
             character.group.setAnimation = animation => {
-              character.rig.setWalking(animation === "walk");
+              character.group.userData.moving = animation === "walk";
+              if (!character.group.userData.actionActive) {
+                character.rig.setWalking(character.group.userData.moving);
+              }
             };
             character.group.update = delta => {
               character.animationTime = (character.animationTime || 0) + delta;
+              if (character.group.userData.actionActive) {
+                character.group.userData.actionRemaining -= delta;
+                if (character.group.userData.actionRemaining <= 0) {
+                  character.group.userData.actionActive = false;
+                  character.rig.setWalking(character.group.userData.moving);
+                }
+              }
               character.rig.updateWalk(character.animationTime);
             };
             character.group.setAnimation("idle");
-            character.group.userData.performPickup = () => character.rig.playAnimation("pickup");
+            character.group.userData.performPickup = () => {
+              character.group.userData.actionActive = true;
+              character.group.userData.actionRemaining = 0.95;
+              character.rig.playAnimation("pickup");
+            };
+            character.group.userData.performAttack = () => {
+              character.group.userData.actionActive = true;
+              character.group.userData.actionRemaining = 0.78;
+              character.rig.playAnimation("punch");
+            };
             characterEntities[name] = character.group;
             group.add(character.group);
             physics.addCharacter(character.group);
