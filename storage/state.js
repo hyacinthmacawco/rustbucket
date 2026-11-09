@@ -50,8 +50,7 @@ export const state = {
 
 import { createTitleScreen } from "../hud/title.js";
 import { createJoystick } from "../hud/joystick.js";
-import { createTeamstick } from "../hud/teamstick.js";
-import { createTutorialLabel } from "../hud/tutorial.js";
+
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -87,11 +86,12 @@ import { createTutorialLabel } from "../hud/tutorial.js";
     let cameraPreset = dimensions.camera.title;
     let ben = null;
     let keyboardController = null;
+    let physics = null;
     let entities = null;
 
     function updateCamera() {
-      const selectedEntity = activeStage === "tutorial" && entities
-        ? entities[teamstick.selected]
+      const selectedEntity = activeStage === "gameplay" && entities
+        ? entities[keyboardController?.selected || "ben"]
         : null;
       const followedEntity = selectedEntity || ben;
       const target = activeStage === "tutorial" && followedEntity
@@ -136,19 +136,15 @@ import { createTutorialLabel } from "../hud/tutorial.js";
 
     const preludeScreen = document.createElement("div");
     preludeScreen.id = "prelude-screen";
-    preludeScreen.innerHTML = '<div id="prelude-title">A NEW DAWN</div>';
+    preludeScreen.innerHTML = '<div id="prelude-title">A NEW DAWN</div><button id="skip-dialogue" type="button">SKIP</button>';
     document.body.appendChild(preludeScreen);
+    preludeScreen.querySelector("#skip-dialogue").addEventListener("click", () => { if (state.stage === "prelude") { stopMusic(); state.stage = "gameplay"; } });
 
     const joystick = createJoystick();
     joystick.setVisible(false);
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const tutorialLabel = createTutorialLabel({ isMobile });
-    const teamstick = createTeamstick({
-      onSelect() {
-        if (state.stage === "tutorial") tutorialLabel.completeStep(2);
-      }
-    });
-    teamstick.setVisible(false);
+    
 
     // One audio handle is reused for the active stage's soundtrack/dialogue.
     let music = null;
@@ -245,6 +241,11 @@ import { createTutorialLabel } from "../hud/tutorial.js";
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointercancel", onPointerUp);
+    canvas.addEventListener("wheel", e => { e.preventDefault(); cameraDistance=THREE.MathUtils.clamp(cameraDistance+e.deltaY*.025,cameraPreset.minDistance,cameraPreset.maxDistance);updateCamera(); }, {passive:false});
+    let pinchDistance=0;
+    canvas.addEventListener("touchstart",e=>{if(e.touches.length===2)pinchDistance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+    canvas.addEventListener("touchmove",e=>{if(e.touches.length!==2||!pinchDistance)return;const next=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cameraDistance=THREE.MathUtils.clamp(cameraDistance-(next-pinchDistance)*.035,cameraPreset.minDistance,cameraPreset.maxDistance);pinchDistance=next;updateCamera();e.preventDefault();},{passive:false});
+    canvas.addEventListener("touchend",()=>{pinchDistance=0;},{passive:true});
 
     // Region objects are imported and instantiated only after the camera is
     // found to be near that region. Each region is held in one removable group.
@@ -262,7 +263,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
         const nearSun = cameraPosition.distanceTo(sun) < 180;
         return nearEarth || nearSun ? "space" : null;
       }
-      if (state.stage === "tutorial") {
+      if (state.stage === "gameplay") {
         const bellwood = new THREE.Vector3(...dimensions.bellwood.position);
         return cameraPosition.distanceTo(bellwood) < 350 ? "bellwood" : null;
       }
@@ -326,7 +327,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
           titleObjects = { ...sun, ...earth, ...moon, ...starfield };
         } else if (name === "bellwood") {
           // Only Bellwood's nearby environment and tutorial models are loaded.
-          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule] = await Promise.all([
+          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule, physicsModule] = await Promise.all([
             import("../omniverse/bellwood.js"),
             import("../omniverse/kevin-storage-unit.js"),
             import("../omniverse/rustbucket.js"),
@@ -335,11 +336,13 @@ import { createTutorialLabel } from "../hud/tutorial.js";
             import("../omniverse/gwen.js"),
             import("../omniverse/kevin.js"),
             import("../omniverse/rook.js"),
-            import("../hud/keyboard.js")
+            import("../hud/joystick.js"),
+            import("../physics/engine.js")
           ]);
           bellwoodModule.createBellwood(scene, group);
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
+          physics = await physicsModule.createPhysics();
           const { createHumanRig } = rigModule;
           const benCharacter = benModule.createBen({ createHumanRig });
           const gwenCharacter = gwenModule.createGwen({ createHumanRig });
@@ -366,22 +369,13 @@ import { createTutorialLabel } from "../hud/tutorial.js";
             character.group.setAnimation("idle");
             characterEntities[name] = character.group;
             group.add(character.group);
+            physics.addCharacter(character.group);
           }
           ben = benCharacter.group;
           entities = { ...characterEntities, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
-          keyboardController = controllerModule.createKeyboard({
-            entities,
-            camera,
-            joystick,
-            teamstick,
-            updateCamera,
-            isMobile,
-            onMove() {
-              tutorialLabel.completeStep(1);
-            }
-          });
+          keyboardController = controllerModule.createKeyboard({ entities, camera, joystick, updateCamera, isMobile });
           loadedRegion = name;
           loadingRegion = null;
           return;
@@ -406,7 +400,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
         preludeScreen.style.display = "none";
         titleScreen.setVisible(true);
         joystick.setVisible(false);
-        teamstick.setVisible(false);
+        
         setCameraPreset(dimensions.camera.title);
         playStageMusic("./hud/senji-v2-ov.mp3", true);
       } else if (activeStage === "prelude") {
@@ -416,14 +410,14 @@ import { createTutorialLabel } from "../hud/tutorial.js";
         preludeScreen.style.display = "flex";
         stopMusic();
         playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
-          if (state.stage === "prelude") state.stage = "tutorial";
+          if (state.stage === "prelude") state.stage = "gameplay";
         });
       } else if (activeStage === "tutorial") {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(isMobile);
-        teamstick.setVisible(isMobile);
-        tutorialLabel.setStep(1);
+        
+        
         setCameraPreset(dimensions.camera.tutorial);
         playStageMusic("./hud/neodevol-ov.mp3", true);
       } else {
@@ -444,7 +438,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
       updateStage();
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
-      joystick.setVisible(isMobile && state.stage === "tutorial");
+      joystick.setVisible(isMobile && state.stage === "gameplay");
       teamstick.setVisible(isMobile && state.stage === "tutorial");
       tutorialLabel.setVisible(state.stage === "tutorial");
 
@@ -455,6 +449,7 @@ import { createTutorialLabel } from "../hud/tutorial.js";
       }
 
       const delta = Math.min(clock.getDelta(), 0.05);
+      if (physics && state.stage === "gameplay") physics.step(delta);
       const elapsed = clock.elapsedTime;
 
       if (state.stage === "tutorial" && keyboardController) {
@@ -501,8 +496,8 @@ import { createTutorialLabel } from "../hud/tutorial.js";
       titleScreen.destroy();
       preludeScreen.remove();
       joystick.destroy();
-      teamstick.destroy();
-      tutorialLabel.destroy();
+      
+      
       stopMusic();
       renderer.dispose();
     }, { once: true });
