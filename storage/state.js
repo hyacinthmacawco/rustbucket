@@ -102,7 +102,8 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         const local = ship.worldToLocal(selectedEntity.position.clone());
         const insideCabin = local.x > -1.18 && local.x < 1.18 && local.z > 1.65 && local.z < 4.65 && local.y > -2.9 && local.y < 0.8;
         if (insideCabin) {
-          const anchor = new THREE.Vector3(0,0.3,0.15);
+          const anchor = ship.worldToLocal(selectedEntity.position.clone());
+          anchor.y += 1.05;
           const orbitDistance = 3.2;
           const horizontal = Math.cos(cameraPitch) * orbitDistance;
           const offset = new THREE.Vector3(
@@ -504,7 +505,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
               if (characterGroup.position.distanceTo(ship.position) > 9) return;
               ship.attach(carried);
               carried.position.set(0,-0.18,-1.65 + storedSuitcaseCount * 0.82);
-              carried.scale.set(1,1,1);
+              carried.scale.set(0.25,0.25,0.25);
               carried.rotation.set(0,0,0);
               carried.userData.carriedBy = null;
               carried.userData.stored = true;
@@ -625,6 +626,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         if (!loadedRegion && !loadingRegion) loadRegion("bellwood");
         
         preludeScreen.style.display = "flex";
+        stopMusic();
         dialogueSfx = playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
         titleScreen.setVisible(false);
