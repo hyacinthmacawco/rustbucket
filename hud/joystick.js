@@ -186,7 +186,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const rx = -fz, rz = fx;
     const mx = magnitude > 0.08 ? (fx * forward + rx * right) / Math.max(1, magnitude) : 0;
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
-    const speed = selected === "rustbucket" ? 12 : 3.5;
+    const speed = selected === "rustbucket" ? 18 : 3.5;
 
     if (joy.jumpRequested) {
       object.userData.requestJump?.();
