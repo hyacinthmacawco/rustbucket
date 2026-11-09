@@ -3,18 +3,20 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   root.id = "extranet-overlay";
   root.innerHTML = `
     <div id="extranet-window">
-      <header id="extranet-header"><div><span class="extranet-mark">◉</span><strong>EXTRANET</strong><small>BEN 10 NETWORK</small></div><button id="extranet-close" aria-label="Close">×</button></header>
-      <nav id="extranet-toolbar"><button id="extranet-back">‹</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home">⌂</button></nav>
+      <nav id="extranet-toolbar"><button id="extranet-back" aria-label="Back">‹</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home" aria-label="Home">⌂</button><button id="extranet-close" aria-label="Close">×</button></nav>
       <main id="extranet-page"></main>
     </div>`;
   document.body.appendChild(root);
   const page = root.querySelector("#extranet-page");
   const address = root.querySelector("#extranet-address");
+  // One symmetric relationship matrix; self-relationships remain zero.
+  // Conflicting reciprocal defaults are averaged to keep each pair identical.
+  const relationshipNames = ["ben","gwen","kevin","rook"];
   const relationships = {
-    ben: { Gwen: 92, Kevin: 95, Rook: 90 },
-    gwen: { Ben: 90, Kevin: 95, Rook: 80 },
-    kevin: { Ben: 95, Gwen: 95, Rook: 85 },
-    rook: { Ben: 98, Kevin: 85, Gwen: 80 }
+    ben:   { ben:0, gwen:91, kevin:95, rook:94 },
+    gwen:  { ben:91, gwen:0, kevin:95, rook:80 },
+    kevin: { ben:95, gwen:95, kevin:0, rook:85 },
+    rook:  { ben:94, gwen:80, kevin:85, rook:0 }
   };
   const photos = [];
   let current = "home";
@@ -30,7 +32,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
   }
   function privateCloud() {
-    current = "private"; address.textContent = "ottps://bgkr.omnicloud.com";
+    current = "private"; address.value = "ottps://bgkr.omnicloud.com";
     page.innerHTML = `<div class="cloud-heading"><div>PRIVATE CLOUD</div><small>BGKR • SECURE TEAM STORAGE</small></div><div class="cloud-links">
       <button data-page="tasks">▤ <span><b>Tasks</b><small>Current team objectives</small></span> ›</button>
       <button data-page="relationships">♡ <span><b>Relationships</b><small>Team connection status</small></span> ›</button>
@@ -38,30 +40,34 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => ({tasks,relationships:showRelationships,memories}[b.dataset.page])()));
   }
   function tasks() {
-    current = "tasks"; address.textContent = "ottps://bgkr.omnicloud.com/tasks";
+    current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";
     const count = storedCount;
     page.innerHTML = `<div class="cloud-heading"><div>TASKS</div><small>ACTIVE MISSION</small></div><article class="task-card"><small>OBJECTIVE 01</small><h2>Put suitcases into Rustbucket</h2><p>Collect all four suitcases from the storage unit and load them aboard.</p><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
     if (completed) showCompletion();
   }
   function showRelationships() {
-    current = "relationships"; address.textContent = "ottps://bgkr.omnidata.org/relationships";
+    current = "relationships"; address.value = "ottps://bgkr.omnicloud.com/relationships";
     const people = ["ben","gwen","kevin","rook"];
     page.innerHTML = `<div class="cloud-heading"><div>RELATIONSHIPS</div><small>TEAM CONNECTIONS</small></div><div class="relationship-tabs">${people.map(p=>`<button data-person="${p}">${p.toUpperCase()}</button>`).join("")}</div><div id="relationship-list"></div>`;
     const render = selected => {
       page.querySelectorAll("[data-person]").forEach(b=>b.classList.toggle("active",b.dataset.person===selected));
       const list = page.querySelector("#relationship-list");
-      list.innerHTML = Object.entries(relationships[selected]).map(([name,value])=>`<div class="relationship-row"><span>${name}</span><div class="relationship-meter"><i style="width:${value}%"></i></div><b>${value.toFixed(1)}%</b></div>`).join("");
+      list.innerHTML = relationshipNames.filter(name => name !== selected).map(name => {
+        const value = relationships[selected][name];
+        const label = name[0].toUpperCase() + name.slice(1);
+        return `<div class="relationship-row"><span>${label}</span><div class="relationship-meter"><i style="width:${value}%"></i></div><b>${value.toFixed(1)}%</b></div>`;
+      }).join("");
     };
     page.querySelectorAll("[data-person]").forEach(b=>b.addEventListener("click",()=>render(b.dataset.person)));
     render("ben");
   }
   function memories() {
-    current = "memories"; address.textContent = "ottps://bgkr.omnicloud.com/memories";
+    current = "memories"; address.value = "ottps://bgkr.omnicloud.com/memories";
     page.innerHTML = `<div class="cloud-heading"><div>MEMORIES</div><small>TEAM PHOTO ARCHIVE</small></div><button id="capture-memory" class="cloud-action">◎ CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"><figcaption>MEMORY ${String(i+1).padStart(2,"0")}</figcaption></figure>`).join("")}</div>`;
     page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
   }
   function omnidata() {
-    current = "omnidata"; address.textContent = "ottps://en.omnidata.org";
+    current = "omnidata"; address.value = "ottps://en.omnidata.org";
     page.innerHTML = `<div class="cloud-heading"><div>OMNIDATA</div><small>INTERGALACTIC KNOWLEDGE INDEX</small></div><p class="extranet-copy">Welcome to Omnidata. The public knowledge portal is available from this terminal.</p>`;
   }
   function capturePhoto() {
@@ -71,14 +77,15 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     catch (error) { console.warn("Could not capture memory", error); }
   }
   function addRelationship(picker, owner) {
-    if (picker === owner) return;
-    const key = picker[0].toUpperCase()+picker.slice(1);
-    const other = owner[0].toUpperCase()+owner.slice(1);
-    const record = relationships[picker];
-    if (record && record[other] !== undefined) record[other] = Math.min(100, record[other] + 0.1);
-    const reverse = relationships[owner];
-    if (reverse && reverse[key] !== undefined) reverse[key] = Math.min(100, reverse[key] + 0.1);
-    completionValues.push(`${key}-${other} +0.1%`);
+    picker = String(picker).toLowerCase();
+    owner = String(owner).toLowerCase();
+    if (picker === owner || !relationships[picker] || !relationships[owner]) return;
+    const value = Math.min(100, relationships[picker][owner] + 0.1);
+    relationships[picker][owner] = value;
+    relationships[owner][picker] = value;
+    const pair = [picker, owner].sort((a,b) => relationshipNames.indexOf(a)-relationshipNames.indexOf(b));
+    const label = pair.map(name => name[0].toUpperCase()+name.slice(1)).join("-");
+    completionValues.push(label + " +0.1%");
   }
   function updateTask(count = storedCount + 1) {
     storedCount = Math.max(storedCount, count);
