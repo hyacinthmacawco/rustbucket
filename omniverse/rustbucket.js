@@ -8,8 +8,40 @@ export function createRustbucket(parent) {
   const orange=new THREE.MeshStandardMaterial({color:0xb95f37,roughness:.68});
   const metal=new THREE.MeshStandardMaterial({color:0x424b50,metalness:.45,roughness:.5});
   function mesh(g,m,p,r=[0,0,0]){const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.castShadow=true;o.receiveShadow=true;o.userData.noPhysics=true;ship.add(o);return o;}
-  // Open-ended fuselage shell: visibly hollow, with an interior floor.
-  mesh(new THREE.CylinderGeometry(1.55,1.25,10.5,12,1,true,Math.PI/2+1.1,Math.PI*2-2.2),hull,[0,0,0],[Math.PI/2,0,0]);
+  // Hollow fuselage with one passenger doorway cut into the starboard side.
+  function createFuselageGeometry() {
+    const axialSegments = 32, radialSegments = 64, length = 10.5;
+    const positions = [], indices = [];
+    for (let j = 0; j <= axialSegments; j++) {
+      const along = j / axialSegments;
+      const axisY = -length / 2 + along * length;
+      const radius = 1.25 + along * 0.3;
+      for (let i = 0; i <= radialSegments; i++) {
+        const angle = i / radialSegments * Math.PI * 2;
+        positions.push(radius * Math.cos(angle), axisY, radius * Math.sin(angle));
+      }
+    }
+    for (let j = 0; j < axialSegments; j++) {
+      const midAxisY = -length / 2 + (j + 0.5) / axialSegments * length;
+      const doorwayLength = -midAxisY > 1.5 && -midAxisY < 3.5;
+      for (let i = 0; i < radialSegments; i++) {
+        const midAngle = (i + 0.5) / radialSegments * Math.PI * 2;
+        const sideAngle = Math.atan2(Math.sin(midAngle), Math.cos(midAngle));
+        if (doorwayLength && Math.abs(sideAngle) < 0.52) continue;
+        const a = j * (radialSegments + 1) + i;
+        const b = a + radialSegments + 1;
+        const c = b + 1;
+        const d = a + 1;
+        indices.push(a,b,d,b,c,d);
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+  mesh(createFuselageGeometry(),hull,[0,0,0],[Math.PI/2,0,0]);
   mesh(new THREE.BoxGeometry(2.5,.12,9.7),inner,[0,-.55,0]);
   mesh(new THREE.CylinderGeometry(1.56,1.56,.16,12),orange,[0,0,-5.1],[Math.PI/2,0,0]);
   mesh(new THREE.ConeGeometry(1.52,2.6,12),hull,[0,0,6.45],[Math.PI/2,0,0]);
@@ -18,8 +50,8 @@ export function createRustbucket(parent) {
 
   // Broad swept wings with orange tips.
   for (const side of [-1,1]) {
-    mesh(new THREE.BoxGeometry(4.7,0.16,1.95),hull,[side*2.85,-0.08,-1.15],[0,0,side*0.035]);
-    mesh(new THREE.BoxGeometry(0.62,0.19,1.9),orange,[side*5.35,-0.08,-1.15],[0,0,side*0.035]);
+    mesh(new THREE.BoxGeometry(6.2,0.16,2.1),hull,[side*3.8,-0.08,-1.15],[0,0,side*0.035]);
+    mesh(new THREE.BoxGeometry(0.72,0.19,2.0),orange,[side*7.15,-0.08,-1.15],[0,0,side*0.035]);
   }
   // Twin forward laser emitters.
   const laserMaterial = new THREE.MeshBasicMaterial({color:0x7dffbd});
@@ -30,9 +62,9 @@ export function createRustbucket(parent) {
     if (now-lastShot < 260) return;
     lastShot = now;
     for (const x of [-0.62,0.62]) {
-      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,3.6,8),laserMaterial);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,6.5,10),laserMaterial);
       beam.rotation.x = Math.PI/2;
-      beam.position.set(x,0.12,7.35);
+      beam.position.set(x*1.15,0.16,7.55);
       ship.add(beam);
       lasers.push({mesh:beam,life:0.55});
     }
