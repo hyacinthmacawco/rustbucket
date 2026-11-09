@@ -1,445 +1,224 @@
-import { dimensions } from '../storage/state.js';
-export default function createBen(THREE) {
-  const root = new THREE.Group();
-  root.name = 'Ben';
+import * as THREE from "three";
 
-  const body = new THREE.Group();
-  body.name = 'BenBody';
-  root.add(body);
+/**
+ * Ben's articulated cuboid model.
+ * The skeleton and animation remain in main.js. Clothing graphics, hair and
+ * the Omnitrix face are drawn into textures rather than built from overlays.
+ */
 
-  const material = (color, roughness = 0.85) =>
-    new THREE.MeshStandardMaterial({ color, roughness });
-
-  const skin = material(0xd9a28d);
-  const skinShadow = material(0xb87869);
-  const hair = material(0x382019);
-  const hairLight = material(0x65402a);
-  const shirt = material(0x101714);
-  const green = material(0x079747);
-  const greenDark = material(0x075b32);
-  const pants = material(0x75452e);
-  const pantsLight = material(0x89563a);
-  const pantsDark = material(0x43291e);
-  const shoe = material(0x202523);
-  const white = material(0xe4e8e5);
-  const sole = material(0x9ba3a2);
-  const watchBlack = material(0x202823);
-
-  function mesh(geometry, mat, parent, position, scale) {
-    const object = new THREE.Mesh(geometry, mat);
-    object.position.set(...position);
-
-    if (scale) object.scale.set(...scale);
-
-    object.castShadow = true;
-    object.receiveShadow = true;
-    parent.add(object);
-    return object;
+export function createBen({ createHumanRig }) {
+  if (typeof createHumanRig !== "function") {
+    throw new TypeError("createBen requires the createHumanRig rig factory.");
   }
 
-  function box(parent, mat, position, size) {
-    return mesh(
-      new THREE.BoxGeometry(...size),
-      mat,
-      parent,
-      position
-    );
-  }
+  const rig = createHumanRig();
+  const { group, joints } = rig;
+  group.name = "Ben10CuboidCharacter";
 
-  function sphere(parent, mat, position, scale) {
-    return mesh(
-      new THREE.SphereGeometry(1, 16, 12),
-      mat,
-      parent,
-      position,
-      scale
-    );
-  }
-
-  function capsule(parent, mat, a, b, radius, segments = 8) {
-    const start = new THREE.Vector3(...a);
-    const end = new THREE.Vector3(...b);
-    const direction = end.clone().sub(start);
-
-    const object = mesh(
-      new THREE.CapsuleGeometry(radius, direction.length(), 4, segments),
-      mat,
-      parent,
-      start.clone().add(end).multiplyScalar(0.5).toArray()
-    );
-
-    object.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      direction.normalize()
-    );
-
-    return object;
-  }
-
-  // --------------------------------------------------
-  // HEAD: intentionally blank, with no facial features.
-  // --------------------------------------------------
-
-  const head = new THREE.Group();
-  head.name = 'Head';
-  head.position.set(0, 3.12, 0);
-  body.add(head);
-
-  sphere(head, skin, [0, 0, 0], [0.37, 0.46, 0.32]);
-
-  // Neck.
-  capsule(
-    body, skin,
-    [0, 2.48, 0],
-    [0, 2.83, 0],
-    0.15
-  );
-
-  // Hair cap and rear hair mass.
-  sphere(head, hair, [0, 0.27, -0.015], [0.39, 0.25, 0.35]);
-
-  // Side and back hair.
-  sphere(head, hair, [-0.29, 0.02, -0.01], [0.13, 0.31, 0.32]);
-  sphere(head, hair, [0.29, 0.02, -0.01], [0.13, 0.29, 0.30]);
-  sphere(head, hair, [0, -0.12, -0.21], [0.32, 0.22, 0.20]);
-
-  // Angular hair spikes, all made from simple cones.
-  function spike(parent, position, rotation, size) {
-    const part = mesh(
-      new THREE.ConeGeometry(size, size * 1.8, 5),
-      hair,
-      parent,
-      position,
-      [1, 1, 0.7]
-    );
-    part.rotation.set(...rotation);
-    return part;
-  }
-
-  spike(head, [-0.16, 0.43, -0.04], [0, 0, 0.9], 0.13);
-  spike(head, [0.02, 0.48, -0.03], [0, 0, 0.25], 0.12);
-  spike(head, [0.18, 0.42, -0.02], [0, 0, -0.9], 0.11);
-
-  // --------------------------------------------------
-  // TORSO: black shirt with green center stripe.
-  // --------------------------------------------------
-
-  const torso = new THREE.Group();
-  torso.name = 'Torso';
-  torso.position.y = 2.12;
-  body.add(torso);
-
-  sphere(torso, shirt, [0, 0.12, 0], [0.43, 0.61, 0.25]);
-
-  // Main shirt body.
-  box(torso, shirt, [0, -0.17, 0], [0.69, 0.90, 0.40]);
-
-  // Green vertical shirt stripe.
-  box(torso, green, [0, -0.16, 0.207], [0.19, 0.90, 0.018]);
-
-  // Green shoulder panels.
-  sphere(torso, green, [-0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
-  sphere(torso, green, [0.25, 0.38, 0.015], [0.19, 0.19, 0.22]);
-
-  // Collar.
-  const collar = mesh(
-    new THREE.TorusGeometry(0.17, 0.035, 6, 16),
-    green,
-    torso,
-    [0, 0.52, 0],
-    [1, 0.7, 0.8]
-  );
-  collar.rotation.x = Math.PI / 2;
-
-  // Number 10, drawn on a canvas to avoid a font dependency.
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
-
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 256, 128);
-  ctx.font = 'bold 100px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 13;
-  ctx.strokeStyle = '#e9eee9';
-  ctx.strokeText('10', 128, 66);
-  ctx.fillStyle = '#a8d5b2';
-  ctx.fillText('10', 128, 66);
-
-  const numberTexture = new THREE.CanvasTexture(canvas);
-  const numberMat = new THREE.MeshBasicMaterial({
-    map: numberTexture,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide
+  // Keep the skeleton, but hide its diagnostic meshes.
+  group.traverse(object => {
+    if (object.isMesh) object.visible = false;
   });
 
-  const number = mesh(
-    new THREE.PlaneGeometry(0.38, 0.19),
-    numberMat,
-    torso,
-    [0, -0.05, 0.222]
-  );
-  number.name = 'ShirtNumber10';
+  const makeTexture = (width, height, draw) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    draw(ctx, width, height);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    return texture;
+  };
 
-  // --------------------------------------------------
-  // ARMS: pivoted at the shoulders.
-  // --------------------------------------------------
+  const shirtTexture = makeTexture(512, 640, (ctx, w, h) => {
+    ctx.fillStyle = "#101512";
+    ctx.fillRect(0, 0, w, h);
 
-  const arms = [];
+    // Central green stripe, with green accents only over the shoulder seams.
+    ctx.fillStyle = "#079b4b";
+    ctx.fillRect(207, 0, 98, h);
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(130, 0); ctx.lineTo(178, 54);
+    ctx.lineTo(115, 75); ctx.lineTo(0, 43); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(w, 0); ctx.lineTo(w - 130, 0); ctx.lineTo(w - 178, 54);
+    ctx.lineTo(w - 115, 75); ctx.lineTo(w, 43); ctx.closePath(); ctx.fill();
 
-  for (const side of [-1, 1]) {
-    const shoulder = new THREE.Group();
-    shoulder.name = side < 0 ? 'LeftArm' : 'RightArm';
-    shoulder.position.set(side * 0.39, 0.30, 0);
-    torso.add(shoulder);
-    arms.push(shoulder);
+    // Bold, clean white 10 printed directly on the shirt.
+    ctx.fillStyle = "#f1f2ec";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 150px Arial, sans-serif";
+    ctx.fillText("10", w / 2, h * 0.53);
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#168c4a";
+    ctx.strokeText("10", w / 2, h * 0.53);
+  });
 
-    // Green-and-black short sleeve.
-    sphere(
-      shoulder, shirt,
-      [side * 0.035, -0.10, 0],
-      [0.16, 0.24, 0.19]
+  const sleeveTexture = makeTexture(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = "#101512";
+    ctx.fillRect(0, 0, w, h);
+    // Narrow green shoulder piping; most of the sleeve remains black.
+    ctx.fillStyle = "#079b4b";
+    ctx.fillRect(0, 0, w, 28);
+    ctx.fillRect(0, 0, 24, 256);
+  });
+
+  const hairFront = makeTexture(384, 384, (ctx, w, h) => {
+    ctx.fillStyle = "#c98d78";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#38231e";
+    ctx.fillRect(0, 0, w, 112);
+    // One simple, shallow fringe silhouette; no separate hair geometry.
+    ctx.beginPath();
+    ctx.moveTo(0, 82); ctx.lineTo(70, 98); ctx.lineTo(112, 135);
+    ctx.lineTo(154, 102); ctx.lineTo(205, 138); ctx.lineTo(251, 100);
+    ctx.lineTo(310, 126); ctx.lineTo(384, 91); ctx.lineTo(384, 0);
+    ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+  });
+
+  const hairBack = makeTexture(384, 384, (ctx, w, h) => {
+    ctx.fillStyle = "#c98d78";
+    ctx.fillRect(0, 0, w, h);
+    // Back hair covers nearly the entire rear of the head.
+    ctx.fillStyle = "#38231e";
+    ctx.fillRect(0, 0, w, h);
+  });
+
+  const hairSide = makeTexture(256, 384, (ctx, w, h) => {
+    ctx.fillStyle = "#c98d78";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#38231e";
+    ctx.fillRect(0, 0, w, h);
+  });
+
+  const hairTop = makeTexture(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = "#38231e";
+    ctx.fillRect(0, 0, w, h);
+  });
+
+  const omnitrixTexture = makeTexture(512, 256, (ctx, w, h) => {
+    // The reference uses a muted olive/grey-green wrist band, not black.
+    ctx.fillStyle = "#68715d"; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#aeb8ae"; ctx.fillRect(150, 18, 212, 220);
+    ctx.fillStyle = "#171d20"; ctx.fillRect(169, 36, 174, 184);
+    ctx.fillStyle = "#477f42";
+    ctx.beginPath();
+    ctx.moveTo(190, 55); ctx.lineTo(322, 55); ctx.lineTo(275, 116);
+    ctx.lineTo(322, 201); ctx.lineTo(190, 201); ctx.lineTo(237, 116);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#171d20";
+    ctx.beginPath();
+    ctx.moveTo(230, 79); ctx.lineTo(282, 79); ctx.lineTo(256, 112);
+    ctx.lineTo(282, 177); ctx.lineTo(230, 177); ctx.lineTo(256, 112);
+    ctx.closePath(); ctx.fill();
+    // Fine pale edging separates the faceplate from the band.
+    ctx.strokeStyle = "#d2d8d0"; ctx.lineWidth = 7;
+    ctx.strokeRect(150, 18, 212, 220);
+  });
+  const strapMaterial = new THREE.MeshStandardMaterial({ color: 0x68715d, roughness: 0.88 });
+  const omnitrixFrontMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffffff, map: omnitrixTexture, roughness: 0.62, metalness: 0.04
+  });
+
+  const mat = {
+    skin: new THREE.MeshStandardMaterial({ color: 0xc98d78, roughness: 0.92 }),
+    hairFront: new THREE.MeshStandardMaterial({ map: hairFront, roughness: 0.96 }),
+    hairBack: new THREE.MeshStandardMaterial({ map: hairBack, roughness: 0.96 }),
+    hairSide: new THREE.MeshStandardMaterial({ map: hairSide, roughness: 0.96 }),
+    hairTop: new THREE.MeshStandardMaterial({ map: hairTop, roughness: 0.96 }),
+    shirt: new THREE.MeshStandardMaterial({ color: 0xffffff, map: shirtTexture, roughness: 0.9 }),
+    sleeve: new THREE.MeshStandardMaterial({ color: 0xffffff, map: sleeveTexture, roughness: 0.9 }),
+    black: new THREE.MeshStandardMaterial({ color: 0x101512, roughness: 0.9 }),
+    green: new THREE.MeshStandardMaterial({ color: 0x079b4b, roughness: 0.86 }),
+    pants: new THREE.MeshStandardMaterial({ color: 0x70452f, roughness: 0.96 }),
+    pantsDark: new THREE.MeshStandardMaterial({ color: 0x593522, roughness: 0.96 }),
+    white: new THREE.MeshStandardMaterial({ color: 0xe7e9e2, roughness: 0.86 }),
+    sole: new THREE.MeshStandardMaterial({ color: 0x252a29, roughness: 0.94 }),
+    strap: strapMaterial,
+    omnitrixFront: omnitrixFrontMaterial
+  };
+
+  const box = (parent, name, size, position, material) => {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(size[0], size[1], size[2]),
+      material
     );
+    mesh.name = name;
+    mesh.position.set(position[0], position[1], position[2]);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  };
 
-    sphere(
-      shoulder, green,
-      [side * 0.04, -0.22, 0.015],
-      [0.15, 0.09, 0.19]
-    );
+  // Shirt extends down over the pelvis. The waistband is parented to the
+  // spine, not the independently rotating hip, so the two cannot pull apart.
+  const torso = box(joints.spine, "BenShirt", [0.45, 0.96, 0.28],
+    [0, 0.025, 0], [
+      mat.black, mat.black, mat.black, mat.black, mat.shirt, mat.black
+    ]);
+  rig.fitToTorso(torso);
 
-    // Upper arm and forearm.
-    capsule(
-      shoulder, skin,
-      [0, -0.25, 0],
-      [side * 0.015, -0.61, 0],
-      0.105
-    );
 
-    const elbow = new THREE.Group();
-    elbow.position.set(side * 0.015, -0.61, 0);
-    shoulder.add(elbow);
-    shoulder.userData.elbow = elbow;
+  // No neck mesh: the head remains attached directly to the neck bone.
+  // Hair is painted onto the cuboid head's faces.
+  const headMesh = box(joints.head, "BenHead", [0.37, 0.42, 0.32],
+    [0, 0.055, 0], [
+      mat.hairSide, mat.hairSide, mat.hairTop, mat.skin,
+      mat.hairFront, mat.hairBack
+    ]);
+  rig.fitHeadToTorso(torso, headMesh);
 
-    capsule(
-      elbow, skin,
-      [0, 0, 0],
-      [side * 0.015, -0.47, 0.015],
-      0.09
-    );
+  // Sleeves are black with narrow green texture accents, matching Ben's shirt.
+  for (const side of ["left", "right"]) {
+    const sign = side === "left" ? -1 : 1;
+    const shoulder = joints[side + "Shoulder"];
+    const elbow = joints[side + "Elbow"];
+    const wrist = joints[side + "Wrist"];
 
-    sphere(
-      elbow, skin,
-      [side * 0.015, -0.53, 0.015],
-      [0.105, 0.12, 0.10]
-    );
+    // Upper sleeve overlaps the clavicle end and the forearm slightly.
+    box(shoulder, side + "BlackSleeve", [Math.abs(elbow.position.x) + 0.035, 0.22, 0.265],
+      [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], [
+        mat.black, mat.black, mat.sleeve, mat.black, mat.black, mat.black
+      ]);
 
-    // Simple hands, without individual fingers.
-    sphere(
-      elbow, skin,
-      [side * 0.015, -0.62, 0.02],
-      [0.115, 0.14, 0.09]
-    );
+    // Forearm and hand are centered on the actual elbow-to-wrist span.
+    box(elbow, side + "SkinForearm", [Math.abs(wrist.position.x) + 0.035, 0.155, 0.175],
+      [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], mat.skin);
+    const handMaterials = side === "left"
+      ? [mat.strap, mat.strap, mat.strap, mat.strap, mat.omnitrixFront, mat.strap]
+      : mat.skin;
+    box(wrist, side + "SkinHand", [0.155, 0.145, 0.17],
+      [sign * 0.075, side === "left" ? 0.025 : 0, 0], handMaterials);
   }
 
-  // Omnitrix watch on the left wrist.
-  const watch = box(
-    arms[0].userData.elbow,
-    green,
-    [0, -0.49, 0.04],
-    [0.16, 0.17, 0.13]
-  );
-  watch.name = 'Omnitrix';
+  // Articulated trouser legs and simple white trainers.
+  for (const side of ["left", "right"]) {
+    const thigh = joints[side + "Thigh"];
+    const knee = joints[side + "Knee"];
+    const ankle = joints[side + "Ankle"];
 
-  box(
-    arms[0].userData.elbow,
-    watchBlack,
-    [0, -0.49, 0.115],
-    [0.105, 0.105, 0.025]
-  );
+    // Extend the upper trouser panel above the thigh pivot so it physically
+    // overlaps the waistband/pelvis. Keep its lower edge at the original
+    // position so the knee seam and lower-leg proportions do not change.
+    box(thigh, side + "UpperTrouser", [0.205, 0.62, 0.215],
+      [0, -0.30, 0], mat.pants);
+    box(knee, side + "LowerTrouser", [0.17, 0.44, 0.20],
+      [0, -0.215, 0], mat.pantsDark);
 
-  // --------------------------------------------------
-  // PANTS AND LEGS.
-  // --------------------------------------------------
-
-  box(body, pants, [0, 1.10, 0], [0.52, 0.48, 0.34]);
-
-  const legs = [];
-
-  for (const side of [-1, 1]) {
-    const hip = new THREE.Group();
-    hip.name = side < 0 ? 'LeftLeg' : 'RightLeg';
-    hip.position.set(side * 0.17, 1.10, 0);
-    body.add(hip);
-    legs.push(hip);
-
-    // Wide brown trouser legs.
-    capsule(
-      hip, pants,
-      [0, 0, 0],
-      [side * 0.015, -0.90, 0],
-      0.17,
-      10
-    );
-
-    // Outer trouser seam.
-    capsule(
-      hip, pantsDark,
-      [side * 0.10, -0.05, 0.12],
-      [side * 0.10, -0.85, 0.12],
-      0.025
-    );
-
-    // Cargo pocket on each outer thigh.
-    const pocket = box(
-      hip,
-      pantsLight,
-      [side * 0.15, -0.48, 0.10],
-      [0.19, 0.27, 0.08]
-    );
-    pocket.rotation.z = side * -0.10;
-
-    box(
-      hip,
-      pantsDark,
-      [side * 0.15, -0.36, 0.15],
-      [0.18, 0.045, 0.025]
-    );
-
-    // Shoe pivot.
-    const foot = new THREE.Group();
-    foot.name = 'Foot';
-    foot.position.set(0, -0.94, 0.08);
-    hip.add(foot);
-    hip.userData.foot = foot;
-
-    // White sneaker sole.
-    box(
-      foot, sole,
-      [0, -0.075, 0.10],
-      [0.35, 0.10, 0.52]
-    );
-
-    // Sneaker upper.
-    sphere(
-      foot, shoe,
-      [0, 0, 0.10],
-      [0.17, 0.12, 0.25]
-    );
-
-    // White toe.
-    sphere(
-      foot, white,
-      [0, -0.015, 0.25],
-      [0.16, 0.085, 0.12]
-    );
-
-    // Green sneaker accent.
-    box(
-      foot, green,
-      [0, 0.055, 0.09],
-      [0.22, 0.025, 0.24]
-    );
+    box(ankle, side + "WhiteTrainer", [0.205, 0.15, 0.31],
+      [0, -0.065, 0.085], mat.white);
+    box(ankle, side + "TrainerSole", [0.21, 0.045, 0.315],
+      [0, -0.145, 0.085], mat.sole);
+    box(ankle, side + "TrainerGreenToe", [0.13, 0.025, 0.035],
+      [0, -0.035, 0.235], mat.green);
   }
 
-  // --------------------------------------------------
-  // CHARACTER CONTROL / PROCEDURAL ANIMATION.
-  // --------------------------------------------------
+  // The Omnitrix is painted onto the existing left wrist cuboid: no separate
+  // watch case, strap meshes, or faceplate geometry.
 
-  let animation = 'idle';
-  let elapsed = 0;
-  let verticalVelocity = 0;
-  let grounded = true;
-
-  root.position.set(...dimensions.ben.position);
-  root.scale.set(...dimensions.ben.scale);
-  const baseY = dimensions.ben.position[1];
-  root.position.y = baseY;
-
-  root.userData.setAnimation = function (name) {
-    const allowed = ['idle', 'walk', 'run', 'jump'];
-
-    if (!allowed.includes(name)) {
-      throw new Error(
-        `Unknown Ben animation "${name}". Use: ${allowed.join(', ')}`
-      );
-    }
-
-    animation = name;
-  };
-
-  root.userData.jump = function (strength = 4.8) {
-    if (!grounded) return;
-
-    verticalVelocity = strength;
-    grounded = false;
-    animation = 'jump';
-  };
-
-  root.userData.update = function (deltaTime) {
-    const dt = Math.min(deltaTime, 0.05);
-    elapsed += dt;
-
-    const walking = animation === 'walk' || animation === 'run';
-    const speed = animation === 'run' ? 12 : 7;
-    const swing = walking ? Math.sin(elapsed * speed) : 0;
-
-    // Arm swing.
-    arms.forEach((arm, index) => {
-      const side = index === 0 ? -1 : 1;
-
-      arm.rotation.x = walking
-        ? swing * 0.45 * side
-        : THREE.MathUtils.damp(arm.rotation.x, 0, 8, dt);
-
-      arm.userData.elbow.rotation.x = walking
-        ? Math.max(0, -swing * side) * 0.45
-        : THREE.MathUtils.damp(
-            arm.userData.elbow.rotation.x, 0, 8, dt
-          );
-    });
-
-    // Leg swing.
-    legs.forEach((leg, index) => {
-      const side = index === 0 ? -1 : 1;
-
-      leg.rotation.x = walking
-        ? swing * 0.55 * side
-        : THREE.MathUtils.damp(leg.rotation.x, 0, 8, dt);
-
-      leg.userData.foot.rotation.x = walking
-        ? Math.max(0, swing * side) * 0.35
-        : THREE.MathUtils.damp(
-            leg.userData.foot.rotation.x, 0, 8, dt
-          );
-    });
-
-    // Slight torso movement while walking.
-    torso.rotation.z = walking ? swing * 0.025 : 0;
-    torso.position.y = 2.12 + (
-      walking ? Math.abs(Math.sin(elapsed * speed * 2)) * 0.025 : 0
-    );
-
-    // Basic gravity and jump.
-    if (!grounded) {
-      verticalVelocity -= 12 * dt;
-      root.position.y += verticalVelocity * dt;
-
-      if (root.position.y <= baseY) {
-        root.position.y = baseY;
-        verticalVelocity = 0;
-        grounded = true;
-        animation = 'idle';
-      }
-    }
-  };
-
-  // Convenience methods.
-  root.setAnimation = root.userData.setAnimation;
-  root.jump = root.userData.jump;
-  root.update = root.userData.update;
-
-  return root;
+  return { group, rig, joints };
 }
