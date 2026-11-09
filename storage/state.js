@@ -343,6 +343,7 @@ import { createJoystick } from "../hud/joystick.js";
           const { unit } = unitModule.createKevinStorageUnit(group);
           const { ship } = shipModule.createRustbucket(group);
           physics = await physicsModule.createPhysics();
+          physics.addStaticScene(group);
           const { createHumanRig } = rigModule;
           const benCharacter = benModule.createBen({ createHumanRig });
           const gwenCharacter = gwenModule.createGwen({ createHumanRig });
