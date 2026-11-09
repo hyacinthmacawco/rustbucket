@@ -103,8 +103,9 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         const insideCabin = local.x > -1.18 && local.x < 1.18 && local.z > 1.65 && local.z < 4.65 && local.y > -2.9 && local.y < 0.8;
         if (insideCabin) {
           const anchor = ship.worldToLocal(selectedEntity.position.clone());
+          anchor.x = THREE.MathUtils.clamp(anchor.x,-0.15,0.15);
           anchor.y += 1.05;
-          const orbitDistance = 3.2;
+          const orbitDistance = THREE.MathUtils.clamp(cameraDistance * 0.055,0.55,1.15);
           const horizontal = Math.cos(cameraPitch) * orbitDistance;
           const offset = new THREE.Vector3(
             Math.sin(cameraYaw) * horizontal,
