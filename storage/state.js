@@ -368,6 +368,7 @@ import { createJoystick } from "../hud/joystick.js";
               character.rig.updateWalk(character.animationTime);
             };
             character.group.setAnimation("idle");
+            character.group.userData.performPickup = () => character.rig.playAnimation("pickup");
             characterEntities[name] = character.group;
             group.add(character.group);
             physics.addCharacter(character.group);
