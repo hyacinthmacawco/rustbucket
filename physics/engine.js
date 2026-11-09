@@ -97,11 +97,11 @@ export async function createPhysics() {
     const vehiclePanels = [
       RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(5.0)).setTranslation(scaled(-1.38),0,0),
       RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(3.1)).setTranslation(scaled(1.38),0,scaled(-1.9)),
-      RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(0.8)).setTranslation(scaled(1.38),0,scaled(4.55)),
+      RAPIER.ColliderDesc.cuboid(scaled(0.12),scaled(0.82),scaled(0.6)).setTranslation(scaled(1.38),0,scaled(4.4)),
       RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.12),scaled(0.12)).setTranslation(0,0,scaled(-5.0)),
       RAPIER.ColliderDesc.cuboid(scaled(1.32),scaled(0.12),scaled(0.12)).setTranslation(0,0,scaled(5.0)),
-      RAPIER.ColliderDesc.cuboid(scaled(2.35),scaled(0.08),scaled(0.98)).setTranslation(scaled(-2.85),scaled(-0.08),scaled(-1.15)),
-      RAPIER.ColliderDesc.cuboid(scaled(2.35),scaled(0.08),scaled(0.98)).setTranslation(scaled(2.85),scaled(-0.08),scaled(-1.15))
+      RAPIER.ColliderDesc.cuboid(scaled(3.1),scaled(0.08),scaled(1.05)).setTranslation(scaled(-3.8),scaled(-0.08),scaled(-1.15)),
+      RAPIER.ColliderDesc.cuboid(scaled(3.1),scaled(0.08),scaled(1.05)).setTranslation(scaled(3.8),scaled(-0.08),scaled(-1.15))
     ];
     for (const descriptor of vehiclePanels) world.createCollider(descriptor,body);
     for (let i=0;i<5;i++) {
@@ -114,13 +114,13 @@ export async function createPhysics() {
     const attitude = { yaw:0, pitch:0, roll:0 };
     const vehicleQuaternion = new THREE.Quaternion();
     object.userData.vehicleBody = body;
-    object.userData.moveVehicle = (dx,dz,lift,dt,steerInput=0) => {
+    object.userData.moveVehicle = (dx,dz,lift,dt,steerInput=0,cameraHeading=attitude.yaw) => {
       const current = body.translation();
       controller.computeColliderMovement(collider,{x:dx,y:lift*9.2*dt,z:dz});
       const movement = controller.computedMovement();
       body.setNextKinematicTranslation({x:current.x+movement.x,y:current.y+movement.y,z:current.z+movement.z});
       const steer = THREE.MathUtils.clamp(steerInput,-1,1);
-      attitude.yaw = THREE.MathUtils.clamp(attitude.yaw - steer * 0.42 * dt,-0.58,0.58);
+      attitude.yaw = cameraHeading;
       attitude.roll = THREE.MathUtils.damp(attitude.roll,steer*0.32,5,dt);
       attitude.pitch = THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
       vehicleQuaternion.setFromEuler(new THREE.Euler(attitude.pitch,attitude.yaw,attitude.roll,"YXZ"));
