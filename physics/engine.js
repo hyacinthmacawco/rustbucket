@@ -109,12 +109,20 @@ export async function createPhysics() {
     }
     const controller = world.createCharacterController(0.04);
     controller.setSlideEnabled(true);
+    const attitude = { yaw:0, pitch:0, roll:0 };
+    const vehicleQuaternion = new THREE.Quaternion();
     object.userData.vehicleBody = body;
     object.userData.moveVehicle = (dx,dz,lift,dt) => {
       const current = body.translation();
-      controller.computeColliderMovement(collider,{x:dx,y:lift*5.5*dt,z:dz});
+      controller.computeColliderMovement(collider,{x:dx,y:lift*9.2*dt,z:dz});
       const movement = controller.computedMovement();
       body.setNextKinematicTranslation({x:current.x+movement.x,y:current.y+movement.y,z:current.z+movement.z});
+      const steer = THREE.MathUtils.clamp(dx / Math.max(dt,0.001) / 18,-1,1);
+      attitude.yaw = THREE.MathUtils.clamp(attitude.yaw + steer * 0.42 * dt,-0.58,0.58);
+      attitude.roll = THREE.MathUtils.damp(attitude.roll,-steer*0.32,5,dt);
+      attitude.pitch = THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
+      vehicleQuaternion.setFromEuler(new THREE.Euler(attitude.pitch,attitude.yaw,attitude.roll,"YXZ"));
+      body.setNextKinematicRotation(vehicleQuaternion);
     };
     bodies.push({object,body,vehicle:true});
     return body;
@@ -125,6 +133,7 @@ export async function createPhysics() {
     for (const { object, body, vehicle = false } of bodies) {
       const position = body.translation();
       object.position.set(position.x, position.y - (vehicle ? 0 : 0.75), position.z);
+      if (vehicle) object.quaternion.set(body.rotation().x,body.rotation().y,body.rotation().z,body.rotation().w);
     }
   }
 
