@@ -1,38 +1,227 @@
 import * as THREE from "three";
-export function createJoystick(){
- const element=document.createElement("div");element.id="movement-joystick";element.setAttribute("aria-label","Movement joystick");element.innerHTML='<div id="joystick-base"><div id="joystick-knob"></div></div>';document.body.appendChild(element);
- const base=element.firstElementChild,knob=base.firstElementChild,input={active:false,pointerId:null,x:0,y:0,mode:"move",toggleRequested:false,selection:null,jumpRequested:false,pickRequested:false};
- const buttons=document.createElement("div");buttons.id="action-controls";buttons.innerHTML='<button id="jump-button" type="button" aria-label="Jump">↑</button><button id="pick-button" type="button" aria-label="Pick up">✋</button>';document.body.appendChild(buttons);
- const jump=buttons.querySelector("#jump-button"),pick=buttons.querySelector("#pick-button");
- const request=(name,e)=>{e.preventDefault();input[name]=true;};
- jump.addEventListener("pointerdown",e=>request("jumpRequested",e));pick.addEventListener("pointerdown",e=>request("pickRequested",e));
- function reset(){input.active=false;input.pointerId=null;input.x=0;input.y=0;knob.style.transform="translate(0px,0px)";}
- function update(e){const r=base.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),max=r.width*.32,d=Math.hypot(dx,dy),f=d>max?max/d:1,x=dx*f,y=dy*f;input.x=x/max;input.y=-y/max;knob.style.transform=`translate(${x}px,${y}px)`;}
- function down(e){e.preventDefault();input.active=true;input.pointerId=e.pointerId;base.setPointerCapture(e.pointerId);update(e);}
- function move(e){if(input.active&&e.pointerId===input.pointerId){e.preventDefault();update(e);}}
- function up(e){if(e.pointerId!==input.pointerId)return;if(Math.hypot(input.x,input.y)<.22)input.toggleRequested=true;else if(input.mode==="switch")input.selection={x:input.x,y:input.y};reset();}
- base.addEventListener("pointerdown",down);base.addEventListener("pointermove",move);base.addEventListener("pointerup",up);base.addEventListener("pointercancel",up);
- return {input,element,buttons,setVisible(v){element.style.display=v?"block":"none";buttons.style.display=v?"flex":"none";if(!v)reset();},destroy(){element.removeEventListener("pointerdown",down);element.removeEventListener("pointermove",move);element.removeEventListener("pointerup",up);element.removeEventListener("pointercancel",up);jump.remove();pick.remove();element.remove();buttons.remove();}};
+
+export function createJoystick() {
+  const element = document.createElement("div");
+  element.id = "movement-joystick";
+  element.setAttribute("aria-label", "Movement and team selector");
+  element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben">B</span><span class="team-label team-gwen">G</span><span class="team-label team-kevin">K</span><span class="team-label team-rook">R</span><span class="team-label team-rustbucket">B</span></div><div id="joystick-knob"></div></div>';
+  document.body.appendChild(element);
+
+  const base = element.firstElementChild;
+  const knob = base.querySelector("#joystick-knob");
+  const input = {
+    active: false, pointerId: null, x: 0, y: 0, mode: "move",
+    toggleRequested: false, selection: null, jumpRequested: false,
+    pickRequested: false, attackRequested: false
+  };
+
+  const buttons = document.createElement("div");
+  buttons.id = "action-controls";
+  buttons.innerHTML = '<button id="jump-button" type="button" aria-label="Jump">↑</button><button id="pick-button" type="button" aria-label="Pick up">✋</button><button id="attack-button" type="button" aria-label="Attack">✊</button>';
+  document.body.appendChild(buttons);
+
+  const jump = buttons.querySelector("#jump-button");
+  const pick = buttons.querySelector("#pick-button");
+  const attack = buttons.querySelector("#attack-button");
+  const request = (name, event) => {
+    event.preventDefault();
+    input[name] = true;
+  };
+  jump.addEventListener("pointerdown", event => request("jumpRequested", event));
+  pick.addEventListener("pointerdown", event => request("pickRequested", event));
+  attack.addEventListener("pointerdown", event => request("attackRequested", event));
+
+  let lastCenterTap = 0;
+  function reset() {
+    input.active = false;
+    input.pointerId = null;
+    input.x = 0;
+    input.y = 0;
+    knob.style.transform = "translate(0px,0px)";
+  }
+  function update(event) {
+    const rect = base.getBoundingClientRect();
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const max = rect.width * 0.32;
+    const distance = Math.hypot(dx, dy);
+    const factor = distance > max ? max / distance : 1;
+    const x = dx * factor;
+    const y = dy * factor;
+    input.x = x / max;
+    input.y = -y / max;
+    knob.style.transform = `translate(${x}px,${y}px)`;
+  }
+  function down(event) {
+    event.preventDefault();
+    input.active = true;
+    input.pointerId = event.pointerId;
+    base.setPointerCapture(event.pointerId);
+    update(event);
+  }
+  function move(event) {
+    if (input.active && event.pointerId === input.pointerId) {
+      event.preventDefault();
+      update(event);
+    }
+  }
+  function up(event) {
+    if (event.pointerId !== input.pointerId) return;
+    const centered = Math.hypot(input.x, input.y) < 0.22;
+    if (input.mode === "switch") {
+      input.selection = centered ? { x: 0, y: 0 } : { x: input.x, y: input.y };
+    } else if (centered) {
+      const now = performance.now();
+      if (now - lastCenterTap <= 320) {
+        input.toggleRequested = true;
+        lastCenterTap = 0;
+      } else {
+        lastCenterTap = now;
+      }
+    }
+    reset();
+  }
+
+  base.addEventListener("pointerdown", down);
+  base.addEventListener("pointermove", move);
+  base.addEventListener("pointerup", up);
+  base.addEventListener("pointercancel", up);
+
+  return {
+    input,
+    element,
+    buttons,
+    setVisible(visible) {
+      element.style.display = visible ? "block" : "none";
+      buttons.style.display = visible ? "flex" : "none";
+      if (!visible) reset();
+    },
+    setMode(mode) {
+      input.mode = mode;
+      element.classList.toggle("team-mode", mode === "switch");
+      if (mode === "switch") knob.textContent = "B";
+      else knob.textContent = "";
+    },
+    destroy() {
+      base.removeEventListener("pointerdown", down);
+      base.removeEventListener("pointermove", move);
+      base.removeEventListener("pointerup", up);
+      base.removeEventListener("pointercancel", up);
+      jump.remove();
+      pick.remove();
+      attack.remove();
+      element.remove();
+      buttons.remove();
+    }
+  };
 }
-export function createKeyboard({entities,camera,joystick,updateCamera,isMobile=false,onSelect=()=>{}}){
- const keys=new Set(),names=["ben","gwen","kevin","rook","rustbucket"];let selected="ben",switchMode=false;
- function keydown(e){const k=e.key.toLowerCase();if(k==="f"){if(e.repeat)return;switchMode=!switchMode;keys.clear();e.preventDefault();return;}if(["w","a","s","d"].includes(k)){keys.add(k);e.preventDefault();}}
- function keyup(e){keys.delete(e.key.toLowerCase());}function blur(){keys.clear();}
- window.addEventListener("keydown",keydown);window.addEventListener("keyup",keyup);window.addEventListener("blur",blur);
- function choose(x,y){const options=names.filter(n=>n!==selected),index=Math.abs(x)>Math.abs(y)?(x>0?1:3):(y>0?0:2);selected=options[index]||options[0];onSelect(selected);}
- function update(dt){
-  const joy=joystick.input;if(joy.toggleRequested){joy.toggleRequested=false;switchMode=!switchMode;joy.mode=switchMode?"switch":"move";keys.clear();}
-  if(joy.selection){choose(joy.selection.x,joy.selection.y);joy.selection=null;}
-  if(!isMobile&&switchMode){const x=(keys.has("d")?1:0)-(keys.has("a")?1:0),y=(keys.has("w")?1:0)-(keys.has("s")?1:0);if(x||y){choose(x,y);keys.clear();}return;}
-  const object=entities[selected];if(!object)return;
-  const f=(keys.has("w")?1:0)-(keys.has("s")?1:0)+(isMobile&&!switchMode?joy.y:0),r=(keys.has("d")?1:0)-(keys.has("a")?1:0)+(isMobile&&!switchMode?joy.x:0),m=Math.hypot(f,r);
-  const d=camera.getWorldDirection(new THREE.Vector3()),l=Math.hypot(d.x,d.z)||1,fx=d.x/l,fz=d.z/l,rx=-fz,rz=fx,mx=m>.08?(fx*f+rx*r)/Math.max(1,m):0,mz=m>.08?(fz*f+rz*r)/Math.max(1,m):0,speed=selected==="rustbucket"?5:3.5;
-  if(object.userData.moveWithCollisions)object.userData.moveWithCollisions(mx*speed*dt,mz*speed*dt,dt,joy.jumpRequested);
-  else if(m>.08){object.position.x+=mx*speed*dt;object.position.z+=mz*speed*dt;}
-  joy.jumpRequested=false;
-  if(joy.pickRequested){object.userData.performPickup?.();joy.pickRequested=false;}
-  if(m>.08){object.rotation.y=Math.atan2(mx,mz);object.setAnimation?.("walk");}else object.setAnimation?.("idle");
-  object.update?.(dt);updateCamera();
- }
- return {update,get selected(){return selected;},destroy(){window.removeEventListener("keydown",keydown);window.removeEventListener("keyup",keyup);window.removeEventListener("blur",blur);keys.clear();}};
+
+export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {} }) {
+  const keys = new Set();
+  let selected = "ben";
+  let switchMode = false;
+
+  function keydown(event) {
+    const key = event.key.toLowerCase();
+    if (key === "f") {
+      if (event.repeat) return;
+      switchMode = !switchMode;
+      joystick.setMode(switchMode ? "switch" : "move");
+      keys.clear();
+      event.preventDefault();
+      return;
+    }
+    if (["w", "a", "s", "d", " "].includes(key)) {
+      keys.add(key);
+      event.preventDefault();
+    }
+    if (key === " " && !event.repeat) joystick.input.jumpRequested = true;
+    if (key === "e" && !event.repeat) joystick.input.pickRequested = true;
+    if (key === "q" && !event.repeat) joystick.input.attackRequested = true;
+  }
+  function keyup(event) { keys.delete(event.key.toLowerCase()); }
+  function blur() { keys.clear(); }
+  window.addEventListener("keydown", keydown);
+  window.addEventListener("keyup", keyup);
+  window.addEventListener("blur", blur);
+
+  function choose(x, y) {
+    if (Math.hypot(x, y) < 0.22) {
+      selected = "rustbucket";
+    } else if (Math.abs(x) > Math.abs(y)) {
+      selected = x > 0 ? "gwen" : "rook";
+    } else {
+      selected = y > 0 ? "ben" : "kevin";
+    }
+    onSelect(selected);
+    updateCamera();
+  }
+
+  function update(dt) {
+    const joy = joystick.input;
+    if (joy.toggleRequested) {
+      joy.toggleRequested = false;
+      switchMode = !switchMode;
+      joystick.setMode(switchMode ? "switch" : "move");
+      keys.clear();
+    }
+    if (joy.selection) {
+      choose(joy.selection.x, joy.selection.y);
+      joy.selection = null;
+    }
+    if (!isMobile && switchMode) {
+      const x = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
+      const y = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
+      if (x || y) {
+        choose(x, y);
+        keys.clear();
+      }
+      return;
+    }
+
+    const object = entities[selected];
+    if (!object) return;
+    const forward = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0) + (isMobile && !switchMode ? joy.y : 0);
+    const right = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + (isMobile && !switchMode ? joy.x : 0);
+    const magnitude = Math.hypot(forward, right);
+    const direction = camera.getWorldDirection(new THREE.Vector3());
+    const length = Math.hypot(direction.x, direction.z) || 1;
+    const fx = direction.x / length, fz = direction.z / length;
+    const rx = -fz, rz = fx;
+    const mx = magnitude > 0.08 ? (fx * forward + rx * right) / Math.max(1, magnitude) : 0;
+    const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
+    const speed = selected === "rustbucket" ? 5 : 3.5;
+
+    if (object.userData.moveWithCollisions) {
+      object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt, joy.jumpRequested);
+    } else if (magnitude > 0.08) {
+      object.position.x += mx * speed * dt;
+      object.position.z += mz * speed * dt;
+    }
+    joy.jumpRequested = false;
+
+    if (joy.pickRequested) {
+      object.userData.performPickup?.();
+      joy.pickRequested = false;
+    }
+    if (joy.attackRequested) {
+      object.userData.performAttack?.();
+      joy.attackRequested = false;
+    }
+
+    object.setAnimation?.(magnitude > 0.08 ? "walk" : "idle");
+    object.update?.(dt);
+    updateCamera();
+  }
+
+  return {
+    update,
+    get selected() { return selected; },
+    destroy() {
+      window.removeEventListener("keydown", keydown);
+      window.removeEventListener("keyup", keyup);
+      window.removeEventListener("blur", blur);
+      keys.clear();
+    }
+  };
 }
