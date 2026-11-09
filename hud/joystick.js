@@ -193,7 +193,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       joy.jumpRequested = false;
     }
     if (selected === "rustbucket" && object.userData.moveVehicle) {
-      object.userData.moveVehicle(mx * speed * dt, mz * speed * dt, getLift(), dt);
+      object.userData.moveVehicle(mx * speed * dt, mz * speed * dt, getLift(), dt, right);
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
