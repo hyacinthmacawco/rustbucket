@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export function createSuitcases(parent) {
-  const owners = ["ben", "gwen", "kevin", "rook"];
+  const owners = ["Ben", "Gwen", "Kevin", "Rook"];
   const colors = [0x263d35, 0x9a4f36, 0x394b69, 0x77715b];
   const suitcases = owners.map((owner, index) => {
     const group = new THREE.Group();
