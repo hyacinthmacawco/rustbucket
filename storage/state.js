@@ -24,7 +24,7 @@ export const dimensions = {
       yaw: 0,
       pitch: 0.13
     },
-    tutorial: {
+    gameplay: {
       position: [0, 5.3, 18.5],
       target: [0, 1.8, 0],
       fov: 43,
@@ -94,7 +94,7 @@ import { createJoystick } from "../hud/joystick.js";
         ? entities[keyboardController?.selected || "ben"]
         : null;
       const followedEntity = selectedEntity || ben;
-      const target = activeStage === "tutorial" && followedEntity
+      const target = activeStage === "gameplay" && followedEntity
         ? new THREE.Vector3(followedEntity.position.x, followedEntity.position.y + 1.8, followedEntity.position.z)
         : cameraTarget;
 
@@ -143,7 +143,7 @@ import { createJoystick } from "../hud/joystick.js";
     const joystick = createJoystick();
     joystick.setVisible(false);
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const tutorialLabel = createTutorialLabel({ isMobile });
+    
     
 
     // One audio handle is reused for the active stage's soundtrack/dialogue.
@@ -406,13 +406,13 @@ import { createJoystick } from "../hud/joystick.js";
       } else if (activeStage === "prelude") {
         titleScreen.setVisible(false);
         joystick.setVisible(false);
-        teamstick.setVisible(false);
+        
         preludeScreen.style.display = "flex";
         stopMusic();
         playStageMusic("./hud/ov-final-dialogues.mp3", false, () => {
           if (state.stage === "prelude") state.stage = "gameplay";
         });
-      } else if (activeStage === "tutorial") {
+      } else if (activeStage === "gameplay") {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(isMobile);
@@ -423,7 +423,7 @@ import { createJoystick } from "../hud/joystick.js";
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
-        joystick.setVisible(isMobile && activeStage === "tutorial");
+        joystick.setVisible(isMobile && activeStage === "gameplay");
         teamstick.setVisible(isMobile && activeStage === "tutorial");
         stopMusic();
       }
@@ -440,7 +440,7 @@ import { createJoystick } from "../hud/joystick.js";
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
       teamstick.setVisible(isMobile && state.stage === "tutorial");
-      tutorialLabel.setVisible(state.stage === "tutorial");
+      
 
       // Decide what to instantiate from the camera's current world position.
       const wantedRegion = regionNearCamera();
@@ -452,7 +452,7 @@ import { createJoystick } from "../hud/joystick.js";
       if (physics && state.stage === "gameplay") physics.step(delta);
       const elapsed = clock.elapsedTime;
 
-      if (state.stage === "tutorial" && keyboardController) {
+      if (state.stage === "gameplay" && keyboardController) {
         keyboardController.update(delta);
       }
 
