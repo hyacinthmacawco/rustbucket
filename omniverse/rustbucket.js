@@ -23,7 +23,7 @@ export function createRustbucket(parent) {
     }
     for (let j = 0; j < axialSegments; j++) {
       const midAxisY = -length / 2 + (j + 0.5) / axialSegments * length;
-      const doorwayLength = -midAxisY > 1.5 && -midAxisY < 3.5;
+      const doorwayLength = midAxisY > 1.5 && midAxisY < 3.5;
       for (let i = 0; i < radialSegments; i++) {
         const midAngle = (i + 0.5) / radialSegments * Math.PI * 2;
         const sideAngle = Math.atan2(Math.sin(midAngle), Math.cos(midAngle));
