@@ -23,13 +23,18 @@ export function createJoystick() {
   const jump = buttons.querySelector("#jump-button");
   const pick = buttons.querySelector("#pick-button");
   const attack = buttons.querySelector("#attack-button");
-  const request = (name, event) => { event.preventDefault(); input[name] = true; };
+  const request = (name, event) => { event.preventDefault(); event.stopPropagation(); input[name] = true; };
   jump.addEventListener("pointerdown", event => request("jumpRequested", event));
   pick.addEventListener("pointerdown", event => request("pickRequested", event));
   attack.addEventListener("pointerdown", event => request("attackRequested", event));
 
   let lastCenterTap = 0;
   let centerSelectionTimer = 0;
+  function setMode(mode) {
+    input.mode = mode;
+    element.classList.toggle("team-mode", mode === "switch");
+    knob.textContent = mode === "switch" ? "T" : "";
+  }
   function reset() {
     input.active = false;
     input.pointerId = null;
@@ -64,21 +69,23 @@ export function createJoystick() {
   }
   function up(event) {
     if (event.pointerId !== input.pointerId) return;
+    if (event.type === "pointercancel") { reset(); return; }
     const centered = Math.hypot(input.x, input.y) < 0.22;
     if (centered) {
       const now = performance.now();
-      if (now - lastCenterTap <= 360) {
+      if (lastCenterTap && now - lastCenterTap <= 420) {
         clearTimeout(centerSelectionTimer);
         centerSelectionTimer = 0;
         lastCenterTap = 0;
-        input.toggleRequested = true;
+        setMode(input.mode === "switch" ? "move" : "switch");
       } else {
         lastCenterTap = now;
         if (input.mode === "switch") {
           centerSelectionTimer = window.setTimeout(() => {
             input.selection = { x: 0, y: 0 };
             centerSelectionTimer = 0;
-          }, 360);
+            lastCenterTap = 0;
+          }, 420);
         }
       }
     } else if (input.mode === "switch") {
@@ -103,9 +110,7 @@ export function createJoystick() {
       if (!visible) reset();
     },
     setMode(mode) {
-      input.mode = mode;
-      element.classList.toggle("team-mode", mode === "switch");
-      knob.textContent = mode === "switch" ? "T" : "";
+      setMode(mode);
     },
     destroy() {
       clearTimeout(centerSelectionTimer);
@@ -128,7 +133,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const key = event.key.toLowerCase();
     if (key === "f") {
       if (event.repeat) return;
-      switchMode = !switchMode;
+      switchMode = joystick.input.mode !== "switch";
       joystick.setMode(switchMode ? "switch" : "move");
       keys.clear();
       event.preventDefault();
@@ -158,12 +163,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
 
   function update(dt) {
     const joy = joystick.input;
-    if (joy.toggleRequested) {
-      joy.toggleRequested = false;
-      switchMode = !switchMode;
-      joystick.setMode(switchMode ? "switch" : "move");
-      keys.clear();
-    }
+    switchMode = joy.mode === "switch";
     if (joy.selection) {
       choose(joy.selection.x, joy.selection.y);
       joy.selection = null;
