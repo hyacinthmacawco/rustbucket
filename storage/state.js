@@ -182,7 +182,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     extranetButton.id = "extranet-button";
     extranetButton.type = "button";
     extranetButton.setAttribute("aria-label", "Open Extranet");
-    extranetButton.textContent = "◎";
+    extranetButton.textContent = "🌐";
     extranetButton.addEventListener("click", () => extranet.open());
     const liftControl = document.createElement("label");
     liftControl.id = "vehicle-lift-control";
