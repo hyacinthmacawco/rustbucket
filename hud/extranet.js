@@ -1,4 +1,4 @@
-export function createExtranet({ onContinue = () => {} } = {}) {
+export function createExtranet({ onContinue = () => {}, onComplete = () => {} } = {}) {
   const root = document.createElement("section");
   root.id = "extranet-overlay";
   root.innerHTML = `
@@ -9,14 +9,14 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   document.body.appendChild(root);
   const page = root.querySelector("#extranet-page");
   const address = root.querySelector("#extranet-address");
-  // One symmetric relationship matrix; self-relationships remain zero.
-  // Conflicting reciprocal defaults are averaged to keep each pair identical.
+  // Directional relationship values: each character has an independent
+  // opinion of every other character. Self-relationships remain zero.
   const relationshipNames = ["ben","gwen","kevin","rook"];
   const relationships = {
-    ben:   { ben:0, gwen:91, kevin:95, rook:94 },
-    gwen:  { ben:91, gwen:0, kevin:95, rook:80 },
+    ben:   { ben:0, gwen:92, kevin:95, rook:90 },
+    gwen:  { ben:90, gwen:0, kevin:95, rook:80 },
     kevin: { ben:95, gwen:95, kevin:0, rook:85 },
-    rook:  { ben:94, gwen:80, kevin:85, rook:0 }
+    rook:  { ben:98, gwen:80, kevin:85, rook:0 }
   };
   const photos = [];
   let current = "home";
@@ -82,7 +82,6 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     if (picker === owner || !relationships[picker] || !relationships[owner]) return;
     const value = Math.min(100, relationships[picker][owner] + 0.1);
     relationships[picker][owner] = value;
-    relationships[owner][picker] = value;
     const pair = [picker, owner].sort((a,b) => relationshipNames.indexOf(a)-relationshipNames.indexOf(b));
     const label = pair.map(name => name[0].toUpperCase()+name.slice(1)).join("-");
     completionValues.push(label + " +0.1%");
@@ -92,6 +91,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     if (current === "tasks") tasks();
     if (storedCount >= 4 && !completed) {
       completed = true;
+      onComplete();
       showCompletion();
     }
   }
