@@ -625,3 +625,35 @@ html, body { height: 100dvh; }
 }
 #action-controls { gap:10px; }
 #attack-button { font-size:25px!important; }
+
+
+/* Gameplay pause control and overlay. */
+#pause-button {
+  display:none; position:fixed; z-index:120;
+  top:max(14px,env(safe-area-inset-top));
+  right:max(14px,env(safe-area-inset-right));
+  width:46px;height:46px;place-items:center;
+  border:1px solid rgba(135,255,170,.9);border-radius:14px;
+  color:#e1ffea;background:rgba(12,75,38,.72);
+  box-shadow:0 0 18px rgba(55,255,120,.2),inset 0 0 12px rgba(100,255,155,.12);
+  backdrop-filter:blur(10px);font-size:22px;font-weight:800;
+  cursor:pointer;touch-action:manipulation;
+}
+#pause-overlay {
+  display:none;position:fixed;inset:0;z-index:115;
+  align-items:center;justify-content:center;
+  background:rgba(0,5,2,.72);backdrop-filter:blur(12px);
+}
+#pause-panel {
+  min-width:min(280px,calc(100vw - 48px));padding:32px 28px;
+  border:1px solid rgba(135,255,170,.55);border-radius:20px;
+  background:rgba(5,28,15,.94);box-shadow:0 0 36px rgba(55,255,120,.16);
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+}
+#pause-title {color:#e1ffea;font-size:22px;font-weight:800;letter-spacing:.2em;}
+#resume-button {
+  min-width:150px;padding:13px 22px;border:1px solid rgba(135,255,170,.9);
+  border-radius:12px;color:#e1ffea;background:rgba(20,115,58,.62);
+  font-weight:700;letter-spacing:.12em;cursor:pointer;
+}
+#pause-button:active,#resume-button:active {transform:scale(.96);background:rgba(30,190,85,.82);}
