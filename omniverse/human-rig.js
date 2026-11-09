@@ -142,8 +142,8 @@ export function createHumanRig(options = {}) {
       ]
     },
     punch: {
-      duration: 1.5,
-      loop: true,
+      duration: 0.78,
+      loop: false,
       frames: [
         { at: 0, pose: {} },
         { at: 0.045, pose: { rightShoulder: { z: -1.72, x: 0.12 }, rightElbow: { x: -1.22 } } },
