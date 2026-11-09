@@ -107,10 +107,15 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     setLocation(currentLocation);
   }
   function setLocation(location) {
-    currentLocation = location === "space" ? "space" : "earth";
+    const nextLocation = location === "space" ? "space" : "earth";
+    const changed = nextLocation !== currentLocation;
+    currentLocation = nextLocation;
     const marker = page.querySelector("#omnidata-current-location");
-    if (marker) marker.textContent = currentLocation === "space" ? "SOLAR SYSTEM" : "EARTH • BELLWOOD";
-    page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === "solar"));
+    const label = currentLocation === "space" ? "SOLAR SYSTEM" : "EARTH • BELLWOOD";
+    if (marker && marker.textContent !== label) marker.textContent = label;
+    if (changed || page.querySelector(".omni-node:not(.current-location)")) {
+      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === "solar"));
+    }
   }
   function capturePhoto() {
     const canvas = document.querySelector("#omniverse");
