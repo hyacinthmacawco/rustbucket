@@ -603,3 +603,25 @@ html, body { height: 100dvh; }
 @media (hover:hover) and (pointer:fine) {
   #movement-joystick,#action-controls {display:none!important;}
 }
+
+
+/* Team selector labels appear only after a deliberate double-tap. */
+#team-ring-labels { position:absolute; inset:0; display:none; pointer-events:none; }
+#movement-joystick.team-mode #team-ring-labels { display:block; }
+.team-label {
+  position:absolute; display:grid; place-items:center; width:28px; height:28px;
+  border-radius:50%; color:#e0ffe8; font-size:14px; font-weight:800;
+  background:rgba(10,75,38,.82); border:1px solid rgba(145,255,175,.9);
+  box-shadow:0 0 12px rgba(60,255,125,.3);
+}
+.team-ben { left:50%; top:7px; transform:translateX(-50%); }
+.team-gwen { right:7px; top:50%; transform:translateY(-50%); }
+.team-kevin { left:50%; bottom:7px; transform:translateX(-50%); }
+.team-rook { left:7px; top:50%; transform:translateY(-50%); }
+.team-rustbucket { left:50%; top:50%; transform:translate(-50%,-50%); width:24px; height:24px; }
+#movement-joystick.team-mode #joystick-knob {
+  display:grid; place-items:center; color:#e0ffe8; font-size:12px; font-weight:900;
+  background:rgba(10,75,38,.9); border-color:rgba(145,255,175,.95);
+}
+#action-controls { gap:10px; }
+#attack-button { font-size:25px!important; }
