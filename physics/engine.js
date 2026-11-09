@@ -1,5 +1,7 @@
+import * as THREE from "three";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
 export async function createPhysics(){await RAPIER.init();const world=new RAPIER.World({x:0,y:-9.81,z:0});const floor=world.createRigidBody(RAPIER.RigidBodyDesc.fixed());world.createCollider(RAPIER.ColliderDesc.cuboid(260,.5,260).setTranslation(0,-.7,0),floor);const bodies=[];
+function addStaticScene(root){root.updateMatrixWorld(true);root.traverse(object=>{if(!object.isMesh||!object.geometry)return;const bounds=new THREE.Box3().setFromObject(object);if(!Number.isFinite(bounds.min.x))return;const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());if(size.x<.05||size.y<.05||size.z<.05)return;const body=world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(center.x,center.y,center.z));world.createCollider(RAPIER.ColliderDesc.cuboid(size.x/2,size.y/2,size.z/2).setFriction(.85),body);});}
 function addCharacter(object){const body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(object.position.x,object.position.y+.9,object.position.z));world.createCollider(RAPIER.ColliderDesc.capsule(.65,.32).setFriction(.8),body);object.userData.physicsBody=body;bodies.push({object,body});return body;}
 function step(dt){world.timestep=Math.min(dt,1/30);world.step();for(const {object,body} of bodies){const p=body.translation();object.position.set(p.x,p.y-.9,p.z);}}
-return {world,addCharacter,step,dispose(){world.free();bodies.length=0;}};}
+return {world,addCharacter,addStaticScene,step,dispose(){world.free();bodies.length=0;}};}
