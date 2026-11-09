@@ -24,6 +24,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   let storedCount = 0;
   let completionPresented = false;
   let completionValues = [];
+  let currentLocation = "earth";
 
   function home() {
     current = "home"; address.value = "extranet://home";
@@ -32,7 +33,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   }
   function privateCloud() {
     current = "private"; address.value = "ottps://bgkr.omnicloud.com";
-    page.innerHTML = `<div class="cloud-heading"><div>PRIVATE CLOUD</div><small>BGKR • SECURE TEAM STORAGE</small></div><div class="cloud-links">
+    page.innerHTML = `<div class="cloud-links">
       <button data-page="tasks">▤ <span><b>Tasks</b><small>Current team objectives</small></span> ›</button>
       <button data-page="relationships">♡ <span><b>Relationships</b><small>Team connection status</small></span> ›</button>
       <button data-page="memories">▧ <span><b>Memories</b><small>Captured moments</small></span> ›</button></div>`;
@@ -41,13 +42,13 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   function tasks() {
     current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";
     const count = storedCount;
-    page.innerHTML = `<div class="cloud-heading"><div>TASKS</div><small>ACTIVE MISSION</small></div><article class="task-card"><small>OBJECTIVE 01</small><h2>Put suitcases into Rustbucket</h2><p>Collect all four suitcases from the storage unit and load them aboard.</p><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
+    page.innerHTML = `<article class="task-card"><h2>Put suitcases into Rustbucket</h2><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
     if (completed) showCompletion();
   }
   function showRelationships() {
     current = "relationships"; address.value = "ottps://bgkr.omnicloud.com/relationships";
     const people = ["ben","gwen","kevin","rook"];
-    page.innerHTML = `<div class="cloud-heading"><div>RELATIONSHIPS</div><small>TEAM CONNECTIONS</small></div><div class="relationship-tabs">${people.map(p=>`<button data-person="${p}">${p.toUpperCase()}</button>`).join("")}</div><div id="relationship-list"></div>`;
+    page.innerHTML = `<div class="relationship-tabs">${people.map(p=>`<button data-person="${p}">${p.toUpperCase()}</button>`).join("")}</div><div id="relationship-list"></div>`;
     const render = selected => {
       page.querySelectorAll("[data-person]").forEach(b=>b.classList.toggle("active",b.dataset.person===selected));
       const list = page.querySelector("#relationship-list");
@@ -62,7 +63,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   }
   function memories() {
     current = "memories"; address.value = "ottps://bgkr.omnicloud.com/memories";
-    page.innerHTML = `<div class="cloud-heading"><div>MEMORIES</div><small>TEAM PHOTO ARCHIVE</small></div><button id="capture-memory" class="cloud-action">◎ CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"><figcaption>MEMORY ${String(i+1).padStart(2,"0")}</figcaption></figure>`).join("")}</div>`;
+    page.innerHTML = `<button id="capture-memory" class="cloud-action">◎ CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
     page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
   }
   function omnidata() {
@@ -74,9 +75,8 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
       anodite: {name:"ANODITE HOMEWORLD", body:"Anodyne is the home planet of the Anodites. From space it appears dark red, with orange rings; the wiki does not give this system a canonical name.", worlds:"Anodyne", status:"ACTIVE / ANODYNE", source:"https://ben10.fandom.com/wiki/Anodyne"},
       galvan: {name:"GALVAN STAR SYSTEM", body:"Galvan is the system's star. Galvan Prime is the Galvan homeworld; Galvan B is its moon and home of the Galvanic Mechamorphs.", worlds:"Galvan • Galvan Prime • Galvan B", status:"ACTIVE / GALVAN PRIME", source:"https://ben10.fandom.com/wiki/Galvan_Star_System_(Classic)"}
     };
-    page.innerHTML = `<div class="cloud-heading"><div>OMNIDATA</div><small>CELESTIAL NAVIGATION CHART • MILKY WAY</small></div>
-      <div id="omnidata-layout">
-        <div id="omnidata-map-wrap"><div id="omnidata-map-title">KNOWN SYSTEM NETWORK <span>5 DESTINATIONS INDEXED</span></div>
+    page.innerHTML = `<div id="omnidata-layout">
+        <div id="omnidata-map-wrap">
           <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Connected map of five Ben 10 star systems">
             <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
             <rect width="900" height="520" rx="14" fill="#06140e"/>
@@ -89,22 +89,28 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
             <g class="omni-node" data-system="galvan" tabindex="0" role="button" aria-label="Galvan Star System"><circle class="omni-halo" cx="770" cy="280" r="30"/><circle class="omni-core galvan" cx="770" cy="280" r="10"/><text x="770" y="324" text-anchor="middle">GALVAN</text></g>
             <g class="omni-node" data-system="anodite" tabindex="0" role="button" aria-label="Anodite System"><circle class="omni-halo" cx="565" cy="425" r="30"/><circle class="omni-core anodite" cx="565" cy="425" r="10"/><text x="565" y="469" text-anchor="middle">ANODITE</text></g>
           </svg>
-          <div class="omni-map-legend"><span>● ACTIVE SYSTEM</span><span>— NAVIGATION LINK (SCHEMATIC)</span></div>
+          <div id="omnidata-current-location"></div>
         </div>
-        <aside id="omnidata-detail"><div class="omni-detail-kicker">SELECT A STAR SYSTEM</div><h2>GALACTIC DATABASE</h2><p>Choose a node on the chart to inspect its known worlds and status.</p></aside>
-      </div>
-      <div class="omni-attribution">Adapted from <a href="https://ben10.fandom.com/wiki/Category:Celestial_Bodies" target="_blank" rel="noopener">Ben 10 Wiki — Celestial Bodies</a> (CC BY-SA). Solar and Galvan are named systems; the other entries are homeworld destinations. Route lines are illustrative, not measured distances.</div>`;
+        <aside id="omnidata-detail"></aside>
+      </div>`;
     const detail = page.querySelector("#omnidata-detail");
     const selectSystem = key => {
       const item = systems[key]; if (!item) return;
       page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
-      detail.innerHTML = `<div class="omni-detail-kicker">${item.status}</div><h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds-label">KNOWN CELESTIAL BODIES</div><div class="omni-worlds">${item.worlds}</div><a class="omni-source" href="${item.source}" target="_blank" rel="noopener">OPEN WIKI ENTRY ↗</a>`;
+      detail.innerHTML = `<h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds">${item.worlds}</div>`;
     };
     page.querySelectorAll(".omni-node").forEach(node => {
       node.addEventListener("click",()=>selectSystem(node.dataset.system));
       node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectSystem(node.dataset.system);}});
     });
     selectSystem("solar");
+    setLocation(currentLocation);
+  }
+  function setLocation(location) {
+    currentLocation = location === "space" ? "space" : "earth";
+    const marker = page.querySelector("#omnidata-current-location");
+    if (marker) marker.textContent = currentLocation === "space" ? "SOLAR SYSTEM" : "EARTH • BELLWOOD";
+    page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === "solar"));
   }
   function capturePhoto() {
     const canvas = document.querySelector("#omniverse");
@@ -134,12 +140,13 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   function showCompletion() {
     if (completionPresented || document.getElementById("mission-complete")) return;
     completionPresented = true;
-    const panel = document.createElement("div");
-    panel.id = "mission-complete";
-    panel.innerHTML = `<div class="mission-complete-title">TASK COMPLETED</div><div class="mission-complete-sub">RELATIONSHIP INCREASE</div><div class="mission-respect">${completionValues.map(v=>`<div>${v}</div>`).join("")}</div><button id="mission-continue">DISMISS</button>`;
-    document.body.appendChild(panel);
-    panel.querySelector("#mission-continue").addEventListener("click",()=>{panel.remove();onContinue();});
+    const notice = document.createElement("div");
+    notice.id = "mission-complete";
+    notice.textContent = "TASK COMPLETED";
+    document.body.appendChild(notice);
+    window.setTimeout(() => notice.remove(), 5200);
   }
+
   root.querySelector("#extranet-close").addEventListener("click",close);
   root.querySelector("#extranet-back").addEventListener("click",()=>current==="home"?close():current==="private"||current==="omnidata"?home():privateCloud());
   root.querySelector("#extranet-home").addEventListener("click",home);
@@ -157,5 +164,5 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
   function open() { root.style.display="flex"; home(); }
   function close() { root.style.display="none"; }
   home();
-  return { open, close, addRelationship, updateTask, get completed(){return completed;}, get relationships(){return relationships;} };
+  return { open, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return relationships;} };
 }
