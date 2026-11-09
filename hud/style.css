@@ -657,3 +657,8 @@ html, body { height: 100dvh; }
   font-weight:700;letter-spacing:.12em;cursor:pointer;
 }
 #pause-button:active,#resume-button:active {transform:scale(.96);background:rgba(30,190,85,.82);}
+
+
+/* Keep touch gestures from being interpreted by the browser and camera together. */
+#omniverse { touch-action: none; }
+#jump-button, #pick-button, #attack-button { touch-action: none; user-select: none; -webkit-user-select: none; }
