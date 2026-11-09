@@ -188,12 +188,16 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
     const speed = selected === "rustbucket" ? 5 : 3.5;
 
-    if (object.userData.moveWithCollisions) object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt, joy.jumpRequested);
-    else if (magnitude > 0.08) {
+    if (joy.jumpRequested) {
+      object.userData.requestJump?.();
+      joy.jumpRequested = false;
+    }
+    if (object.userData.moveWithCollisions) {
+      object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
+    } else if (magnitude > 0.08) {
       object.position.x += mx * speed * dt;
       object.position.z += mz * speed * dt;
     }
-    joy.jumpRequested = false;
 
     if (joy.pickRequested) { object.userData.performPickup?.(); joy.pickRequested = false; }
     if (joy.attackRequested) { object.userData.performAttack?.(); joy.attackRequested = false; }
