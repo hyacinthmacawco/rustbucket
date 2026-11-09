@@ -30,7 +30,7 @@ export function createJoystick() {
 
   let lastCenterTap = 0;
   let centerSelectionTimer = 0;
-  function setMode(mode) {
+  function applyMode(mode) {
     input.mode = mode;
     element.classList.toggle("team-mode", mode === "switch");
     knob.textContent = mode === "switch" ? "T" : "";
@@ -77,7 +77,7 @@ export function createJoystick() {
         clearTimeout(centerSelectionTimer);
         centerSelectionTimer = 0;
         lastCenterTap = 0;
-        setMode(input.mode === "switch" ? "move" : "switch");
+        applyMode(input.mode === "switch" ? "move" : "switch");
       } else {
         lastCenterTap = now;
         if (input.mode === "switch") {
@@ -110,7 +110,7 @@ export function createJoystick() {
       if (!visible) reset();
     },
     setMode(mode) {
-      setMode(mode);
+      applyMode(mode);
     },
     destroy() {
       clearTimeout(centerSelectionTimer);
