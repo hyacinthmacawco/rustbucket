@@ -12,7 +12,7 @@ export function createJoystick(){
 }
 export function createKeyboard({entities,camera,joystick,updateCamera,isMobile=false,onSelect=()=>{}}){
  const keys=new Set(),names=["ben","gwen","kevin","rook","rustbucket"];let selected="ben",switchMode=false;
- function keydown(e){const k=e.key.toLowerCase();if(k==="f"){switchMode=!switchMode;keys.clear();e.preventDefault();return;}if(["w","a","s","d"].includes(k)){keys.add(k);e.preventDefault();}}
+ function keydown(e){const k=e.key.toLowerCase();if(k==="f"){if(e.repeat)return;switchMode=!switchMode;keys.clear();e.preventDefault();return;}if(["w","a","s","d"].includes(k)){keys.add(k);e.preventDefault();}}
  function keyup(e){keys.delete(e.key.toLowerCase());}function blur(){keys.clear();}
  window.addEventListener("keydown",keydown);window.addEventListener("keyup",keyup);window.addEventListener("blur",blur);
  function choose(x,y){const options=names.filter(n=>n!==selected),index=Math.abs(x)>Math.abs(y)?(x>0?1:3):(y>0?0:2);selected=options[index]||options[0];onSelect(selected);}
