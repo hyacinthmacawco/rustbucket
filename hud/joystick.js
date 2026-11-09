@@ -11,7 +11,7 @@ export function createJoystick() {
   const knob = base.querySelector("#joystick-knob");
   const input = {
     active: false, pointerId: null, x: 0, y: 0, mode: "move",
-    toggleRequested: false, selection: null, jumpRequested: false,
+    selection: null, jumpRequested: false,
     pickRequested: false, attackRequested: false
   };
 
