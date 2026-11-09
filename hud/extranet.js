@@ -19,6 +19,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   const photos = [];
   let current = "home";
   let completed = false;
+  let storedCount = 0;
   let completionValues = [];
 
   function home() {
@@ -37,7 +38,7 @@ export function createExtranet({ onContinue = () => {} } = {}) {
   }
   function tasks() {
     current = "tasks"; address.textContent = "ottps://bgkr.omnicloud.com/tasks";
-    const count = completionValues.length;
+    const count = storedCount;
     page.innerHTML = `<div class="cloud-heading"><div>TASKS</div><small>ACTIVE MISSION</small></div><article class="task-card"><small>OBJECTIVE 01</small><h2>Put suitcases into Rustbucket</h2><p>Collect all four suitcases from the storage unit and load them aboard.</p><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
     if (completed) showCompletion();
   }
@@ -78,9 +79,10 @@ export function createExtranet({ onContinue = () => {} } = {}) {
     if (reverse && reverse[key] !== undefined) reverse[key] = Math.min(100, reverse[key] + 0.1);
     completionValues.push(`${key}-${other} +0.1%`);
   }
-  function updateTask() {
+  function updateTask(count = storedCount + 1) {
+    storedCount = Math.max(storedCount, count);
     tasks();
-    if (completionValues.length >= 4 && !completed) {
+    if (storedCount >= 4 && !completed) {
       completed = true;
       showCompletion();
     }
