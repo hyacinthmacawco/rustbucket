@@ -91,9 +91,10 @@ export async function createPhysics() {
     // A thin deck collider drives vehicle movement; surrounding panels and stair
     // colliders let characters physically board through the open starboard doorway.
     const collider = world.createCollider(
-      RAPIER.ColliderDesc.cuboid(1.32,0.12,5.0).setTranslation(0,-0.55,0).setFriction(0.75), body
+      RAPIER.ColliderDesc.cuboid(1.32,0.12,5.0).setTranslation(0,-1.4,0).setFriction(0.75), body
     );
     const vehiclePanels = [
+      [RAPIER.ColliderDesc.cuboid(1.25,0.10,4.8).setTranslation(0,-0.55,0)],
       [RAPIER.ColliderDesc.cuboid(0.12,0.82,5.0).setTranslation(-1.38,0,0)],
       [RAPIER.ColliderDesc.cuboid(0.12,0.82,3.1).setTranslation(1.38,0,-1.9)],
       [RAPIER.ColliderDesc.cuboid(0.12,0.82,0.8).setTranslation(1.38,0,4.55)],
