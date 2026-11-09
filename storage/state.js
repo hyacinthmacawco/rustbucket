@@ -50,6 +50,8 @@ export const state = {
 
 import { createTitleScreen } from "../hud/title.js";
 import { createJoystick } from "../hud/joystick.js";
+import { createExtranet } from "../hud/extranet.js";
+import { createSuitcases } from "../omniverse/suitcases.js";
 
 
     const canvas = document.getElementById("omniverse");
@@ -175,6 +177,18 @@ import { createJoystick } from "../hud/joystick.js";
     pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
+    const extranet = createExtranet();
+    const extranetButton = document.createElement("button");
+    extranetButton.id = "extranet-button";
+    extranetButton.type = "button";
+    extranetButton.setAttribute("aria-label", "Open Extranet");
+    extranetButton.textContent = "◎";
+    extranetButton.addEventListener("click", () => extranet.open());
+    const liftControl = document.createElement("label");
+    liftControl.id = "vehicle-lift-control";
+    liftControl.innerHTML = '<span>LIFT</span><input id="vehicle-lift-slider" type="range" min="-1" max="1" step="0.02" value="0" orient="vertical"><span>HOVER</span>';
+    document.body.append(extranetButton, liftControl);
+    const liftInput = liftControl.querySelector("#vehicle-lift-slider");
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     
     
@@ -429,6 +443,41 @@ import { createJoystick } from "../hud/joystick.js";
           const { ship } = shipModule.createRustbucket(group);
           physics = await physicsModule.createPhysics();
           physics.addStaticScene(group);
+          const { suitcases } = createSuitcases(group);
+          physics.addVehicle(ship);
+          const carriedSuitcases = new Map();
+          let storedSuitcaseCount = 0;
+          function tryPickup(characterName, characterGroup, rig) {
+            const carried = carriedSuitcases.get(characterName);
+            if (carried) {
+              if (characterGroup.position.distanceTo(ship.position) > 9) return;
+              ship.attach(carried);
+              carried.position.set(0,-0.18,-1.65 + storedSuitcaseCount * 0.82);
+              carried.rotation.set(0,0,0);
+              carried.userData.carriedBy = null;
+              carried.userData.stored = true;
+              carriedSuitcases.delete(characterName);
+              storedSuitcaseCount += 1;
+              extranet.updateTask(storedSuitcaseCount);
+              return;
+            }
+            let nearest = null;
+            let nearestDistance = 2.35;
+            for (const suitcase of suitcases) {
+              if (!suitcase.userData.pickable || suitcase.userData.stored || suitcase.userData.carriedBy) continue;
+              const distance = characterGroup.position.distanceTo(suitcase.position);
+              if (distance < nearestDistance) { nearest = suitcase; nearestDistance = distance; }
+            }
+            if (!nearest) return;
+            nearest.userData.carriedBy = characterName;
+            characterGroup.attach(nearest);
+            nearest.position.set(0,0.18,0.68);
+            carriedSuitcases.set(characterName,nearest);
+            extranet.addRelationship(characterName,nearest.userData.owner);
+            characterGroup.userData.actionActive = true;
+            characterGroup.userData.actionRemaining = 0.95;
+            rig.playAnimation("pickup");
+          }
           const { createHumanRig } = rigModule;
           const benCharacter = benModule.createBen({ createHumanRig });
           const gwenCharacter = gwenModule.createGwen({ createHumanRig });
@@ -466,11 +515,7 @@ import { createJoystick } from "../hud/joystick.js";
               character.rig.updateWalk(character.animationTime);
             };
             character.group.setAnimation("idle");
-            character.group.userData.performPickup = () => {
-              character.group.userData.actionActive = true;
-              character.group.userData.actionRemaining = 0.95;
-              character.rig.playAnimation("pickup");
-            };
+            character.group.userData.performPickup = () => tryPickup(name, character.group, character.rig);
             character.group.userData.performAttack = () => {
               character.group.userData.actionActive = true;
               character.group.userData.actionRemaining = 0.78;
@@ -484,7 +529,14 @@ import { createJoystick } from "../hud/joystick.js";
           entities = { ...characterEntities, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
-          keyboardController = controllerModule.createKeyboard({ entities, camera, joystick, updateCamera, isMobile });
+          keyboardController = controllerModule.createKeyboard({
+            entities, camera, joystick, updateCamera, isMobile,
+            getLift: () => Number(liftInput.value),
+            onSelect: selected => {
+              liftControl.style.display = selected === "rustbucket" ? "flex" : "none";
+              if (selected !== "rustbucket") liftInput.value = "0";
+            }
+          });
           loadedRegion = name;
           loadingRegion = null;
           if (name === "bellwood" && startRequested && state.stage === "prelude") state.stage = "gameplay";
@@ -551,6 +603,8 @@ import { createJoystick } from "../hud/joystick.js";
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
       pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
+      extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
+      if (state.stage !== "gameplay") liftControl.style.display = "none";
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
       // Decide what to instantiate from the camera's current world position.
@@ -606,6 +660,9 @@ import { createJoystick } from "../hud/joystick.js";
       document.removeEventListener("keydown", pauseKey);
       pauseButton.remove();
       pauseOverlay.remove();
+      extranetButton.remove();
+      liftControl.remove();
+      extranet.close();
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
