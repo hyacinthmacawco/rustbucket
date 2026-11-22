@@ -1175,7 +1175,7 @@ class RustbucketGame {
         state.currentScene = "earth";
         titleScreen.setVisible(false);
         joystick.setVisible(false);
-        setCameraPreset(this.cameraConfig.gameplay);
+        setCameraPreset(cameraConfig.gameplay);
         if (loadedRegion !== "earth" && loadingRegion !== "earth") loadRegion("earth");
         
         preludeScreen.style.display = "flex";
@@ -1188,7 +1188,7 @@ class RustbucketGame {
         joystick.setVisible(isMobile);
         
         
-        setCameraPreset(this.cameraConfig.gameplay);
+        setCameraPreset(cameraConfig.gameplay);
         playMusic("./hud/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
@@ -1211,7 +1211,7 @@ class RustbucketGame {
           planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
           warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
           await new Promise(resolve=>window.setTimeout(resolve,1250));
-          state.currentScene=key;await loadRegion(key);setCameraPreset(this.cameraConfig.gameplay);
+          state.currentScene=key;await loadRegion(key);setCameraPreset(cameraConfig.gameplay);
           extranet.setLocation(key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
           return;
         }
