@@ -32,7 +32,7 @@ export function createStarfieldTexture(parent, name = "StarfieldTexture") {
   texture.wrapS = THREE.RepeatWrapping;
   texture.anisotropy = 4;
   const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(50000, 48, 32),
+    new THREE.SphereGeometry(100000000, 48, 32),
     new THREE.MeshBasicMaterial({
       map: texture,
       side: THREE.BackSide,
