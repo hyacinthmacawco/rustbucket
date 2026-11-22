@@ -5,7 +5,7 @@ export const dimensions = {
   kevin: { position: [0, -0.5, -9], scale: [0.52, 0.52, 0.52] },
   rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
   rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
-  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1, 1, 1] },
+  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
   bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
   earth: { position: [4.5, 0, 0], radius: 2.05 },
   moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
