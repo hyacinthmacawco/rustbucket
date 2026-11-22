@@ -209,6 +209,26 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     hep.addEventListener("click",()=>setPaused(!state.paused));
     document.body.append(phaseTwoButton,hep);
     const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
+    const carriedHud=document.createElement("div");carriedHud.id="carried-items-hud";
+    carriedHud.innerHTML='<span>IN HAND</span><select id="carried-item-select"><option value="">NO ITEMS</option></select><button id="use-carried-item">USE</button>';
+    document.body.appendChild(carriedHud);
+    const carriedSelect=carriedHud.querySelector("select");
+    carriedHud.querySelector("button").addEventListener("click",()=>{
+      const selected=keyboardController?.selected||"ben";
+      if(carriedSelect.value==="")return;
+      const result=phaseTwo.useCarriedItem(selected[0].toUpperCase()+selected.slice(1),Number(carriedSelect.value));
+      if(!result.ok)carriedHud.title=result.reason;
+      refreshCarriedHud();
+    });
+    function refreshCarriedHud(){
+      const selected=keyboardController?.selected||"ben";
+      const who=selected[0].toUpperCase()+selected.slice(1);
+      const list=phaseTwo.data.team.carried[who]||[];
+      const previous=carriedSelect.value;
+      carriedSelect.innerHTML=list.map((name,i)=>'<option value="'+i+'">'+name+'</option>').join("")||'<option value="">NO ITEMS</option>';
+      if(previous!==""&&list[Number(previous)])carriedSelect.value=previous;
+      carriedHud.style.display=state.stage==="gameplay"&&selected!=="rustbucket"?"flex":"none";
+    }
     const omnitrixControl=document.createElement("label");omnitrixControl.id="omnitrix-control";
     omnitrixControl.innerHTML='<span>OMNITRIX</span><input id="omnitrix-slider" type="range" min="0" max="1" step="1" value="0"><b id="omnitrix-alien-label">BEN</b>';
     document.body.appendChild(omnitrixControl);
@@ -693,6 +713,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       phaseTwoButton.style.display=state.stage==="gameplay"?"grid":"none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
+      carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
       omnitrixControl.style.display=state.stage==="gameplay"&&keyboardController?.selected==="ben"?"flex":"none";
       if (state.stage !== "gameplay") { liftControl.style.display = "none"; rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
@@ -714,6 +735,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
         hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
         omnitrixControl.style.display=selectedName==="ben"?"flex":"none";
+        refreshCarriedHud();
       }
 
       if (state.stage === "title" && titleObjects) {
