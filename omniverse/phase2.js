@@ -172,13 +172,23 @@ export function createPhaseTwo() {
     addItem({id:key(name).replace(/[^a-z0-9]+/g,"-"),name,weight:1,category:"Recovered"});
     save();return true;
   }
+  function useCarriedItem(character,index) {
+    const carried=data.team.carried[character]||[];
+    const item=carried[index];
+    if(!item)return {ok:false,reason:"No item selected."};
+    const name=item.toLowerCase();
+    if(name.includes("medkit"))setHealth(character,getStatus(character).health+35);
+    else if(name.includes("energy cell"))recharge(character,30);
+    else return {ok:false,reason:"This item has no direct-use action yet."};
+    carried.splice(index,1);save();return {ok:true};
+  }
   function getChromastoneActive(){return chromastoneActive;}
   function setChromastoneActive(value){chromastoneActive=Boolean(value);}
   function damage(name,amount){setHealth(name,getStatus(name).health-amount);}
   function recharge(name,amount){setEnergy(name,getStatus(name).energy+amount);}
   return {
     data, ENTITY_NAMES, crew, species, healthEnergy, getRelationship,setRelationship,canTrade,isHostile,
-    recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,tradeWithSpecies,
+    recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,useCarriedItem,tradeWithSpecies,
     getChromastoneActive,setChromastoneActive,damage,recharge,save,
     set onEvent(fn){onEvent=fn||(()=>{});}
   };
