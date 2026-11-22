@@ -24,3 +24,7 @@ export function createChromastone() {
   root.visible=false;
   return root;
 }
+
+export class ChromastoneTransformation {
+  constructor() { this.model = createChromastone(); }
+}
