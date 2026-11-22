@@ -4,13 +4,6 @@ export function createSimulationCloud(simulation) {
   document.body.appendChild(root);
   const content=root.querySelector("#simulation-cloud-content");
   const data=simulation.data;
-  function relationships(){
-    const names=simulation.ENTITY_NAMES;
-    content.innerHTML="<label>ENTITY <select id=\"sim-relationship-entity\">"+names.map(n=>"<option>"+n+"</option>").join("")+"</select></label><div id=\"sim-relationship-list\"></div>";
-    const picker=content.querySelector("select"), list=content.querySelector("#sim-relationship-list");
-    const render=()=>{list.innerHTML=names.filter(n=>n!==picker.value).map(n=>{const v=simulation.getRelationship(picker.value,n);return "<div class=\"sim-row\"><span>"+n+"</span><i><b style=\"width:"+v+"%\"></b></i><strong>"+v.toFixed(0)+"%</strong></div>";}).join("");};
-    picker.addEventListener("change",render);render();
-  }
   function accounting(){
     content.innerHTML="<nav class=\"sim-tabs\"><button data-tab=\"balance\">BALANCE SHEET</button><button data-tab=\"income\">INCOME STATEMENT</button><button data-tab=\"cash\">CASH FLOW STATEMENT</button></nav><div id=\"sim-ledger\"></div>";
     const ledger=content.querySelector("#sim-ledger");
@@ -29,12 +22,6 @@ export function createSimulationCloud(simulation) {
       inventory.querySelectorAll("[data-carry]").forEach(b=>b.onclick=()=>{simulation.moveItemToCharacter(b.dataset.carry,carrier.value);render();});
       carried.querySelectorAll("[data-store]").forEach(b=>b.onclick=()=>{simulation.moveItemToShip(carrier.value,Number(b.dataset.store));render();});};
     carrier.addEventListener("change",render);render();
-  }
-  function resources(){
-    content.innerHTML="<h2>SPECIES RESOURCE MARKETS</h2><label>SPECIES <select id=\"sim-market-species\">"+simulation.species.map(n=>"<option>"+n+"</option>").join("")+"</select></label><label>BUYING AS <select id=\"sim-market-person\"><option>Ben</option><option>Gwen</option><option>Kevin</option><option>Rook</option></select></label><div id=\"sim-market-stock\"></div><p id=\"sim-market-message\"></p>";
-    const species=content.querySelector("#sim-market-species"),person=content.querySelector("#sim-market-person"),stock=content.querySelector("#sim-market-stock"),message=content.querySelector("#sim-market-message");
-    const render=()=>{const allowed=simulation.canTrade(person.value,species.value);stock.innerHTML=(data.resources[species.value]||[]).map(x=>"<div class=\"sim-item\"><span>"+x.name+" ×"+x.quantity+"<small>"+x.price+" Taydenite each</small></span><button data-buy=\""+x.id+"\" "+(!allowed?"disabled":"")+">BUY 1</button></div>").join("");stock.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>{const result=simulation.tradeWithSpecies(person.value,species.value,b.dataset.buy,1);message.textContent=result.ok?"PURCHASED • "+result.cost+" T":result.reason;render();});message.textContent=allowed?"TRADE PERMITTED • RELATIONSHIP "+simulation.getRelationship(person.value,species.value).toFixed(0)+"%":"TRADE BLOCKED • RELATIONSHIP BELOW 30%";};
-    species.addEventListener("change",render);person.addEventListener("change",render);render();
   }
   function events(){content.innerHTML="<h2>EVENT LOG</h2>"+(data.eventLog.map(e=>"<article class=\"sim-event\"><b>"+e.type.toUpperCase()+"</b><p>"+e.description+"</p><small>STARTED "+new Date(e.at).toLocaleString()+" • "+e.status.toUpperCase()+(e.endedAt?" • ENDED "+new Date(e.endedAt).toLocaleString():"")+"</small></article>").join("")||"<p>No recorded events.</p>");}
   function open(view="accounting", host=null){
