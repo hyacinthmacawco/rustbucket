@@ -844,8 +844,7 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 @media(hover:hover) and (pointer:fine){#ramp-toggle-button{bottom:24px}}
 @media(max-width:520px){#system-map-panel{padding:16px}#system-map-graphic{height:42vh;min-height:210px}.sun-node{left:7%}.earth-node{left:51%}.moon-node{right:6%}#ramp-toggle-button{bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));right:24px}}
 
-/* Phase 2: compact HEP bars, Omnitrix selector, and data hub access. */
-#simulation-cloud-button{display:none;position:fixed;z-index:125;top:max(18px,env(safe-area-inset-top));right:78px;width:48px;height:42px;border:1px solid rgba(125,255,160,.65);border-radius:11px;background:rgba(5,38,19,.82);color:#dfffe8;font-size:10px;font-weight:800;letter-spacing:.1em}
+/* Phase 2: compact HEP bars and Omnitrix selector. */
 #hep-control{display:none;position:fixed;z-index:125;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);gap:12px;align-items:flex-end;padding:8px 14px;border:1px solid rgba(125,255,160,.5);border-radius:14px;background:rgba(3,17,10,.78);color:#eaffef;cursor:pointer}
 .hep-meter{position:relative;display:flex;align-items:flex-end;justify-content:center;width:24px;height:76px;border:1px solid rgba(190,255,205,.4);border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden}
 .hep-meter i{position:absolute;bottom:0;left:0;width:100%;height:100%;background:#64dc83;transition:height .18s}
@@ -861,7 +860,7 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 #pause-content h3{font-size:12px;letter-spacing:.16em;color:#a9ffc0}
 #pause-content label{display:flex;justify-content:space-between;gap:14px;margin:12px 0}
 #pause-content input{max-width:150px;accent-color:#6ce68e}
-@media(max-width:520px){#hep-control{bottom:max(12px,env(safe-area-inset-bottom))}#omnitrix-control{bottom:max(104px,calc(env(safe-area-inset-bottom) + 104px))}#simulation-cloud-button{right:72px}}
+@media(max-width:520px){#hep-control{bottom:max(12px,env(safe-area-inset-bottom))}#omnitrix-control{bottom:max(104px,calc(env(safe-area-inset-bottom) + 104px))}}
 
 #carried-items-hud{display:none;position:fixed;z-index:124;left:max(18px,env(safe-area-inset-left));top:max(74px,calc(env(safe-area-inset-top) + 74px));align-items:center;gap:7px;padding:8px 9px;border:1px solid rgba(125,255,160,.45);border-radius:10px;background:rgba(2,20,9,.78);color:#dcffe5;font-size:9px;letter-spacing:.1em}
 #carried-items-hud select{max-width:125px;min-width:80px;background:#102e1c;color:#eaffef;border:1px solid #477b55;border-radius:6px;padding:6px;font-size:10px}
