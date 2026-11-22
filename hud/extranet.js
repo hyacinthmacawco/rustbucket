@@ -37,7 +37,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
       <button data-page="tasks">▤ <span><b>Tasks</b></span> ›</button>
       <button data-page="relationships">♡ <span><b>Relationships</b></span> ›</button>
       <button data-page="memories">▧ <span><b>Memories</b></span> ›</button><button data-page="data">▤ <span><b>Accounting, Items & Events</b></span> ›</button></div>`;
-    page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => b.dataset.page === "data" ? onData(page) : ({tasks,relationships:onData,memories}[b.dataset.page])()));
+    page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => ({tasks,relationships:onData,memories,data:onData}[b.dataset.page])()));
   }
   function tasks() {
     current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";

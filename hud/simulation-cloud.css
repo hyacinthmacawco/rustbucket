@@ -22,8 +22,3 @@
 #simulation-cloud .sim-event{padding:12px;margin:9px 0;border-left:2px solid #68d98a;background:rgba(35,90,53,.18)}
 #simulation-cloud .sim-event p{margin:7px 0}
 #simulation-cloud .sim-event small{color:#91b99c}
-
-/* The same data hub can be rendered as a page inside Extranet Private Cloud. */
-#simulation-cloud.embedded{position:relative;inset:auto;z-index:auto;display:block!important;min-height:100%;padding:0;background:transparent;backdrop-filter:none}
-#simulation-cloud.embedded #simulation-cloud-window{width:100%;max-height:none;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 0}
-#simulation-cloud.embedded main{max-height:none}
