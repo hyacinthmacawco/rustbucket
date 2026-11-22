@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
-export function createChromastone() {
+export class ChromastoneTransformation {
+  constructor() {
   const root=new THREE.Group();root.name="Chromastone";
   const dark=new THREE.MeshStandardMaterial({color:0x171526,roughness:.35,metalness:.35});
   const crystal=new THREE.MeshStandardMaterial({color:0x5d42c5,roughness:.2,metalness:.55,emissive:0x26105e,emissiveIntensity:.35});
@@ -22,9 +23,6 @@ export function createChromastone() {
   }
   root.traverse(o=>{if(o.isMesh){const outline=new THREE.Mesh(o.geometry,new THREE.MeshBasicMaterial({color:0x050509,side:THREE.BackSide}));outline.scale.multiplyScalar(1.055);o.add(outline);}});
   root.visible=false;
-  return root;
-}
-
-export class ChromastoneTransformation {
-  constructor() { this.model = createChromastone(); }
+  this.model = root;
+  }
 }
