@@ -21,7 +21,16 @@ export class ChromastoneTransformation {
     const shard=add(new THREE.OctahedronGeometry(.17,0),i%2?crystal:pale,(Math.random()-.5)*.62,1.2+Math.random()*1.5,.32+Math.random()*.1,.7,1.2,.6);
     shard.rotation.set(Math.random(),Math.random(),Math.random());
   }
-  root.traverse(o=>{if(o.isMesh){const outline=new THREE.Mesh(o.geometry,new THREE.MeshBasicMaterial({color:0x050509,side:THREE.BackSide}));outline.scale.multiplyScalar(1.055);o.add(outline);}});
+  // Snapshot the original meshes before adding outlines. Traversing while
+  // appending children would visit each new outline and recursively outline it.
+  const outlinedMeshes=[];
+  root.traverse(object=>{if(object.isMesh)outlinedMeshes.push(object);});
+  for(const object of outlinedMeshes){
+    const outline=new THREE.Mesh(object.geometry,new THREE.MeshBasicMaterial({color:0x050509,side:THREE.BackSide}));
+    outline.scale.multiplyScalar(1.055);
+    outline.userData.isOutline=true;
+    object.add(outline);
+  }
   root.visible=false;
   this.model = root;
   }
