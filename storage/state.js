@@ -392,7 +392,7 @@ class RustbucketGame {
       gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 250, distance: 18.5, minDistance: 8, maxDistance: 45, yaw: 0, pitch: 0.18 },
       dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
     };
-    const dimensions = { camera: this.cameraConfig };
+    
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -415,10 +415,10 @@ class RustbucketGame {
     renderer.toneMappingExposure = 1.15;
 
     const camera = new THREE.PerspectiveCamera(
-      dimensions.camera.title.fov,
+      this.cameraConfig.title.fov,
       window.innerWidth / window.innerHeight,
-      dimensions.camera.title.near,
-      dimensions.camera.title.far
+      this.cameraConfig.title.near,
+      this.cameraConfig.title.far
     );
     scene.add(camera);
 
@@ -427,7 +427,7 @@ class RustbucketGame {
     let cameraYaw = 0;
     let cameraPitch = 0;
     let cameraDistance = 1;
-    let cameraPreset = dimensions.camera.title;
+    let cameraPreset = this.cameraConfig.title;
     let ben = null;
     let keyboardController = null;
     let physics = null;
@@ -488,7 +488,7 @@ class RustbucketGame {
       updateCamera();
     }
 
-    setCameraPreset(dimensions.camera.title);
+    setCameraPreset(this.cameraConfig.title);
 
     // UI overlays are created once; the animation loop controls visibility.
     const titleScreen = createTitleScreen({
@@ -685,7 +685,7 @@ class RustbucketGame {
         await loadRegion("space");
         if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
       } else await loadRegion(destination);
-      setCameraPreset(dimensions.camera.gameplay);
+      setCameraPreset(this.cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination);
       marketPanel.style.display="none";
@@ -825,11 +825,11 @@ class RustbucketGame {
       const dy = event.clientY - lastPointerY;
       lastPointerX = event.clientX;
       lastPointerY = event.clientY;
-      cameraYaw -= dx * dimensions.camera.dragSensitivity;
+      cameraYaw -= dx * this.cameraConfig.dragSensitivity;
       cameraPitch = THREE.MathUtils.clamp(
-        cameraPitch + dy * dimensions.camera.pitchSensitivity,
-        dimensions.camera.minPitch,
-        dimensions.camera.maxPitch
+        cameraPitch + dy * this.cameraConfig.pitchSensitivity,
+        this.cameraConfig.minPitch,
+        this.cameraConfig.maxPitch
       );
       updateCamera();
     }
@@ -957,7 +957,7 @@ class RustbucketGame {
         } else if (name === "moon") {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
           new MoonInterior(group);
-          const {ship}=createRustbucket(group);configureShip(ship);
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;configureShip(ship);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
@@ -974,7 +974,7 @@ class RustbucketGame {
           const InteriorClass = { augstaka: AugstakaInterior, anodyne: AnodyneInterior, galvan: GalvanPrimeInterior, incursia: IncursiaInterior }[name];
           const interior = new InteriorClass(group);
           const { marketPosition } = interior.environment;
-          const {ship}=createRustbucket(group);configureShip(ship);ship.position.set(0,2,13);
+          const {ship}=new Rustbucket(group);configureShip(ship);ship.position.set(0,2,13);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
@@ -988,8 +988,8 @@ class RustbucketGame {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           new EarthInterior(scene, group);
-          const { unit } = new KevinStorageUnit(group);
-          const { ship } = createRustbucket(group);
+          const storageUnit = new KevinStorageUnit(group); const unit = storageUnit.unit;
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;
 
           const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
@@ -1000,7 +1000,7 @@ class RustbucketGame {
           physics = nextPhysics;
           physics.setEnvironment("planet");
           physics.addStaticScene(group);
-          const { suitcases } = new Suitcases(group);
+          const suitcaseCollection = new Suitcases(group); const suitcases = suitcaseCollection.suitcases;
           physics.addVehicle(ship);
           const carriedSuitcases = new Map();
           let storedSuitcaseCount = 0;
@@ -1168,13 +1168,13 @@ class RustbucketGame {
         titleScreen.setVisible(true);
         joystick.setVisible(false);
         
-        setCameraPreset(dimensions.camera.title);
+        setCameraPreset(this.cameraConfig.title);
         playMusic("./hud/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
         state.currentScene = "earth";
         titleScreen.setVisible(false);
         joystick.setVisible(false);
-        setCameraPreset(dimensions.camera.gameplay);
+        setCameraPreset(this.cameraConfig.gameplay);
         if (loadedRegion !== "earth" && loadingRegion !== "earth") loadRegion("earth");
         
         preludeScreen.style.display = "flex";
@@ -1187,7 +1187,7 @@ class RustbucketGame {
         joystick.setVisible(isMobile);
         
         
-        setCameraPreset(dimensions.camera.gameplay);
+        setCameraPreset(this.cameraConfig.gameplay);
         playMusic("./hud/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
@@ -1210,7 +1210,7 @@ class RustbucketGame {
           planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
           warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
           await new Promise(resolve=>window.setTimeout(resolve,1250));
-          state.currentScene=key;await loadRegion(key);setCameraPreset(dimensions.camera.gameplay);
+          state.currentScene=key;await loadRegion(key);setCameraPreset(this.cameraConfig.gameplay);
           extranet.setLocation(key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
           return;
         }
