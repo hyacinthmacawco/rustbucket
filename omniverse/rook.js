@@ -4,7 +4,7 @@ export class Rook {
   constructor({ HumanRig }) {
     this.startPosition = [7,-0.5,-7];
     this.startScale = [0.52,0.52,0.52];
-  if (typeof HumanRig !== "function") throw new TypeError("createRook requires createHumanRig.");
+  if (typeof HumanRig !== "function") throw new TypeError(" Rook requires the HumanRig class.");
   const rig = new HumanRig({ boneRadius: 0.05, jointRadius: 0.07 });
   const { group, joints } = rig;
   group.name = "RookBlonko";
