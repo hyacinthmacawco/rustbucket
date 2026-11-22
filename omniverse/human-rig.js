@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
-export function createHumanRig(options = {}) {
+export class HumanRig {
+  constructor(options = {}) {
   const {
     boneColor = 0x8bb8e8,
     jointColor = 0xf0bd72,
@@ -338,5 +339,6 @@ export function createHumanRig(options = {}) {
     }
   };
 
-  return rig;
+  Object.assign(this, rig);
+  }
 }
