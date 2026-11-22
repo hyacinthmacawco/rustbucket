@@ -3,6 +3,10 @@ import { createTitleScreen } from "../hud/title.js";
 import { createJoystick, createKeyboard } from "../hud/joystick.js";
 import { createExtranet } from "../hud/extranet.js";
 import { SolarSystem } from "../omniverse/systems/solar-system.js";
+import { AugstakaSystem } from "../omniverse/systems/augstaka.js";
+import { AnodyneSystem } from "../omniverse/systems/anodyne.js";
+import { GalvanSystem } from "../omniverse/systems/galvan.js";
+import { IncursiaSystem } from "../omniverse/systems/incursia.js";
 import { EarthInterior, KevinStorageUnit, Suitcases } from "../omniverse/interiors/earth-interior.js";
 import { MoonInterior } from "../omniverse/interiors/moon-interior.js";
 import { PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
@@ -574,7 +578,8 @@ class RustbucketGame {
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
       simulation,
-      onData: host => simulationCloud.open("relationships", host)
+      onData: (host, view) => simulationCloud.open(view, host),
+      onJumpSystem: key => warpToSystem(key)
     });
     const simulationCloud=createSimulationCloud(simulation);
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
@@ -707,7 +712,30 @@ class RustbucketGame {
     warpOverlay.innerHTML = '<div id="warp-flash"></div><div id="warp-caption">SPACE WARP</div>';
     document.body.appendChild(warpOverlay);
     function openSystemMap() {
-      if (state.stage === "gameplay" && keyboardController?.selected === "rustbucket") mapOverlay.style.display = "flex";
+      if (state.stage === "gameplay" && keyboardController?.selected === "rustbucket") extranet.openOmnidata();
+    }
+    async function warpToSystem(requestedKey) {
+      const systemKey = ({solar:"solar",highbreed:"augstaka",incursean:"incursia",anodite:"anodyne",galvan:"galvan"})[requestedKey];
+      if (!systemKey) return;
+      extranet.close();
+      mapOverlay.style.display = "none";
+      warpOverlay.querySelector("#warp-caption").textContent = "INTERSTELLAR JUMP";
+      warpOverlay.classList.remove("atmospheric");
+      warpOverlay.style.display = "flex";
+      warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
+      await new Promise(resolve => window.setTimeout(resolve, 1250));
+      activeSystem = systemKey;
+      state.currentScene = "space";
+      state.spaceReturnPosition = systemKey === "solar" ? new THREE.Vector3(4.5,15,0) : new THREE.Vector3(-20,12,0);
+      await loadRegion(systemKey === "solar" ? "space" : "system-" + systemKey);
+      if (entities?.rustbucket) {
+        entities.rustbucket.position.copy(state.spaceReturnPosition);
+        entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
+        entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
+      }
+      setCameraPreset(cameraConfig.gameplay);
+      extranet.setLocation("space");
+      warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
     }
     async function warpTo(destination) {
       mapOverlay.style.display = "none";
@@ -966,6 +994,7 @@ class RustbucketGame {
       if (failedRegion) loadRegion(failedRegion);
     });
 
+    let activeSystem = "solar";
     async function loadRegion(name) {
       if (loadingRegion === name || loadedRegion === name) return;
       const requestId = ++regionLoadId;
@@ -991,6 +1020,26 @@ class RustbucketGame {
           }
           physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
+            keyboardController = createKeyboard({
+              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+              onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
+              onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
+            });
+          } else { regionGroup=group; scene.add(regionGroup); }
+          loadedRegion=name; loadingRegion=null; return;
+        } else if (name.startsWith("system-")) {
+          const systemKey = name.slice("system-".length);
+          const SystemClass = {augstaka:AugstakaSystem,anodyne:AnodyneSystem,galvan:GalvanSystem,incursia:IncursiaSystem}[systemKey];
+          if (!SystemClass) throw new Error("Unknown star system: " + systemKey);
+          scene.background = new THREE.Color(0x02040a); scene.fog = null;
+          titleObjects = new SystemClass(group);
+          if (state.stage === "gameplay") {
+            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
+            ship.position.set(-20,12,0);
+            const nextPhysics = await PhysicsEngine.create();
+            if (requestId !== regionLoadId) { nextPhysics.dispose(); disposeObjectTree(group); return; }
+            physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
+            entities = {rustbucket:ship}; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
               entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
@@ -1234,13 +1283,20 @@ class RustbucketGame {
     };
 
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
-    const PLANET_ORBITS={augstaka:new THREE.Vector3(174,12,-115),anodyne:new THREE.Vector3(-148,18,-125),galvan:new THREE.Vector3(191,8,145),incursia:new THREE.Vector3(-168,-8,150)};
+    const SYSTEM_PLANET_ORBITS = {
+      solar: {earth:new THREE.Vector3(4.5,0,0),moon:new THREE.Vector3(6.8,.2,-1.5)},
+      augstaka: {augstaka:new THREE.Vector3(19,0,0)},
+      anodyne: {anodyne:new THREE.Vector3(17,0,0)},
+      galvan: {galvan:new THREE.Vector3(16,0,0)},
+      incursia: {incursia:new THREE.Vector3(17,0,0)}
+    };
     let planetEntryCooldown=0;
     let planetTransitionBusy=false;
     const enterNearbyPlanet = async () => {
-      if(planetTransitionBusy||state.currentScene!=="space"||loadedRegion!=="space"||!entities?.rustbucket||planetEntryCooldown>0)return;
+      const expectedRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
+      if(planetTransitionBusy||state.currentScene!=="space"||loadedRegion!==expectedRegion||!entities?.rustbucket||planetEntryCooldown>0)return;
       const ship=entities.rustbucket;
-      for(const [key,center] of Object.entries(PLANET_ORBITS)){
+      for(const [key,center] of Object.entries(SYSTEM_PLANET_ORBITS[activeSystem]||{})){
         const horizontalDistance=Math.hypot(ship.position.x-center.x,ship.position.z-center.z);
         if(horizontalDistance<13 && ship.position.y<center.y+2){
           planetTransitionBusy=true;
@@ -1256,15 +1312,17 @@ class RustbucketGame {
       }
     };
     async function leavePlanetInterior(){
-      if(planetTransitionBusy||!PLANET_WORLDS[state.currentScene]||!entities?.rustbucket)return;
-      const planet=state.currentScene,orbit=PLANET_ORBITS[planet];if(!orbit)return;
+      if(planetTransitionBusy||(state.currentScene!=="earth"&&state.currentScene!=="moon"&&!PLANET_WORLDS[state.currentScene])||!entities?.rustbucket)return;
+      const planet=state.currentScene,orbit=SYSTEM_PLANET_ORBITS[activeSystem]?.[planet];if(!orbit)return;
       planetTransitionBusy=true;
       warpOverlay.querySelector("#warp-caption").textContent="CLEARING ATMOSPHERE";
       warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";
       warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
       await new Promise(resolve=>window.setTimeout(resolve,1250));
       state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,15,0));
-      state.currentScene="space";await loadRegion("space");
+      state.currentScene="space";
+      const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
+      await loadRegion(returnRegion);
       if(entities?.rustbucket){
         entities.rustbucket.position.copy(state.spaceReturnPosition);
         entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
@@ -1299,7 +1357,7 @@ class RustbucketGame {
         keyboardController.update(delta);
       }
       if (!state.paused && state.stage==="gameplay"&&state.currentScene==="space") enterNearbyPlanet();
-      if (!state.paused && state.stage==="gameplay" && PLANET_WORLDS[state.currentScene] && entities?.rustbucket && !planetTransitionBusy) {
+      if (!state.paused && state.stage==="gameplay" && (state.currentScene==="earth"||state.currentScene==="moon"||PLANET_WORLDS[state.currentScene]) && entities?.rustbucket && !planetTransitionBusy) {
         const shipHeight = entities.rustbucket.userData.vehicleBody?.translation().y ?? entities.rustbucket.position.y;
         if (shipHeight > 12) leavePlanetInterior();
       }
