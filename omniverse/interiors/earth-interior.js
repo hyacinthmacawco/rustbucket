@@ -323,3 +323,9 @@ export function createSuitcases(parent) {
   });
   return { suitcases };
 }
+
+export class EarthInterior {
+  constructor(...args) {
+    Object.assign(this, createEarthInterior(...args));
+  }
+}
