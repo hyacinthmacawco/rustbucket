@@ -30,6 +30,14 @@ const defaults = {
     {id:"taydenite",name:"Taydenite",quantity:120,weight:0.1,category:"Currency"},
     {id:"rations",name:"Rations",quantity:12,weight:0.5,category:"Supplies"}
   ], carried: {Ben:["Omnitrix"],Gwen:["Mana focus"],Kevin:["Absorbed alloy"],Rook:["Proto-Tool"]} },
+  resources: {
+    Highbreed:[{id:"bio-sample",name:"Bio samples",quantity:800,price:35},{id:"agri-goods",name:"Agricultural goods",quantity:1200,price:12},{id:"bio-tech",name:"Bio-tech",quantity:260,price:90}],
+    Incursean:[{id:"mil-alloy",name:"Military alloy",quantity:900,price:55},{id:"weapon-parts",name:"Weapon parts",quantity:400,price:80},{id:"inc-energy",name:"Energy cells",quantity:700,price:28}],
+    Anodite:[{id:"mana-crystal",name:"Mana crystals",quantity:350,price:110},{id:"raw-mana",name:"Raw mana",quantity:600,price:65},{id:"healing-herbs",name:"Healing herbs",quantity:900,price:18}],
+    Galvan:[{id:"microchips",name:"Microchips",quantity:1500,price:24},{id:"tech-components",name:"Tech components",quantity:950,price:42},{id:"science-data",name:"Scientific data",quantity:300,price:75}],
+    Human:[{id:"food",name:"Food supplies",quantity:2400,price:8},{id:"fuel",name:"Fuel",quantity:1600,price:20},{id:"medicine",name:"Medicine",quantity:850,price:32}]
+  },
+  transactions: [],
   eventLog: []
 };
 
@@ -121,6 +129,19 @@ export function createPhaseTwo() {
   function setHealth(name,value) { const s=getStatus(name);s.health=clamp(value); }
   function setEnergy(name,value) { const s=getStatus(name);s.energy=clamp(value); }
   function spendEnergy(name,amount) { const s=getStatus(name);if(s.energy<amount)return false;s.energy-=amount;return true; }
+  function tradeWithSpecies(character,speciesName,resourceId,quantity=1) {
+    const stock=(data.resources[speciesName]||[]).find(x=>x.id===resourceId);
+    if(!stock||quantity<1||stock.quantity<quantity)return {ok:false,reason:"Insufficient stock."};
+    if(!canTrade(character,speciesName))return {ok:false,reason:"Trade denied: relationship below 30%."};
+    const cost=stock.price*quantity;
+    if(data.team.cash<cost)return {ok:false,reason:"Insufficient Taydenite."};
+    stock.quantity-=quantity;data.team.cash-=cost;
+    addItem({id:stock.id,name:stock.name,category:"Trade goods",value:stock.price},quantity);
+    data.transactions.unshift({type:"purchase",from:speciesName,item:stock.name,quantity,cost,at:new Date().toISOString()});
+    data.transactions=data.transactions.slice(0,100);save();
+    recordEvent("trade",character+" purchased "+quantity+" "+stock.name+" from "+speciesName+".",{character,species:speciesName,cost});
+    return {ok:true,cost};
+  }
   function addItem(item,quantity=1) {
     const found=data.team.inventory.find(x=>x.id===item.id);
     if(found)found.quantity+=quantity;else data.team.inventory.push({...item,quantity});
@@ -155,7 +176,7 @@ export function createPhaseTwo() {
   function recharge(name,amount){setEnergy(name,getStatus(name).energy+amount);}
   return {
     data, ENTITY_NAMES, crew, species, healthEnergy, getRelationship,setRelationship,canTrade,isHostile,
-    recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,
+    recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,tradeWithSpecies,
     getChromastoneActive,setChromastoneActive,damage,recharge,save,
     set onEvent(fn){onEvent=fn||(()=>{});}
   };
