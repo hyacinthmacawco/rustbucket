@@ -116,8 +116,8 @@ export function createJoystick() {
       if (!visible) reset();
     },
     setMode(mode) { applyMode(mode); },
-    setTeamOptions(selected) {
-      const available = TEAM_MEMBERS.filter(name => name !== selected);
+    setTeamOptions(selected, members = TEAM_MEMBERS) {
+      const available = members.filter(name => name !== selected);
       labelElements.forEach((label, index) => {
         label.textContent = TEAM_LABELS[available[index]] || "";
         label.setAttribute("aria-label", available[index] || "");
@@ -138,7 +138,8 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   const keys = new Set();
   let selected = initialSelected;
   let lastAttackAt = 0;
-  joystick.setTeamOptions(selected);
+  const selectableMembers = TEAM_MEMBERS.filter(name => entities[name]);
+  joystick.setTeamOptions(selected, selectableMembers);
   onSelect(selected);
 
   function keydown(event) {
@@ -165,14 +166,14 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   window.addEventListener("blur", blur);
 
   function choose(x, y) {
-    const available = TEAM_MEMBERS.filter(name => name !== selected);
+    const available = selectableMembers.filter(name => name !== selected);
     let index;
     if (Math.abs(x) > Math.abs(y)) index = x > 0 ? 1 : 3;
     else index = y > 0 ? 0 : 2;
     const next = available[index];
     if (!next) return;
     selected = next;
-    joystick.setTeamOptions(selected);
+    joystick.setTeamOptions(selected, selectableMembers);
     onSelect(selected);
     updateCamera();
   }
