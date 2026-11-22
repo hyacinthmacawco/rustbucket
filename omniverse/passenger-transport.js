@@ -38,7 +38,7 @@ export class PassengerTransport {
       arm.position.set(side*.42,.9,0);group.add(arm);
     }
     group.name = passenger.name + " Passenger";
-    group.userData.noPhysics = true;
+    group.traverse(object => { object.userData.noPhysics = true; });
     return group;
   }
 
