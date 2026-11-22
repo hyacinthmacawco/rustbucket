@@ -1141,7 +1141,7 @@ class RustbucketGame {
           chromastoneVisual.visible=simulation.getChromastoneActive();
           benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
           if(simulation.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
-          joystick.buttons.querySelector("#pick-button").textContent=simulation.getChromastoneActive()?"↯":"✋";
+          joystick.buttons.querySelector("#pick-button").textContent="PICK";
           benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
           setAbilityMode("ben",simulation.getChromastoneActive()?1:0);
           benCharacter.group.userData.performChromastoneAttack=()=>{
