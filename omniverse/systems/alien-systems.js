@@ -124,10 +124,11 @@ export class AlienSystems {
     const moon = new THREE.Mesh(new THREE.SphereGeometry(PLANET_RADIUS * .16, 32, 24), new THREE.MeshStandardMaterial({ color: 0xaab7a0, roughness: 1 }));
     moon.position.set(distance, 0, PLANET_RADIUS * 1.55); group.add(moon);
     const city = new THREE.Group(); city.position.set(distance, 0, 0); group.add(city);
+    const cityScale = PLANET_RADIUS / 5.2;
     for (let i = 0; i < 18; i++) {
-      const a = i * TAU / 18, r = 5.25 + (i % 3) * .35;
-      const h = .35 + (i % 5) * .19;
-      const tower = new THREE.Mesh(new THREE.BoxGeometry(.18, h, .18), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x9bbd9a : 0xd0d7b1, emissive: 0x1e4630, emissiveIntensity: .25 }));
+      const a = i * TAU / 18, r = (5.25 + (i % 3) * .35) * cityScale;
+      const h = (.35 + (i % 5) * .19) * cityScale;
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(.18 * cityScale, h, .18 * cityScale), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x9bbd9a : 0xd0d7b1, emissive: 0x1e4630, emissiveIntensity: .25 }));
       tower.position.set(Math.cos(a) * r, Math.sin(a) * r * .55, Math.sin(a) * r);
       city.add(tower);
     }
@@ -142,7 +143,7 @@ export class AlienSystems {
     const distance = scaledSeparation(17, 4.5, 4.7);
     const { planet } = makeWorld(group, "Anodyne", 4.7, ["#70252d", "#45131e", "#210d19"], "bands", { atmosphere: 0x9c3440 });
     planet.position.set(distance, 0, 0);
-    for (const [radius, tube, opacity] of [[720,.24*100,.85],[840,.16*100,.65]]) {
+    for (const [radius, tube, opacity] of [[720*(PLANET_RADIUS/4.7),.24*(PLANET_RADIUS/4.7),.85],[840*(PLANET_RADIUS/4.7),.16*(PLANET_RADIUS/4.7),.65]]) {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 160), new THREE.MeshBasicMaterial({ color: 0xe97835, transparent: true, opacity, side: THREE.DoubleSide }));
       ring.position.copy(planet.position); ring.rotation.set(1.18, .18, .16); group.add(ring);
     }
