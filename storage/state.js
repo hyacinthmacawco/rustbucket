@@ -105,15 +105,17 @@ async function createPhysics() {
     const q=new THREE.Quaternion();
     object.userData.vehicleBody=body;
     object.userData.moveVehicle=(forward,right,lift,dt,steerInput=0,heading=attitude.yaw)=>{
-      const thrust=environment==="space"?15:22;
-      body.applyImpulse({x:forward*thrust*dt,y:0,z:right*thrust*dt},true);
-      // Actively regulate vertical speed so planetary gravity cannot pin the ship down.
+      // Drive horizontal velocity directly from the left joystick. This avoids
+      // tiny impulses being lost to contact friction or the planet's damping.
       const velocity=body.linvel();
+      const horizontalSpeed=environment==="space"?18:13;
+      const targetX=THREE.MathUtils.clamp(forward,-1,1)*horizontalSpeed;
+      const targetZ=THREE.MathUtils.clamp(right,-1,1)*horizontalSpeed;
       const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?16:12);
       body.setLinvel({
-        x:velocity.x,
+        x:THREE.MathUtils.damp(velocity.x,targetX,5,dt),
         y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
-        z:velocity.z
+        z:THREE.MathUtils.damp(velocity.z,targetZ,5,dt)
       },true);
       attitude.yaw=heading;
       attitude.roll=THREE.MathUtils.damp(attitude.roll,THREE.MathUtils.clamp(steerInput,-1,1)*0.32,5,dt);
