@@ -631,7 +631,7 @@ class RustbucketGame {
         const visual=entities?.ben?.userData.chromastoneVisual;
         if(visual)visual.visible=next===1;
         entities?.ben?.children?.forEach(child=>{if(child!==visual)child.visible=next===0;});
-        const pickButton=joystick.buttons.querySelector("#pick-button");if(pickButton)pickButton.textContent=next?"↯":"✋";
+        const pickButton=joystick.buttons.querySelector("#pick-button");if(pickButton)pickButton.textContent="PICK";
       }
       if(entities?.[character])entities[character].userData.toolMode=mode;
     }
@@ -743,7 +743,7 @@ class RustbucketGame {
     async function warpTo(destination) {
       mapOverlay.style.display = "none";
       if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
-      const atmosphericTransition=Boolean(PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
+      const atmosphericTransition=Boolean(destination==="earth"||destination==="moon"||PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
       warpOverlay.querySelector("#warp-caption").textContent=atmosphericTransition?"":"SPACE WARP";
       warpOverlay.classList.toggle("atmospheric",atmosphericTransition);
       warpOverlay.style.display = "flex";
