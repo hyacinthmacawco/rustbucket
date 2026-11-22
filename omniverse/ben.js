@@ -7,14 +7,14 @@ import * as THREE from "three";
  */
 
 export class Ben {
-  constructor({ createHumanRig }) {
+  constructor({ HumanRig }) {
     this.startPosition = [-3,-0.5,5];
     this.startScale = [0.5,0.5,0.5];
-  if (typeof createHumanRig !== "function") {
+  if (typeof HumanRig !== "function") {
     throw new TypeError("createBen requires the createHumanRig rig factory.");
   }
 
-  const rig = createHumanRig();
+  const rig = new HumanRig();
   const { group, joints } = rig;
   group.name = "Ben10CuboidCharacter";
 
