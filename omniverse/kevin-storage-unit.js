@@ -1,6 +1,6 @@
 import * as THREE from
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-import { dimensions } from '../storage/state.js';
+import { dimensions } from '../storage/dimensions.js';
 
 export function createKevinStorageUnit(scene) {
   function standardMaterial(color, roughness = 0.9, extra = {}) {
