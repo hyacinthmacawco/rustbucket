@@ -107,6 +107,7 @@ export class AlienSystems {
   constructor(parent, only = null) {
   const root = new THREE.Group();
   root.name = "Ben10AlienSystems";
+  root.add(new THREE.AmbientLight(0x8794a8, 0.8));
   parent.add(root);
   const starfield = createStarfieldTexture(root, "AlienSystemStarfieldTexture");
   const systems = [];
