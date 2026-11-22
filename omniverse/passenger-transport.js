@@ -54,7 +54,7 @@ export class PassengerTransport {
       });
     }
     ship.userData.passengerVisuals = [];
-    const seats = [[-.42,-.48,-1.55],[.42,-.48,-1.55],[-.42,-.48,-3.0],[.42,-.48,-3.0]];
+    const seats = [[-.42,-1.15,-1.55],[.42,-1.15,-1.55],[-.42,-1.15,-3.0],[.42,-1.15,-3.0]];
     this.passengers.slice(0,4).forEach((passenger,index) => {
       const visual = this.createVisual(passenger);
       visual.position.set(...seats[index]);
