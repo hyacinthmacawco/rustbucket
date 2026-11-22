@@ -601,6 +601,8 @@ class RustbucketGame {
     }
 
     const combatWorldPosition = new THREE.Vector3();
+    const combatSegment = new THREE.Vector3();
+    const combatClosest = new THREE.Vector3();
     function updatePatrolCombat(delta) {
       const ship = entities?.rustbucket;
       if (!ship || !alienPatrols.length || state.currentScene !== 'space') return;
@@ -614,7 +616,12 @@ class RustbucketGame {
         if (!patrol.destroyed) {
           for (const laser of [...(ship.userData.getLasers?.() || [])]) {
             laser.mesh.getWorldPosition(combatWorldPosition);
-            if (patrol.group.position.distanceTo(combatWorldPosition) < 55) {
+            const start = laser.previousWorldPosition || combatWorldPosition;
+            combatSegment.subVectors(combatWorldPosition,start);
+            const segmentLengthSq = combatSegment.lengthSq();
+            const segmentT = segmentLengthSq ? THREE.MathUtils.clamp(new THREE.Vector3().subVectors(patrol.group.position,start).dot(combatSegment)/segmentLengthSq,0,1) : 0;
+            combatClosest.copy(start).addScaledVector(combatSegment,segmentT);
+            if (patrol.group.position.distanceTo(combatClosest) < 55) {
               patrol.takeDamage(5);
               ship.userData.removeLaser?.(laser);
               if (patrol.destroyed) simulation.recordEvent('combat',patrol.species + ' patrol fighter was destroyed.',{species:patrol.species});
