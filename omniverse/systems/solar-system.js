@@ -3,7 +3,7 @@ import { createStarfieldTexture } from "./starfield.js";
 // The sky is one inward-facing textured dome, not thousands of star meshes.
 export class SolarSystem {
   constructor(parent) {
-    const sunConfig = { position: [-22464300, 0, 0], radius: 13000 };
+    const sunConfig = { position: [-274300, 0, 0], radius: 13000 };
     const earthConfig = { position: [0, 0, 0], radius: 1300 };
     const moonConfig = { position: [1547, 0, 0], radius: 217 };
     parent.name = "SolarSystem";
