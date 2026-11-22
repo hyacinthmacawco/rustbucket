@@ -1248,6 +1248,7 @@ class RustbucketGame {
       activeStage = state.stage;
 
       if (activeStage === "title") {
+        activeSystem = "solar";
         state.currentScene = "space";
         if (loadedRegion !== "space" && !loadingRegion) loadRegion("space");
         preludeScreen.style.display = "none";
