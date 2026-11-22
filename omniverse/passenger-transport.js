@@ -116,7 +116,7 @@ export class PassengerTransport {
       this.simulation.data.team.cash += passenger.reward;
       this.simulation.data.transactions.unshift({
         type:"passenger-delivery",from:passenger.name,item:"Safe passage to " + homePlanet,
-        quantity:1,cost:-passenger.reward,at:new Date().toISOString()
+        quantity:1,cost:passenger.reward,at:new Date().toISOString()
       });
       this.simulation.recordEvent("delivery", passenger.name + " reached " + homePlanet + " safely. Received " + passenger.reward + " Taydenite.", passenger);
     }
