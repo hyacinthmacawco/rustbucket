@@ -102,6 +102,7 @@ async function createPhysics() {
       RAPIER.ColliderDesc.cuboid(s(0.12),s(0.82),s(5.0)).setTranslation(s(-1.38),0,0),
       RAPIER.ColliderDesc.cuboid(s(0.12),s(0.82),s(5.0)).setTranslation(s(1.38),0,0),
       RAPIER.ColliderDesc.cuboid(s(1.32),s(0.82),s(0.12)).setTranslation(0,0,s(5.0)),
+      RAPIER.ColliderDesc.cuboid(s(1.36),s(0.09),s(5.15)).setTranslation(0,s(1.28),0),
       // External landing skids support the hull without creating a floor inside the cabin.
       RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(s(-0.92),s(-1.12),s(-3.35)),
       RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(s(0.92),s(-0.82),s(-3.35)),
@@ -111,22 +112,40 @@ async function createPhysics() {
     const attitude={yaw:0,pitch:0,roll:0};
     const q=new THREE.Quaternion();
     object.userData.vehicleBody=body;
-    object.userData.moveVehicle=(forward,right,lift,dt,steerInput=0,heading=attitude.yaw)=>{
-      // Drive horizontal velocity directly from the left joystick. This avoids
-      // tiny impulses being lost to contact friction or the planet's damping.
+    object.userData.moveVehicle=(worldX,worldZ,lift,dt,steerInput=0,heading=attitude.yaw)=>{
       const velocity=body.linvel();
-      const horizontalSpeed=environment==="space"?30000:13;
-      const targetX=THREE.MathUtils.clamp(forward,-1,1)*horizontalSpeed;
-      const targetZ=THREE.MathUtils.clamp(right,-1,1)*horizontalSpeed;
-      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?30000:12);
-      body.setLinvel({
-        x:THREE.MathUtils.damp(velocity.x,targetX,5,dt),
-        y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
-        z:THREE.MathUtils.damp(velocity.z,targetZ,5,dt)
-      },true);
-      attitude.yaw=heading;
-      attitude.roll=THREE.MathUtils.damp(attitude.roll,THREE.MathUtils.clamp(steerInput,-1,1)*0.32,5,dt);
-      attitude.pitch=THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
+      const inSpace=environment==="space";
+      const maxHorizontal=inSpace?30000:22;
+      const maxVertical=inSpace?14000:14;
+      const acceleration=inSpace?42000:34;
+      const verticalAcceleration=inSpace?26000:26;
+      const drag=inSpace?0.045:1.05;
+      const inputMagnitude=Math.min(1,Math.hypot(worldX,worldZ));
+      let vx=velocity.x, vz=velocity.z, vy=velocity.y;
+      if(inputMagnitude>0.045){
+        const targetX=THREE.MathUtils.clamp(worldX,-1,1)*maxHorizontal;
+        const targetZ=THREE.MathUtils.clamp(worldZ,-1,1)*maxHorizontal;
+        const change=acceleration*dt;
+        vx+=THREE.MathUtils.clamp(targetX-vx,-change,change);
+        vz+=THREE.MathUtils.clamp(targetZ-vz,-change,change);
+      }else{
+        const coast=Math.exp(-drag*dt);
+        vx*=coast; vz*=coast;
+      }
+      const horizontalLength=Math.hypot(vx,vz);
+      if(horizontalLength>maxHorizontal){vx*=maxHorizontal/horizontalLength;vz*=maxHorizontal/horizontalLength;}
+      const targetY=THREE.MathUtils.clamp(lift,-1,1)*maxVertical;
+      if(Math.abs(lift)>0.045) vy+=THREE.MathUtils.clamp(targetY-vy,-verticalAcceleration*dt,verticalAcceleration*dt);
+      else vy*=Math.exp(-(inSpace?0.075:1.25)*dt);
+      body.setLinvel({x:vx,y:THREE.MathUtils.clamp(vy,-maxVertical,maxVertical),z:vz},true);
+      const yawDifference=Math.atan2(Math.sin(heading-attitude.yaw),Math.cos(heading-attitude.yaw));
+      attitude.yaw+=yawDifference*Math.min(1,dt*2.6);
+      const forwardThrust=worldX*Math.sin(heading)+worldZ*Math.cos(heading);
+      const sideThrust=worldX*Math.cos(heading)-worldZ*Math.sin(heading);
+      const targetRoll=THREE.MathUtils.clamp(-sideThrust*0.48,-0.48,0.48);
+      const targetPitch=THREE.MathUtils.clamp(-forwardThrust*0.14+lift*0.12,-0.28,0.28);
+      attitude.roll=THREE.MathUtils.damp(attitude.roll,targetRoll,2.8,dt);
+      attitude.pitch=THREE.MathUtils.damp(attitude.pitch,targetPitch,2.4,dt);
       q.setFromEuler(new THREE.Euler(attitude.pitch,attitude.yaw,attitude.roll,"YXZ"));
       body.setRotation({x:q.x,y:q.y,z:q.z,w:q.w},true);
     };
@@ -139,8 +158,8 @@ async function createPhysics() {
     for(const entry of bodies){
       if(entry.kind!=="vehicle")continue;
       entry.body.setGravityScale(0,true);
-      entry.body.setLinearDamping(environment==="space"?0.02:0.08);
-      entry.body.setAngularDamping(environment==="space"?0:0.25);
+      entry.body.setLinearDamping(environment==="space"?0.005:0.035);
+      entry.body.setAngularDamping(environment==="space"?0.04:0.12);
     }
   }
 
@@ -180,8 +199,17 @@ const initialRelationships = {
   Human:{ Ben:98,Gwen:90,Kevin:75,Rook:64,Highbreed:22,Incursean:32,Anodite:70,Galvan:78 }
 };
 
+const initialEntities = Object.fromEntries(Object.entries(initialRelationships).map(([name, relationships]) => [
+  name,
+  { relationships: Object.fromEntries(Object.entries(relationships).map(([other, value]) => [other, value * 2 - 100])) }
+]));
+for (const speciesName of ["Highbreed", "Incursean", "Galvan"]) {
+  initialEntities.Anodite.relationships[speciesName] = 3;
+  initialEntities[speciesName].relationships.Anodite = 3;
+}
+
 const defaults = {
-  relationships: initialRelationships,
+  entities: initialEntities,
   populations: { Highbreed:820, Incursean:540, Anodite:180, Galvan:240, Human:810 },
   treasury: { Highbreed:920000, Incursean:510000, Anodite:740000, Galvan:1250000, Human:1800000 },
   revenue: { Highbreed:12500, Incursean:9200, Anodite:6500, Galvan:18000, Human:22000 },
@@ -208,10 +236,20 @@ function loadData() {
     const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
     if (saved) {
       const merged = { ...structuredClone(defaults), ...saved,
-        relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
         team:{...structuredClone(defaults.team),...(saved.team||{})},
-        populations:{...structuredClone(defaults.populations),...(saved.populations||{})}
+        populations:{...structuredClone(defaults.populations),...(saved.populations||{})},
+        entities: {}
       };
+      for (const name of ENTITY_NAMES) {
+        const base = structuredClone(defaults.entities[name] || {relationships:{}});
+        const savedEntity = saved.entities?.[name] || {};
+        const legacy = Object.fromEntries(Object.entries(saved.relationships?.[name] || {}).map(([other,value]) => [other, Number(value) * 2 - 100]));
+        merged.entities[name] = {...base,...savedEntity,relationships:{...base.relationships,...legacy,...(savedEntity.relationships||{})}};
+        for (const [other,value] of Object.entries(merged.entities[name].relationships)) {
+          merged.entities[name].relationships[other] = Math.max(-100,Math.min(100,Number(value)||0));
+        }
+      }
+      delete merged.relationships;
       for (const name of species) merged.populations[name] = clamp(Number(merged.populations[name]) || 0, 0, 999);
       return merged;
     }
@@ -230,7 +268,8 @@ function createSimulationSystem() {
     Rustbucket:{health:100,energy:data.team.fuel,energyLabel:"FUEL"}
   };
   let elapsed = 0;
-  let eventCooldown = 18;
+  const healthRecoveryDelay = Object.fromEntries(Object.keys(healthEnergy).map(name => [name, 0]));
+  const energyRecoveryDelay = Object.fromEntries(Object.keys(healthEnergy).map(name => [name, 0]));
   let chromastoneActive = false;
   let lastHostileAt = 0;
   let onEvent = () => {};
@@ -241,16 +280,17 @@ function createSimulationSystem() {
   }
   function getRelationship(from,to) {
     if (from === to) return 0;
-    return clamp(Number(data.relationships[from]?.[to] ?? 50));
+    return Math.max(-100,Math.min(100,Number(data.entities[from]?.relationships?.[to] ?? 0)));
   }
   function setRelationship(from,to,value) {
     if (from === to) return;
-    if (!data.relationships[from]) data.relationships[from] = {};
-    data.relationships[from][to] = clamp(value);
+    if (!data.entities[from]) data.entities[from] = {relationships:{}};
+    if (!data.entities[from].relationships) data.entities[from].relationships = {};
+    data.entities[from].relationships[to] = Math.max(-100,Math.min(100,Number(value)||0));
     save();
   }
-  function canTrade(from,to) { return getRelationship(from,to) >= 30; }
-  function isHostile(from,to) { return getRelationship(from,to) < 30; }
+  function canTrade(from,to) { return getRelationship(from,to) >= -30; }
+  function isHostile(from,to) { return getRelationship(from,to) < -30; }
   function recordEvent(type, description, details={}) {
     const event={id:Date.now()+"-"+Math.random().toString(36).slice(2,7),type,description,details,at:new Date().toISOString(),status:"active"};
     data.eventLog.unshift(event);
@@ -259,7 +299,7 @@ function createSimulationSystem() {
   }
   function startWar(attacker,defender) {
     if (attacker===defender || !species.includes(attacker) || !species.includes(defender)) return null;
-    if (!isHostile(attacker,defender)) setRelationship(attacker,defender,25);
+    if (!isHostile(attacker,defender)) setRelationship(attacker,defender,-55);
     const loot=Math.min(data.treasury[defender]||0,Math.max(100,Math.round((data.treasury[defender]||0)*0.025)));
     data.treasury[defender]=Math.max(0,(data.treasury[defender]||0)-loot);
     data.treasury[attacker]=(data.treasury[attacker]||0)+loot;
@@ -276,7 +316,14 @@ function createSimulationSystem() {
     return recordEvent("war",attacker+" has declared war on "+defender+" to seize Taydenite and resources.",{attacker,defender,loot,seized});
   }
   function update(dt, selected="Ben", location="earth", isNearHome=false) {
-    elapsed+=dt; eventCooldown-=dt;
+    elapsed+=dt;
+    for (const [name,status] of Object.entries(healthEnergy)) {
+      healthRecoveryDelay[name] = Math.max(0,healthRecoveryDelay[name] - dt);
+      energyRecoveryDelay[name] = Math.max(0,energyRecoveryDelay[name] - dt);
+      if (healthRecoveryDelay[name] <= 0 && status.health < 100) status.health = Math.min(100,status.health + dt * 0.32);
+      if (energyRecoveryDelay[name] <= 0 && status.energy < 100) status.energy = Math.min(100,status.energy + dt * 0.48);
+      if (name === "Rustbucket") data.team.fuel = status.energy;
+    }
     const now=Date.now();
     for(const event of data.eventLog){
       if(event.status==="active"&&now-Date.parse(event.at)>90000){
@@ -299,15 +346,11 @@ function createSimulationSystem() {
       }
       save();
     }
-    if (eventCooldown<=0) {
-      eventCooldown=30+Math.random()*35;
-      if (Math.random()<0.28) recordEvent("encounter","A passing trader convoy has been detected.",{location});
-    }
-    const person=crew.includes(selected)?selected:null;
+Remove trader convoy event    const person=crew.includes(selected)?selected:null;
     const worldSpecies=species.find(name=>key(name)===key(location));
     if (person && isNearHome && worldSpecies && isHostile(person,worldSpecies) && elapsed-lastHostileAt>12) {
       lastHostileAt=elapsed;
-      healthEnergy[person].health=clamp(healthEnergy[person].health-8);
+      setHealth(person,healthEnergy[person].health-8);
       recordEvent("attack",worldSpecies+" forces attacked "+person+" in "+worldSpecies+" territory.",{attacker:worldSpecies,target:person});
     }
     if (worldSpecies && elapsed-lastHostileAt>12) {
@@ -316,9 +359,21 @@ function createSimulationSystem() {
     }
   }
   function getStatus(name) { return healthEnergy[name] || healthEnergy.Ben; }
-  function setHealth(name,value) { const s=getStatus(name);s.health=clamp(value); }
-  function setEnergy(name,value) { const s=getStatus(name);s.energy=clamp(value); }
-  function spendEnergy(name,amount) { const s=getStatus(name);if(s.energy<amount)return false;s.energy-=amount;return true; }
+  function setHealth(name,value) {
+    const s=getStatus(name), next=clamp(value);
+    if (next < s.health) healthRecoveryDelay[name] = 4;
+    s.health = next;
+  }
+  function setEnergy(name,value) {
+    const s=getStatus(name), next=clamp(value);
+    if (next < s.energy) energyRecoveryDelay[name] = 4;
+    s.energy = next;
+    if (name === "Rustbucket") data.team.fuel = next;
+  }
+  function spendEnergy(name,amount) {
+    const s=getStatus(name);if(s.energy<amount)return false;
+    setEnergy(name,s.energy-amount);return true;
+  }
   function tradeWithSpecies(character,speciesName,resourceId,quantity=1) {
     const stock=(data.resources[speciesName]||[]).find(x=>x.id===resourceId);
     if(!stock||quantity<1||stock.quantity<quantity)return {ok:false,reason:"Insufficient stock."};
@@ -374,7 +429,7 @@ function createSimulationSystem() {
   }
   function getChromastoneActive(){return chromastoneActive;}
   function setChromastoneActive(value){chromastoneActive=Boolean(value);}
-  function consumeFuel(amount){const status=getStatus("Rustbucket");if(status.energy<amount)return false;status.energy=clamp(status.energy-amount);data.team.fuel=status.energy;save();return true;}
+  function consumeFuel(amount){const status=getStatus("Rustbucket");if(status.energy<amount)return false;setEnergy("Rustbucket",status.energy-amount);save();return true;}
   function damage(name,amount){setHealth(name,getStatus(name).health-amount);}
   function recharge(name,amount){setEnergy(name,getStatus(name).energy+amount);}
   return {
@@ -1145,6 +1200,7 @@ class RustbucketGame {
           scene.fog=new THREE.Fog(world.sky,38,190);
           const InteriorClass = { augstaka: AugstakaInterior, anodyne: AnodyneInterior, galvan: GalvanPrimeInterior, incursia: IncursiaInterior }[name];
           const interior = new InteriorClass(group);
+          group.userData.population = interior.environment.population;
           const { marketPosition } = interior.environment;
           const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship); ship.position.set(0,2,13);
           passengerTransport.bindShip(ship,interior.environment.inhabitants);
@@ -1160,8 +1216,9 @@ class RustbucketGame {
         } else if (name === "earth") {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
-          new EarthInterior(scene, group);
-          const population = new PlanetPopulation(group,"earth");
+          const earthEnvironment = new EarthInterior(scene, group);
+          const population = new PlanetPopulation(earthEnvironment.bellwood,"earth");
+          group.userData.population = population;
           const storageUnit = new KevinStorageUnit(group); const unit = storageUnit.unit;
           const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
           passengerTransport.bindShip(ship,population.inhabitants);
@@ -1453,7 +1510,10 @@ class RustbucketGame {
       }
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
-      if (!state.paused && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") updatePatrolCombat(delta);
+      if (!state.paused && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") {
+        updatePatrolCombat(delta);
+        regionGroup?.userData.population?.update(delta);
+      }
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
