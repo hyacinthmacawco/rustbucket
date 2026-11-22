@@ -18,7 +18,7 @@ import { createKevin } from "../omniverse/kevin.js";
 import { createRook } from "../omniverse/rook.js";
 import { createPhaseTwoCloud } from "../hud/phase2-cloud.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
-import { createChromastone } from "../omniverse/transformations/chromastone.js";
+import { ChromastoneTransformation } from "../omniverse/transformations/chromastone.js";
 
 import { dimensions } from "./dimensions.js";
 export { dimensions };
@@ -1035,7 +1035,7 @@ class RustbucketGame {
           }
           
           const benCharacter = createBen({ createHumanRig });
-          const chromastoneVisual=createChromastone();
+          const chromastoneVisual=new ChromastoneTransformation().model;
           benCharacter.group.add(chromastoneVisual);
           chromastoneVisual.visible=phaseTwo.getChromastoneActive();
           omnitrixSlider.value=phaseTwo.getChromastoneActive()?"1":"0";
