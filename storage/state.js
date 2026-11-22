@@ -761,7 +761,7 @@ class RustbucketGame {
       } else await loadRegion(destination);
       setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
-      extranet.setLocation(destination);
+      extranet.setLocation(destination === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : destination);
       marketPanel.style.display="none";
     }
     mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => warpTo(button.dataset.destination)));
@@ -1299,19 +1299,22 @@ class RustbucketGame {
       const expectedRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
       if(planetTransitionBusy||state.currentScene!=="space"||loadedRegion!==expectedRegion||!entities?.rustbucket||planetEntryCooldown>0)return;
       const ship=entities.rustbucket;
+      let nearestPlanet=null, nearestDistance=Infinity;
       for(const [key,center] of Object.entries(SYSTEM_PLANET_ORBITS[activeSystem]||{})){
         const horizontalDistance=Math.hypot(ship.position.x-center.x,ship.position.z-center.z);
-        if(horizontalDistance<13 && ship.position.y<center.y+2){
-          planetTransitionBusy=true;
-          state.spaceReturnPosition=center.clone().add(new THREE.Vector3(0,15,0));
-          planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
-          warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
-          await new Promise(resolve=>window.setTimeout(resolve,1250));
-          state.currentScene=key;await loadRegion(key);setCameraPreset(cameraConfig.gameplay);
-          extranet.setLocation(key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
-          planetTransitionBusy=false;
-          return;
+        if(horizontalDistance<13 && ship.position.y<center.y+2 && horizontalDistance<nearestDistance){
+          nearestPlanet={key,center};nearestDistance=horizontalDistance;
         }
+      }
+      if(nearestPlanet){
+        planetTransitionBusy=true;
+        state.spaceReturnPosition=nearestPlanet.center.clone().add(new THREE.Vector3(0,15,0));
+        planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
+        warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
+        await new Promise(resolve=>window.setTimeout(resolve,1250));
+        state.currentScene=nearestPlanet.key;await loadRegion(nearestPlanet.key);setCameraPreset(cameraConfig.gameplay);
+        extranet.setLocation(nearestPlanet.key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
+        planetTransitionBusy=false;
       }
     };
     async function leavePlanetInterior(){
@@ -1331,7 +1334,7 @@ class RustbucketGame {
         entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
         entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
       }
-      setCameraPreset(cameraConfig.gameplay);extranet.setLocation("space");
+      setCameraPreset(cameraConfig.gameplay);extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
       extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       planetTransitionBusy=false;planetEntryCooldown=2;
