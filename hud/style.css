@@ -827,3 +827,22 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 #ramp-toggle-button:active{transform:scale(.96)}
 @media(hover:hover) and (pointer:fine){#ramp-toggle-button{bottom:24px}}
 @media(max-width:520px){#system-map-panel{padding:16px}#system-map-graphic{height:42vh;min-height:210px}.sun-node{left:7%}.earth-node{left:51%}.moon-node{right:6%}#ramp-toggle-button{bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));right:24px}}
+
+/* Phase 2: compact HEP bars, Omnitrix selector, and data hub access. */
+#phase2-cloud-button{display:none;position:fixed;z-index:125;top:max(18px,env(safe-area-inset-top));right:78px;width:48px;height:42px;border:1px solid rgba(125,255,160,.65);border-radius:11px;background:rgba(5,38,19,.82);color:#dfffe8;font-size:10px;font-weight:800;letter-spacing:.1em}
+#hep-control{display:none;position:fixed;z-index:125;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);gap:12px;align-items:flex-end;padding:8px 14px;border:1px solid rgba(125,255,160,.5);border-radius:14px;background:rgba(3,17,10,.78);color:#eaffef;cursor:pointer}
+.hep-meter{position:relative;display:flex;align-items:flex-end;justify-content:center;width:24px;height:76px;border:1px solid rgba(190,255,205,.4);border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden}
+.hep-meter i{position:absolute;bottom:0;left:0;width:100%;height:100%;background:#64dc83;transition:height .18s}
+.hep-meter:nth-child(2) i{background:#56c9e8}
+.hep-meter b{position:relative;z-index:1;font-size:10px;text-shadow:0 1px 3px #000;padding-bottom:4px}
+#omnitrix-control{display:none;position:fixed;z-index:124;left:50%;bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));transform:translateX(-50%);align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(120,255,155,.55);border-radius:12px;background:rgba(2,20,9,.82);color:#dcffe5;font-size:10px;letter-spacing:.12em}
+#omnitrix-control input{width:90px;accent-color:#67e58a}
+#omnitrix-control b{min-width:78px}
+#pause-tabs{display:flex;gap:8px;justify-content:center;margin:14px 0}
+#pause-tabs button{padding:9px 13px;border:1px solid rgba(125,255,160,.45);border-radius:8px;background:rgba(10,50,25,.5);color:#eaffef;font-size:10px;letter-spacing:.1em}
+#pause-tabs button.active{background:rgba(30,110,55,.8);border-color:#9bffb2}
+#pause-content{max-width:560px;min-height:130px;margin:0 auto 18px;text-align:left;color:#cdebd5;font-size:13px;line-height:1.55}
+#pause-content h3{font-size:12px;letter-spacing:.16em;color:#a9ffc0}
+#pause-content label{display:flex;justify-content:space-between;gap:14px;margin:12px 0}
+#pause-content input{max-width:150px;accent-color:#6ce68e}
+@media(max-width:520px){#hep-control{bottom:max(12px,env(safe-area-inset-bottom))}#omnitrix-control{bottom:max(104px,calc(env(safe-area-inset-bottom) + 104px))}#phase2-cloud-button{right:72px}}
