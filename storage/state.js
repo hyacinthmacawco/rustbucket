@@ -581,6 +581,13 @@ class RustbucketGame {
     };
     function configureShip(ship){
       passengerTransport.attachShip(ship);
+      ship.userData.maxHealth = 100;
+      ship.userData.health = simulation.getStatus('Rustbucket').health;
+      ship.userData.takeDamage = amount => {
+        simulation.damage('Rustbucket',amount);
+        ship.userData.health = simulation.getStatus('Rustbucket').health;
+        return ship.userData.health;
+      };
       ship.userData.onFuelUse=amount=>simulation.consumeFuel(amount*0.45);
       const fire=ship.userData.performAttack;
       ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
@@ -610,7 +617,7 @@ class RustbucketGame {
       for (const patrol of [...alienPatrols]) {
         const hostile = simulation.crew.some(member => simulation.isHostile(patrol.species,member));
         patrol.update(delta,ship,hostile,() => {
-          simulation.damage('Rustbucket',5);
+          ship.userData.takeDamage?.(5);
           simulation.recordEvent('attack',patrol.species + ' patrol fired on Rustbucket.',{attacker:patrol.species,target:'Rustbucket',damage:5});
         });
         if (!patrol.destroyed) {
@@ -622,7 +629,7 @@ class RustbucketGame {
             const segmentT = segmentLengthSq ? THREE.MathUtils.clamp(new THREE.Vector3().subVectors(patrol.group.position,start).dot(combatSegment)/segmentLengthSq,0,1) : 0;
             combatClosest.copy(start).addScaledVector(combatSegment,segmentT);
             if (patrol.group.position.distanceTo(combatClosest) < 55) {
-              patrol.takeDamage(5);
+              patrol.takeDamage(laser.damage || 5);
               ship.userData.removeLaser?.(laser);
               if (patrol.destroyed) simulation.recordEvent('combat',patrol.species + ' patrol fighter was destroyed.',{species:patrol.species});
               break;
