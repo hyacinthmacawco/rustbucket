@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, part, finishModel } from "../model-utils.js";
 
-export function createGalvanShip(parent = null, options = {}) {
+export class GalvanShip {
+  constructor(parent = null, options = {}) {
   const g=new THREE.Group();
   const green=toon(0x168e20), light=toon(0x43d83b), dark=toon(0x075014), glass=toon(0x063b21,{emissive:0x06240e}), lime=toon(0x60ff2d);
   // Compact, organic flying saucer with twin raised engine pods.
@@ -20,5 +21,7 @@ export function createGalvanShip(parent = null, options = {}) {
   sphere(g,light,.42,[0,-.08,1.45],[1.3,.32,.5]);
   sphere(g,dark,.2,[0,-.35,1.52],[1,.6,.8]);
   for(let i=-2;i<=2;i++) sphere(g,lime,.055,[i*.28,-.02,1.83],[1,.7,.6],false);
-  return finishModel(g,"GalvanShip",parent,options.scale ?? 1);
+  this.group = finishModel(g,"GalvanShip",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
