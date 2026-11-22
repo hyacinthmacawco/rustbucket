@@ -200,7 +200,7 @@ export function createPhaseTwo() {
     if(!item)return {ok:false,reason:"No item selected."};
     const name=item.toLowerCase();
     if(name.includes("medkit"))setHealth(character,getStatus(character).health+35);
-    else if(name.includes("energy cell"))recharge(character,30);
+    else if(name.includes("energy cell"))recharge(character==="Ben"&&chromastoneActive?"Chromastone":character,30);
     else return {ok:false,reason:"This item has no direct-use action yet."};
     carried.splice(index,1);save();return {ok:true};
   }
