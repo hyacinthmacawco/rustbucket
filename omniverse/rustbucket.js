@@ -56,9 +56,15 @@ export class Rustbucket {
   };
   ship.userData.updateVehicle=delta=>{
     for(let i=lasers.length-1;i>=0;i--){
-      const shot=lasers[i];shot.mesh.position.z+=4600*delta;shot.life-=delta;
+      const shot=lasers[i];shot.mesh.position.z+=46000000*delta;shot.life-=delta;
       if(shot.life<=0){ship.remove(shot.mesh);shot.mesh.geometry.dispose();lasers.splice(i,1);}
     }
+  };
+  ship.userData.getLasers=()=>lasers;
+  ship.userData.removeLaser=shot=>{
+    const index=lasers.indexOf(shot);
+    if(index<0)return;
+    ship.remove(shot.mesh);shot.mesh.geometry.dispose();lasers.splice(index,1);
   };
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(7.2,32),new THREE.MeshBasicMaterial({color:0x080a0e,transparent:true,opacity:.25,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.set(0,.025,0);shadow.scale.set(1.25,.62,1);shadow.userData.noPhysics=true;parent.add(shadow);
