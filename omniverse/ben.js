@@ -11,7 +11,7 @@ export class Ben {
     this.startPosition = [-3,-0.5,5];
     this.startScale = [0.5,0.5,0.5];
   if (typeof HumanRig !== "function") {
-    throw new TypeError("createBen requires the createHumanRig rig factory.");
+    throw new TypeError(" Ben requires the HumanRig class.");
   }
 
   const rig = new HumanRig();
