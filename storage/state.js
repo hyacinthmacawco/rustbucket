@@ -131,7 +131,7 @@ import { createPhysics } from "../physics/engine.js";
       startRequested = true;
       if (dialogueSfx) { stopSfx(dialogueSfx); dialogueSfx = null; }
       stopMusic();
-      if (loadedRegion === "bellwood") state.stage = "gameplay";
+      if (loadedRegion === "earth") state.stage = "gameplay";
       else preludeTitle.textContent = "LOADING";
     }
     preludeScreen.querySelector("#skip-dialogue").addEventListener("click", startGameplay);
@@ -495,10 +495,10 @@ import { createPhysics } from "../physics/engine.js";
             rig.playAnimation("pickup");
           }
           
-          const benCharacter = benModule.createBen({ createHumanRig });
-          const gwenCharacter = gwenModule.createGwen({ createHumanRig });
-          const kevinCharacter = kevinModule.createKevin({ createHumanRig });
-          const rookCharacter = rookModule.createRook({ createHumanRig });
+          const benCharacter = createBen({ createHumanRig });
+          const gwenCharacter = createGwen({ createHumanRig });
+          const kevinCharacter = createKevin({ createHumanRig });
+          const rookCharacter = createRook({ createHumanRig });
           const characterEntries = [
             ["ben", benCharacter],
             ["gwen", gwenCharacter],
@@ -552,6 +552,7 @@ import { createPhysics } from "../physics/engine.js";
             getLift: () => Number(liftInput.value),
             onSelect: selected => {
               liftControl.style.display = selected === "rustbucket" ? "flex" : "none";
+              rampButton.style.display = selected === "rustbucket" ? "block" : "none";
               if (selected !== "rustbucket") liftInput.value = "0";
             }
           });
@@ -559,7 +560,6 @@ import { createPhysics } from "../physics/engine.js";
           loadingRegion = null;
           if (name === "earth" && startRequested && state.stage === "prelude") state.stage = "gameplay";
           return;
-        }
         }
         regionGroup=group;scene.add(regionGroup);loadedRegion=name;
       } catch(error) {
