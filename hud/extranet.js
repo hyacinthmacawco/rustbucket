@@ -1,4 +1,4 @@
-export function createExtranet({ onContinue = () => {}, onComplete = () => {} } = {}) {
+export function createExtranet({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {} } = {}) {
   const root = document.createElement("section");
   root.id = "extranet-overlay";
   root.innerHTML = `
@@ -53,7 +53,9 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
       page.querySelectorAll("[data-person]").forEach(b=>b.classList.toggle("active",b.dataset.person===selected));
       const list = page.querySelector("#relationship-list");
       list.innerHTML = relationshipNames.filter(name => name !== selected).map(name => {
-        const value = relationships[selected][name];
+        const from = selected[0].toUpperCase() + selected.slice(1);
+        const to = name[0].toUpperCase() + name.slice(1);
+        const value = simulation?.getRelationship(from, to) ?? relationships[selected][name];
         const label = name[0].toUpperCase() + name.slice(1);
         return `<div class="relationship-row"><span>${label}</span><div class="relationship-meter"><i style="width:${value}%"></i></div><b>${value.toFixed(1)}%</b></div>`;
       }).join("");
@@ -125,10 +127,10 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     catch (error) { console.warn("Could not capture memory", error); }
   }
   function addRelationship(picker, owner) {
-    if (!phaseTwo) return;
+    if (!simulation) return;
     const from=String(picker).toLowerCase().replace(/^./,c=>c.toUpperCase());
     const to=String(owner).toLowerCase().replace(/^./,c=>c.toUpperCase());
-    phaseTwo.setRelationship(from,to,phaseTwo.getRelationship(from,to)+0.1);
+    simulation.setRelationship(from,to,simulation.getRelationship(from,to)+0.1);
   }
   function updateTask(count = storedCount + 1) {
     storedCount = Math.max(storedCount, count);
