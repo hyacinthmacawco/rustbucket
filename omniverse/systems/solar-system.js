@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { dimensions } from "../../storage/dimensions.js";
-import { createAlienSystems } from "./alien-systems.js";
+import { AugstakaSystem } from "./augstaka.js";
+import { AnodyneSystem } from "./anodyne.js";
+import { GalvanSystem } from "./galvan.js";
+import { IncursiaSystem } from "./incursia.js";
 
 // A complete system is the scene unit: its stars and all external celestial
 // bodies are owned and disposed together when the player enters a planet.
@@ -105,7 +108,12 @@ export function createSolarSystem(parent) {
   moon.position.set(...dimensions.moon.position);
   parent.add(moon);
 
-  const alienSystems = createAlienSystems(parent);
+  const alienSystems = [
+    new AugstakaSystem(parent),
+    new AnodyneSystem(parent),
+    new GalvanSystem(parent),
+    new IncursiaSystem(parent)
+  ];
   const { stars } = createStarfield(parent);
   parent.traverse(object => { object.userData.noPhysics = true; });
   return { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars, alienSystems };
