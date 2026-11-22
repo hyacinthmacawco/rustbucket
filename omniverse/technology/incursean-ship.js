@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, part, finishModel } from "../model-utils.js";
 
-export function createIncurseanShip(parent = null, options = {}) {
+export class IncurseanShip {
+  constructor(parent = null, options = {}) {
   const g=new THREE.Group();
   const olive=toon(0x477d19), gold=toon(0xb5a51a), dark=toon(0x203c18), purple=toon(0x7626a6), pink=toon(0xff3bd0), glass=toon(0x3c1768,{emissive:0x210a3a});
   // Flattened green/gold hull with pointed swept wings.
@@ -20,5 +21,7 @@ export function createIncurseanShip(parent = null, options = {}) {
   sphere(g,glass,.48,[0,.85,.28],[1,.38,.9]);
   cylinder(g,gold,.14,.18,1.8,[0,-.08,-1.55],[Math.PI/2,0,0],10);
   for(let i=-3;i<=3;i++) box(g,pink,[.12,.06,.48],[i*.24,-.28,-.05],[0,0,0],false);
-  return finishModel(g,"IncurseanShip",parent,options.scale ?? 1);
+  this.group = finishModel(g,"IncurseanShip",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
