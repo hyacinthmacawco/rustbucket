@@ -51,7 +51,7 @@ export class Rustbucket {
     const now=performance.now();if(now-lastShot<260)return;lastShot=now;
     for(const x of [-.62,.62]){
       const beam=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,6.5,10),laserMaterial);
-      beam.rotation.x=Math.PI/2;beam.position.set(x*1.15,.16,7.55);ship.add(beam);lasers.push({mesh:beam,life:.55});
+      beam.rotation.x=Math.PI/2;beam.position.set(x*1.15,.16,7.55);ship.add(beam);lasers.push({mesh:beam,life:.55,damage:5});
     }
   };
   ship.userData.updateVehicle=delta=>{
