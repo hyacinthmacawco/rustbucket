@@ -1,3 +1,3 @@
 # Rustbucket
 
-Rustbucket is a Ben 10 space flight simulator game set during the post-Omniverse road trip.
+Rustbucket is a Ben 10 post-Omniverse road trip game.
