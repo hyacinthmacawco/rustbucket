@@ -1,0 +1,24 @@
+#simulation-cloud{position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,8,4,.88);backdrop-filter:blur(14px);color:#eaffef;font:13px Arial,sans-serif}
+#simulation-cloud-window{width:min(760px,100%);max-height:min(88vh,900px);overflow:auto;border:1px solid rgba(120,255,160,.45);border-radius:18px;background:rgba(4,24,13,.97);box-shadow:0 20px 80px #000;padding:18px}
+#simulation-cloud header{display:flex;justify-content:space-between;align-items:center;letter-spacing:.12em;padding-bottom:14px;border-bottom:1px solid #31543d}
+#simulation-cloud button,#simulation-cloud select{background:#102e1c;color:#eaffef;border:1px solid #477b55;border-radius:7px;padding:9px}
+#simulation-cloud header button{font-size:22px;line-height:1}
+#simulation-cloud nav{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+#simulation-cloud nav button{font-size:10px;letter-spacing:.08em}
+#simulation-cloud nav button.active,#simulation-cloud .sim-tabs button.active{background:#1b693b;border-color:#9bffb2}
+#simulation-cloud main{overflow:auto;max-height:68vh}
+#simulation-cloud h2{font-size:13px;letter-spacing:.14em;margin:20px 0 10px}
+#simulation-cloud label{display:flex;align-items:center;gap:12px;color:#a9d9b7;font-size:10px;letter-spacing:.12em;margin:12px 0}
+#simulation-cloud .sim-row{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 5px;border-bottom:1px solid rgba(130,190,145,.15)}
+#simulation-cloud .sim-row span{min-width:110px}
+#simulation-cloud .sim-row i{display:block;flex:1;height:7px;border-radius:8px;background:#183c28;overflow:hidden}
+#simulation-cloud .sim-row i b{display:block;height:100%;background:#65df87;border-radius:8px}
+#simulation-cloud .sim-row strong{min-width:100px;text-align:right}
+#simulation-cloud .sim-tabs{display:flex;gap:7px;flex-wrap:wrap}
+#simulation-cloud .sim-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 5px;border-bottom:1px solid rgba(130,190,145,.15)}
+#simulation-cloud .sim-item span{flex:1}
+#simulation-cloud .sim-item small{display:block;color:#8aaf96;margin-top:4px}
+#simulation-cloud .sim-item button{font-size:10px}
+#simulation-cloud .sim-event{padding:12px;margin:9px 0;border-left:2px solid #68d98a;background:rgba(35,90,53,.18)}
+#simulation-cloud .sim-event p{margin:7px 0}
+#simulation-cloud .sim-event small{color:#91b99c}
