@@ -118,3 +118,9 @@ export function createSolarSystem(parent) {
   parent.traverse(object => { object.userData.noPhysics = true; });
   return { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars, alienSystems };
 }
+
+export class SolarSystem {
+  constructor(...args) {
+    Object.assign(this, createSolarSystem(...args));
+  }
+}
