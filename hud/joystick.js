@@ -21,6 +21,7 @@ export function createJoystick() {
   const base = element.firstElementChild;
   const knob = base.querySelector("#joystick-knob");
   const labelElements = [...base.querySelectorAll(".team-label")];
+  let vehicleMode = false;
   const input = {
     active: false, pointerId: null, x: 0, y: 0, mode: "move",
     selection: null, liftY: 0, jumpRequested: false,
@@ -160,12 +161,14 @@ export function createJoystick() {
     setVisible(visible) {
       element.style.display = visible ? "block" : "none";
       buttons.style.display = visible ? "flex" : "none";
-      if (!visible) { reset(); resetLift(); liftElement.style.display = "none"; }
+      liftElement.style.display = visible && vehicleMode ? "block" : "none";
+      if (!visible) { reset(); resetLift(); }
     },
     setMode(mode) { applyMode(mode); },
     setVehicleMode(active) {
-      liftElement.style.display = active && element.style.display !== "none" ? "block" : "none";
-      if (!active) resetLift();
+      vehicleMode = Boolean(active);
+      liftElement.style.display = vehicleMode && element.style.display !== "none" ? "block" : "none";
+      if (!vehicleMode) resetLift();
     },
     setTeamOptions(selected, members = TEAM_MEMBERS) {
       const available = members.filter(name => name !== selected);
