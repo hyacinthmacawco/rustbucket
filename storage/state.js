@@ -18,24 +18,9 @@ import { createPhysics } from "../physics/engine.js";
 import { createPhaseTwo, createChromastone } from "../omniverse/phase2.js";
 import { createPhaseTwoCloud } from "../hud/phase2-cloud.js";
 
-export const dimensions = {
-  ben: { position: [-3, -0.5, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, -0.5, -7], scale: [0.5, 0.5, 0.5] },
-  kevin: { position: [0, -0.5, -9], scale: [0.52, 0.52, 0.52] },
-  rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
-  rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
-  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
-  earthInterior: { position: [0, 0, 0], scale: [1, 1, 1] },
-  bellwood: { scale: [1, 1, 1] },
-  earth: { position: [4.5, 0, 0], radius: 2.05 },
-  moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
-  sun: { position: [-50, 0, 0], radius: 30 },
-  camera: {
-    title: { position: [-22.75, 6, 90], target: [-22.75, 0, 0], fov: 55, near: 0.1, far: 1000, distance: 90, minDistance: 45, maxDistance: 140, yaw: 0, pitch: 0.13 },
-    gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 250, distance: 18.5, minDistance: 8, maxDistance: 45, yaw: 0, pitch: 0.18 },
-    dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
-  }
-};
+import { dimensions } from "./dimensions.js";
+export { dimensions };
+
 export const state = { stage: "title", currentScene: "space", arrivingInShip: false };
 
 
@@ -515,36 +500,60 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     let titleObjects = null;
 
 
-    function disposeRegion() {
-      if (keyboardController) {
-        keyboardController.destroy();
-        keyboardController = null;
-      }
-      ben = null;
-      if (physics) { physics.dispose(); physics = null; }
-      entities = null;
-      if (!regionGroup) return;
-      scene.remove(regionGroup);
-      regionGroup.traverse(object => {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          for (const material of materials) {
-            for (const value of Object.values(material)) {
-              if (value?.isTexture) value.dispose();
-            }
-            material.dispose();
+    function disposeObjectTree(root) {
+      if (!root) return;
+      root.traverse(object => {
+        object.geometry?.dispose();
+        if (!object.material) return;
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of materials) {
+          for (const value of Object.values(material)) {
+            if (value?.isTexture) value.dispose();
           }
+          material.dispose();
         }
       });
+    }
+
+    function disposeRegion() {
+      keyboardController?.destroy();
+      keyboardController = null;
+      ben = null;
+      physics?.dispose();
+      physics = null;
+      entities = null;
+      if (regionGroup) {
+        scene.remove(regionGroup);
+        disposeObjectTree(regionGroup);
+      }
       regionGroup = null;
       titleObjects = null;
-
     }
+
+    const sceneLoadError = document.createElement("section");
+    sceneLoadError.id = "scene-load-error";
+    sceneLoadError.setAttribute("role", "alert");
+    sceneLoadError.style.cssText = "display:none;position:fixed;z-index:10000;inset:0;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.88);color:#eaffef;font:14px/1.5 monospace;text-align:center";
+    const sceneLoadErrorCard = document.createElement("div");
+    sceneLoadErrorCard.style.cssText = "max-width:420px;padding:24px;border:1px solid #65d889;background:#07150d";
+    const sceneLoadErrorTitle = document.createElement("h2");
+    sceneLoadErrorTitle.textContent = "SCENE COULD NOT LOAD";
+    const sceneLoadErrorMessage = document.createElement("p");
+    const sceneLoadRetry = document.createElement("button");
+    sceneLoadRetry.type = "button";
+    sceneLoadRetry.textContent = "RETRY";
+    sceneLoadRetry.style.cssText = "margin-top:12px;padding:10px 24px;border:1px solid #65d889;background:#102b1b;color:#eaffef;font:inherit";
+    sceneLoadErrorCard.append(sceneLoadErrorTitle, sceneLoadErrorMessage, sceneLoadRetry);
+    sceneLoadError.appendChild(sceneLoadErrorCard);
+    document.body.appendChild(sceneLoadError);
+    let failedRegion = null;
+    sceneLoadRetry.addEventListener("click", () => {
+      if (failedRegion) loadRegion(failedRegion);
+    });
 
     async function loadRegion(name) {
       if (loadingRegion === name || loadedRegion === name) return;
-      loadingRegion = name; disposeRegion();
+      loadingRegion = name;\n      sceneLoadError.style.display = "none";\n      failedRegion = null;\n      disposeRegion();
       if (!name) { loadedRegion = null; loadingRegion = null; return; }
       const group = new THREE.Group();
       group.name = name === "space" ? "SolarSystemScene" : name === "moon" ? "MoonScene" : "EarthScene";
@@ -732,9 +741,27 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           return;
         }
         regionGroup=group;scene.add(regionGroup);loadedRegion=name;
-      } catch(error) {
-        console.error("Could not load scene:",name,error);loadedRegion=null;
-      } finally { loadingRegion=null; }
+      } catch (error) {
+        console.error("Could not load scene:", name, error);
+        loadedRegion = null;
+        keyboardController?.destroy();
+        keyboardController = null;
+        physics?.dispose();
+        physics = null;
+        entities = null;
+        ben = null;
+        scene.remove(group);
+        disposeObjectTree(group);
+        if (regionGroup === group) regionGroup = null;
+        titleObjects = null;
+        failedRegion = name;
+        sceneLoadErrorMessage.textContent = error?.message
+          ? "The " + name + " scene failed: " + error.message
+          : "The " + name + " scene failed to initialize. Check the browser console for details.";
+        sceneLoadError.style.display = "flex";
+      } finally {
+        loadingRegion = null;
+      }
     }
     loadRegion("space");
 
@@ -880,7 +907,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       document.removeEventListener("touchend", requestFullscreenOnGesture);
       document.removeEventListener("keydown", requestFullscreenOnGesture);
       document.removeEventListener("keydown", pauseKey);
-      pauseButton.remove();
+      sceneLoadError.remove();\n      pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
       liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
