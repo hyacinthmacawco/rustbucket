@@ -586,6 +586,50 @@ class RustbucketGame {
       ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
       return ship;
     }
+    function spawnPatrols(parent, systemKey) {
+      const systems = {
+        solar: {species:'Human',planet:'earth',center:new THREE.Vector3(0,0,0)},
+        augstaka: {species:'Highbreed',planet:'augstaka',center:new THREE.Vector3(97300,0,0)},
+        anodyne: {species:'Anodite',planet:'anodyne',center:new THREE.Vector3(92300,0,0)},
+        galvan: {species:'Galvan',planet:'galvan',center:new THREE.Vector3(91300,0,0)},
+        incursia: {species:'Incursean',planet:'incursia',center:new THREE.Vector3(93300,0,0)}
+      };
+      const config = systems[systemKey];
+      if (!config) return;
+      alienPatrols = [];
+      for (let index=0; index<3; index++) alienPatrols.push(new AlienShip(parent,config.species,config.planet,config.center,index));
+    }
+
+    const combatWorldPosition = new THREE.Vector3();
+    function updatePatrolCombat(delta) {
+      const ship = entities?.rustbucket;
+      if (!ship || !alienPatrols.length || state.currentScene !== 'space') return;
+      ship.updateMatrixWorld(true);
+      for (const patrol of [...alienPatrols]) {
+        const hostile = simulation.crew.some(member => simulation.isHostile(patrol.species,member));
+        patrol.update(delta,ship,hostile,() => {
+          simulation.damage('Rustbucket',5);
+          simulation.recordEvent('attack',patrol.species + ' patrol fired on Rustbucket.',{attacker:patrol.species,target:'Rustbucket',damage:5});
+        });
+        if (!patrol.destroyed) {
+          for (const laser of [...(ship.userData.getLasers?.() || [])]) {
+            laser.mesh.getWorldPosition(combatWorldPosition);
+            if (patrol.group.position.distanceTo(combatWorldPosition) < 55) {
+              patrol.takeDamage(5);
+              ship.userData.removeLaser?.(laser);
+              if (patrol.destroyed) simulation.recordEvent('combat',patrol.species + ' patrol fighter was destroyed.',{species:patrol.species});
+              break;
+            }
+          }
+        }
+      }
+      alienPatrols = alienPatrols.filter(patrol => {
+        if (!patrol.destroyed) return true;
+        patrol.dispose();
+        return false;
+      });
+    }
+
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
