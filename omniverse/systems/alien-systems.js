@@ -4,7 +4,7 @@ import { createStarfieldTexture } from "./starfield.js";
 // Stylised Ben 10 planetary systems. Planet colours and silhouettes are
 // procedural so these models do not depend on remote image assets.
 const TAU = Math.PI * 2;
-const SHIP_LENGTH = 21;
+const SHIP_LENGTH = 26;
 const STAR_RADIUS = SHIP_LENGTH * 500;
 const PLANET_RADIUS = SHIP_LENGTH * 50;
 const scaledSeparation = (distance, oldStarRadius, oldPlanetRadius) => STAR_RADIUS + PLANET_RADIUS + Math.max(0, distance - oldStarRadius - oldPlanetRadius) * 100;
