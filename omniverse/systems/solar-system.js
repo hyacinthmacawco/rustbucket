@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { dimensions } from "../../storage/dimensions.js";
 import { AugstakaSystem } from "./augstaka.js";
 import { AnodyneSystem } from "./anodyne.js";
 import { GalvanSystem } from "./galvan.js";
@@ -49,8 +48,10 @@ function createStarfield(parent) {
   return { stars };
 }
 
-export function createSolarSystem(parent) {
-  parent.name = "SolarSystem";
+export class SolarSystem {
+  constructor(parent) {
+    const dimensions = { sun: { position: [-50, 0, 0], radius: 30 }, earth: { position: [4.5, 0, 0], radius: 2.05 }, moon: { position: [6.8, 0.2, -1.5], radius: 0.35 } };
+    parent.name = "SolarSystem";
   parent.add(new THREE.AmbientLight(0x52617f, 0.45));
 
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -116,11 +117,6 @@ export function createSolarSystem(parent) {
   ];
   const { stars } = createStarfield(parent);
   parent.traverse(object => { object.userData.noPhysics = true; });
-  return { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars, alienSystems };
-}
-
-export class SolarSystem {
-  constructor(...args) {
-    Object.assign(this, createSolarSystem(...args));
+  Object.assign(this, { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars, alienSystems });
   }
 }
