@@ -873,3 +873,61 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 #warp-overlay.atmospheric #warp-flash{inset:-15%;filter:blur(18px);background:radial-gradient(ellipse at 45% 55%,rgba(255,255,255,.98) 0 12%,rgba(235,255,250,.78) 35%,rgba(210,245,235,.08) 72%);transform:none;animation:planet-fog-in 1.25s ease-in-out both}
 #warp-overlay.atmospheric #warp-caption{color:#123c2a;text-shadow:0 0 20px #fff;animation:rustbucket-warp-caption 1.25s ease-in-out both}
 @keyframes planet-fog-in{0%{opacity:0;transform:scale(.55)}38%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1.8)}}
+
+
+/* Dedicated right-hand altitude stick for Rustbucket flight. */
+#lift-joystick {
+  display:none;
+  position:fixed;
+  z-index:100;
+  right:max(18px,env(safe-area-inset-right));
+  bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));
+  width:148px;
+  height:148px;
+  pointer-events:auto;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#lift-joystick-base {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid rgba(105,255,150,.78);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(105,255,150,.12) 0 38%,rgba(72,220,120,.2) 39% 100%);
+  box-shadow:0 0 22px rgba(60,255,125,.28),inset 0 0 18px rgba(60,255,125,.16);
+  backdrop-filter:blur(5px);
+  touch-action:none;
+}
+#lift-joystick-knob {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:58px;
+  height:58px;
+  margin:-29px 0 0 -29px;
+  border:1px solid rgba(190,255,210,.95);
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(185,255,205,.92),rgba(35,190,85,.82));
+  box-shadow:0 0 18px rgba(55,255,120,.45);
+  pointer-events:none;
+}
+#lift-up-label,#lift-down-label {
+  position:absolute;
+  left:50%;
+  color:#d9ffe4;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-shadow:0 1px 5px #001b09;
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+#lift-up-label { top:12px; }
+#lift-down-label { bottom:12px; }
+@media (hover:hover) and (pointer:fine) {
+  #lift-joystick { display:none!important; }
+}
