@@ -22,7 +22,7 @@ export const dimensions = {
   rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
   rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
   kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
-  bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
+  earthInterior: { position: [0, 0, 0], scale: [1, 1, 1] },
   earth: { position: [4.5, 0, 0], radius: 2.05 },
   moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
   sun: { position: [-50, 0, 0], radius: 30 },
@@ -200,7 +200,7 @@ export const state = { stage: "title", currentScene: "space" };
     rampButton.type = "button";
     rampButton.textContent = "OPEN RAMP";
     document.body.appendChild(rampButton);
-    rampButton.addEventListener("click", () => entities?.rustbucket?.userData.toggleRamp?.());
+    rampButton.addEventListener("click", () => { const ship = entities?.rustbucket; ship?.userData.toggleRamp?.(); rampButton.textContent = ship?.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; });
     const mapOverlay = document.createElement("div");
     mapOverlay.id = "system-map-overlay";
     mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">SOLAR SYSTEM</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button></div><div id="system-map-actions"><button data-destination="space">REMAIN IN ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
@@ -449,7 +449,7 @@ export const state = { stage: "title", currentScene: "space" };
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
-              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),getLift:()=>Number(liftInput.value),
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
               onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
             });
