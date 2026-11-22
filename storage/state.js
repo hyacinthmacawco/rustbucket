@@ -1157,7 +1157,7 @@ class RustbucketGame {
     }
     loadRegion("space");
 
-    function updateStage() {
+    const updateStage = () => {
       if (activeStage === state.stage) return;
       activeStage = state.stage;
 
@@ -1196,12 +1196,12 @@ class RustbucketGame {
         
         stopMusic();
       }
-    }
+    };
 
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const PLANET_ORBITS={augstaka:new THREE.Vector3(174,12,-115),anodyne:new THREE.Vector3(-148,18,-125),galvan:new THREE.Vector3(191,8,145),incursia:new THREE.Vector3(-168,-8,150)};
     let planetEntryCooldown=0;
-    async function enterNearbyPlanet(){
+    const enterNearbyPlanet = async () => {
       if(state.currentScene!=="space"||loadedRegion!=="space"||!entities?.rustbucket||planetEntryCooldown>0)return;
       const ship=entities.rustbucket;
       for(const [key,center] of Object.entries(PLANET_ORBITS)){
@@ -1215,7 +1215,7 @@ class RustbucketGame {
           return;
         }
       }
-    }
+    };
     const clock = new THREE.Clock();
     let animationFrame = 0;
 
