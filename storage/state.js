@@ -601,6 +601,7 @@ export const state = { stage: "title", currentScene: "space" };
         setCameraPreset(dimensions.camera.title);
         playMusic("./hud/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
+        state.currentScene = "earth";
         titleScreen.setVisible(false);
         joystick.setVisible(false);
         setCameraPreset(dimensions.camera.gameplay);
