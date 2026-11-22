@@ -499,7 +499,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = createSolarSystem(group);
           if (state.stage === "gameplay") {
-            const { ship } = createRustbucket(group); configureShip(ship);
+            const { ship } = createRustbucket(group); configureShip(ship); configureShip(ship);
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
