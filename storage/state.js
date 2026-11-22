@@ -1114,7 +1114,7 @@ class RustbucketGame {
           if (state.stage === "gameplay") {
             spawnPatrols(group,systemKey);
             const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
-            ship.position.set(-20,12,0);
+            ship.position.set(15000,12,0);
             const nextPhysics = await PhysicsEngine.create();
             if (requestId !== regionLoadId) { nextPhysics.dispose(); disposeObjectTree(group); return; }
             physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
@@ -1453,7 +1453,7 @@ class RustbucketGame {
       }
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
-      if (!state.paused && state.stage === "gameplay") updatePatrolCombat(delta);
+      if (!state.paused && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") updatePatrolCombat(delta);
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
