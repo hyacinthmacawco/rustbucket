@@ -143,7 +143,7 @@ export class AlienSystems {
     const distance = scaledSeparation(17, 4.5, 4.7);
     const { planet } = makeWorld(group, "Anodyne", 4.7, ["#70252d", "#45131e", "#210d19"], "bands", { atmosphere: 0x9c3440 });
     planet.position.set(distance, 0, 0);
-    for (const [radius, tube, opacity] of [[720*(PLANET_RADIUS/4.7),.24*(PLANET_RADIUS/4.7),.85],[840*(PLANET_RADIUS/4.7),.16*(PLANET_RADIUS/4.7),.65]]) {
+    for (const [radius, tube, opacity] of [[7.2*(PLANET_RADIUS/4.7),.24*(PLANET_RADIUS/4.7),.85],[8.4*(PLANET_RADIUS/4.7),.16*(PLANET_RADIUS/4.7),.65]]) {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 160), new THREE.MeshBasicMaterial({ color: 0xe97835, transparent: true, opacity, side: THREE.DoubleSide }));
       ring.position.copy(planet.position); ring.rotation.set(1.18, .18, .16); group.add(ring);
     }
@@ -178,10 +178,11 @@ export class AlienSystems {
     // Radial fractures and detached crust fragments make the destruction
     // readable at a distance without turning the whole planet into noise.
     const shardMaterial = new THREE.MeshStandardMaterial({ color: 0xd78b75, roughness: .95 });
+    const shardScale = PLANET_RADIUS / 4.3;
     for (let i = 0; i < 13; i++) {
-      const a = i * TAU / 13, r = (4.5 + (i % 3) * .65) * 100;
-      const shard = new THREE.Mesh(new THREE.DodecahedronGeometry((.55 + (i % 4) * .16) * 100, 0), shardMaterial);
-      shard.position.set(Math.cos(a) * r, Math.sin(a * 1.7) * 150, Math.sin(a) * r);
+      const a = i * TAU / 13, r = (4.5 + (i % 3) * .65) * shardScale;
+      const shard = new THREE.Mesh(new THREE.DodecahedronGeometry((.55 + (i % 4) * .16) * shardScale, 0), shardMaterial);
+      shard.position.set(Math.cos(a) * r, Math.sin(a * 1.7) * 1.5 * shardScale, Math.sin(a) * r);
       shard.rotation.set(a, a * .7, a * .3); shell.add(shard);
     }
     planet.scale.setScalar(.82);
