@@ -317,6 +317,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     async function warpTo(destination) {
       mapOverlay.style.display = "none";
       if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
+      const atmosphericTransition=Boolean(PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
+      warpOverlay.classList.toggle("atmospheric",atmosphericTransition);
       warpOverlay.style.display = "flex";
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
@@ -328,7 +330,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
       } else await loadRegion(destination);
       setCameraPreset(dimensions.camera.gameplay);
-      warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
+      warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination);
       marketPanel.style.display="none";
     }
@@ -786,10 +788,10 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         if(ship.position.distanceTo(center)<13){
           state.spaceReturnPosition=center.clone().add(new THREE.Vector3(0,15,0));
           planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
-          warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
+          warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
           await new Promise(resolve=>window.setTimeout(resolve,1250));
           state.currentScene=key;await loadRegion(key);setCameraPreset(dimensions.camera.gameplay);
-          extranet.setLocation(key);warpOverlay.classList.remove("warp-active");warpOverlay.style.display="none";
+          extranet.setLocation(key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
           return;
         }
       }
