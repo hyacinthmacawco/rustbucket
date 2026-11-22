@@ -832,7 +832,7 @@ class RustbucketGame {
           entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
         }
       } else await loadRegion(destination);
-      if (destination !== "space") passengerTransport.complete(destination,entities?.rustbucket);
+      if (destination !== "space" && loadedRegion === destination) passengerTransport.complete(destination,entities?.rustbucket);
       setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : destination);
@@ -1396,7 +1396,7 @@ class RustbucketGame {
         warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
         await new Promise(resolve=>window.setTimeout(resolve,1250));
         state.currentScene=nearestPlanet.key;await loadRegion(nearestPlanet.key);setCameraPreset(cameraConfig.gameplay);
-        passengerTransport.complete(nearestPlanet.key,entities?.rustbucket);
+        if (loadedRegion === nearestPlanet.key) passengerTransport.complete(nearestPlanet.key,entities?.rustbucket);
         extranet.setLocation(nearestPlanet.key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
         planetTransitionBusy=false;
       }
