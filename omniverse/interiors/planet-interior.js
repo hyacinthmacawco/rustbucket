@@ -53,7 +53,7 @@ export class PlanetInterior {
     lamp.position.set(i%2?5:-5,1,-i*5);root.add(lamp);
   }
   const population = new PlanetPopulation(root, key);
-  Object.assign(this, {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world,inhabitants:population.inhabitants});
+  Object.assign(this, {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world,inhabitants:population.inhabitants,population});
   }
 }
 
