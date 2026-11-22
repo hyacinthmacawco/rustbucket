@@ -42,8 +42,11 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
       <button data-page="event-log">◷ <span><b>Event Log</b></span> ›</button></div>`;
     page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => {
       const views = { accounts: "accounting", inventory: "items", "event-log": "events" };
-      if (views[b.dataset.page]) onData(page, views[b.dataset.page]);
-      else ({tasks,relationships:showRelationships,memories}[b.dataset.page])();
+      if (views[b.dataset.page]) {
+        current = b.dataset.page;
+        address.value = "ottps://bgkr.omnicloud.com/" + b.dataset.page;
+        onData(page, views[b.dataset.page]);
+      } else ({tasks,relationships:showRelationships,memories}[b.dataset.page])();
     }));
   }
   function tasks() {
@@ -86,7 +89,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     };
     page.innerHTML = `<div id="omnidata-layout">
         <div id="omnidata-map-wrap">
-          <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Connected map of five Ben 10 star systems">
+          <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Omnidata directory of five separate Ben 10 star systems">
             <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
             <rect width="900" height="520" rx="14" fill="#06140e"/>
             <ellipse cx="455" cy="255" rx="420" ry="245" fill="url(#omni-nebula)"/>
