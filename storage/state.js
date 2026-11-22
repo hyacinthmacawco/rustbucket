@@ -832,6 +832,7 @@ class RustbucketGame {
           entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
         }
       } else await loadRegion(destination);
+      if (destination !== "space") passengerTransport.complete(destination,entities?.rustbucket);
       setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : destination);
