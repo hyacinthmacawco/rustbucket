@@ -1,14 +1,18 @@
 import * as THREE from "three";
 
+const TEAM_MEMBERS = ["ben", "gwen", "kevin", "rook", "rustbucket"];
+const TEAM_LABELS = { ben: "B", gwen: "G", kevin: "K", rook: "R", rustbucket: "T" };
+
 export function createJoystick() {
   const element = document.createElement("div");
   element.id = "movement-joystick";
   element.setAttribute("aria-label", "Movement and team selector");
-  element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben">B</span><span class="team-label team-gwen">G</span><span class="team-label team-kevin">K</span><span class="team-label team-rook">R</span><span class="team-label team-rustbucket">T</span></div><div id="joystick-knob"></div></div>';
+  element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben"></span><span class="team-label team-gwen"></span><span class="team-label team-kevin"></span><span class="team-label team-rook"></span></div><div id="joystick-knob"></div></div>';
   document.body.appendChild(element);
 
   const base = element.firstElementChild;
   const knob = base.querySelector("#joystick-knob");
+  const labelElements = [...base.querySelectorAll(".team-label")];
   const input = {
     active: false, pointerId: null, x: 0, y: 0, mode: "move",
     selection: null, jumpRequested: false,
@@ -40,11 +44,10 @@ export function createJoystick() {
   attack.addEventListener("lostpointercapture", () => { input.attackHeld = false; });
 
   let lastCenterTap = 0;
-  let centerSelectionTimer = 0;
   function applyMode(mode) {
     input.mode = mode;
     element.classList.toggle("team-mode", mode === "switch");
-    knob.textContent = mode === "switch" ? "T" : "";
+    knob.textContent = mode === "switch" ? "↔" : "";
   }
   function reset() {
     input.active = false;
@@ -85,23 +88,15 @@ export function createJoystick() {
     if (centered) {
       const now = performance.now();
       if (lastCenterTap && now - lastCenterTap <= 420) {
-        clearTimeout(centerSelectionTimer);
-        centerSelectionTimer = 0;
         lastCenterTap = 0;
         applyMode(input.mode === "switch" ? "move" : "switch");
       } else {
         lastCenterTap = now;
-        if (input.mode === "switch") {
-          centerSelectionTimer = window.setTimeout(() => {
-            input.selection = { x: 0, y: 0 };
-            centerSelectionTimer = 0;
-            lastCenterTap = 0;
-          }, 420);
-        }
+        window.setTimeout(() => {
+          if (lastCenterTap === now) lastCenterTap = 0;
+        }, 420);
       }
     } else if (input.mode === "switch") {
-      clearTimeout(centerSelectionTimer);
-      centerSelectionTimer = 0;
       lastCenterTap = 0;
       input.selection = { x: input.x, y: input.y };
     }
@@ -120,11 +115,15 @@ export function createJoystick() {
       buttons.style.display = visible ? "flex" : "none";
       if (!visible) reset();
     },
-    setMode(mode) {
-      applyMode(mode);
+    setMode(mode) { applyMode(mode); },
+    setTeamOptions(selected) {
+      const available = TEAM_MEMBERS.filter(name => name !== selected);
+      labelElements.forEach((label, index) => {
+        label.textContent = TEAM_LABELS[available[index]] || "";
+        label.setAttribute("aria-label", available[index] || "");
+      });
     },
     destroy() {
-      clearTimeout(centerSelectionTimer);
       base.removeEventListener("pointerdown", down);
       base.removeEventListener("pointermove", move);
       base.removeEventListener("pointerup", up);
@@ -138,15 +137,14 @@ export function createJoystick() {
 export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, getLift = () => 0 }) {
   const keys = new Set();
   let selected = "ben";
-  let switchMode = false;
   let lastAttackAt = 0;
+  joystick.setTeamOptions(selected);
 
   function keydown(event) {
     const key = event.key.toLowerCase();
     if (key === "f") {
       if (event.repeat) return;
-      switchMode = joystick.input.mode !== "switch";
-      joystick.setMode(switchMode ? "switch" : "move");
+      joystick.setMode(joystick.input.mode === "switch" ? "move" : "switch");
       keys.clear();
       event.preventDefault();
       return;
@@ -165,31 +163,37 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   window.addEventListener("blur", blur);
 
   function choose(x, y) {
-    if (Math.hypot(x, y) < 0.22) selected = "rustbucket";
-    else if (Math.abs(x) > Math.abs(y)) selected = x > 0 ? "gwen" : "rook";
-    else selected = y > 0 ? "ben" : "kevin";
+    const available = TEAM_MEMBERS.filter(name => name !== selected);
+    let index;
+    if (Math.abs(x) > Math.abs(y)) index = x > 0 ? 1 : 3;
+    else index = y > 0 ? 0 : 2;
+    const next = available[index];
+    if (!next) return;
+    selected = next;
+    joystick.setTeamOptions(selected);
     onSelect(selected);
     updateCamera();
   }
 
   function update(dt) {
     const joy = joystick.input;
-    switchMode = joy.mode === "switch";
     if (joy.selection) {
       choose(joy.selection.x, joy.selection.y);
       joy.selection = null;
     }
-    if (!isMobile && switchMode) {
-      const x = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
-      const y = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
-      if (x || y) { choose(x, y); keys.clear(); }
+    if (joystick.input.mode === "switch") {
+      if (!isMobile) {
+        const x = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
+        const y = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
+        if (x || y) { choose(x, y); keys.clear(); }
+      }
       return;
     }
 
     const object = entities[selected];
     if (!object) return;
-    const forward = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0) + (isMobile && !switchMode ? joy.y : 0);
-    const right = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + (isMobile && !switchMode ? joy.x : 0);
+    const forward = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0) + (isMobile ? joy.y : 0);
+    const right = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + (isMobile ? joy.x : 0);
     const magnitude = Math.hypot(forward, right);
     const direction = camera.getWorldDirection(new THREE.Vector3());
     const length = Math.hypot(direction.x, direction.z) || 1;
