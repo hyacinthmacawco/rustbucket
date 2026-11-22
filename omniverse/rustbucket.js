@@ -47,7 +47,7 @@ export function createRustbucket(parent) {
   let rampOpen=false;
   function setRamp(open){
     rampOpen=Boolean(open);
-    rampPivot.rotation.x=rampOpen?-Math.PI/2:0;
+    rampPivot.rotation.x=rampOpen?Math.PI/2:0;
     rampPivot.position.z=rampOpen?-5.0:-5.0;
     ship.userData.rampOpen=rampOpen;
   }
