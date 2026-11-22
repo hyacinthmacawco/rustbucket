@@ -734,7 +734,7 @@ class RustbucketGame {
         entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
       }
       setCameraPreset(cameraConfig.gameplay);
-      extranet.setLocation("space");
+      extranet.setLocation(systemKey === "solar" ? "space" : systemKey);
       warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
     }
     async function warpTo(destination) {
@@ -751,7 +751,8 @@ class RustbucketGame {
       if(destinationOrbit)state.spaceReturnPosition=destinationOrbit.clone().add(new THREE.Vector3(0,15,0));
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
-        await loadRegion("space");
+        const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
+        await loadRegion(returnRegion);
         if(entities?.rustbucket){
           entities.rustbucket.position.copy(state.spaceReturnPosition);
           entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
@@ -1331,6 +1332,7 @@ class RustbucketGame {
       }
       setCameraPreset(cameraConfig.gameplay);extranet.setLocation("space");
       warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
+      extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       planetTransitionBusy=false;planetEntryCooldown=2;
     }
     const clock = new THREE.Clock();
