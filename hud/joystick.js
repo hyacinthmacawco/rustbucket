@@ -13,7 +13,7 @@ export function createJoystick() {
   const liftElement = document.createElement("div");
   liftElement.id = "lift-joystick";
   liftElement.setAttribute("aria-label", "Rustbucket altitude control");
-  liftElement.innerHTML = '<div id="lift-joystick-base"><div id="lift-joystick-knob"></div><span id="lift-up-label">UP</span><span id="lift-down-label">DOWN</span></div>';
+  liftElement.innerHTML = '<div id="lift-joystick-base"><div id="lift-joystick-knob"></div></div>';
   document.body.appendChild(liftElement);
 
   const liftBase = liftElement.firstElementChild;
