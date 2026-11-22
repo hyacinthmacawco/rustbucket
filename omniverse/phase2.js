@@ -138,6 +138,8 @@ export function createPhaseTwo() {
     const cost=stock.price*quantity;
     if(data.team.cash<cost)return {ok:false,reason:"Insufficient Taydenite."};
     stock.quantity-=quantity;data.team.cash-=cost;
+    data.revenue[speciesName]=(data.revenue[speciesName]||0)+cost;
+    data.treasury[speciesName]=(data.treasury[speciesName]||0)+cost;
     addItem({id:stock.id,name:stock.name,category:"Trade goods",value:stock.price},quantity);
     data.transactions.unshift({type:"purchase",from:speciesName,item:stock.name,quantity,cost,at:new Date().toISOString()});
     data.transactions=data.transactions.slice(0,100);save();
