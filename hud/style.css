@@ -1047,3 +1047,13 @@ button,input,select,textarea,#extranet-overlay,#extranet-window,#extranet-page,#
   .hep-meter{width:16px!important;height:38px!important}
   #extranet-button{right:10px!important;bottom:max(58px,calc(env(safe-area-inset-bottom) + 58px))!important}
 }
+
+
+/* Paired flight sticks: aligned baselines, no directional captions. */
+#lift-joystick{
+  bottom:max(22px,env(safe-area-inset-bottom))!important;
+  width:148px!important;height:148px!important;
+}
+#lift-up-label,#lift-down-label{display:none!important}
+.relationship-matrix td i{position:relative!important;height:3px!important;background:linear-gradient(90deg,transparent 49.5%,rgba(255,255,255,.38) 49.5%,rgba(255,255,255,.38) 50.5%,transparent 50.5%)!important}
+.relationship-matrix td i b{position:absolute!important;top:0!important;height:100%!important;display:block!important}
