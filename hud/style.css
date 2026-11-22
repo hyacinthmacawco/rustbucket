@@ -846,3 +846,8 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 #pause-content label{display:flex;justify-content:space-between;gap:14px;margin:12px 0}
 #pause-content input{max-width:150px;accent-color:#6ce68e}
 @media(max-width:520px){#hep-control{bottom:max(12px,env(safe-area-inset-bottom))}#omnitrix-control{bottom:max(104px,calc(env(safe-area-inset-bottom) + 104px))}#phase2-cloud-button{right:72px}}
+
+#carried-items-hud{display:none;position:fixed;z-index:124;left:max(18px,env(safe-area-inset-left));top:max(74px,calc(env(safe-area-inset-top) + 74px));align-items:center;gap:7px;padding:8px 9px;border:1px solid rgba(125,255,160,.45);border-radius:10px;background:rgba(2,20,9,.78);color:#dcffe5;font-size:9px;letter-spacing:.1em}
+#carried-items-hud select{max-width:125px;min-width:80px;background:#102e1c;color:#eaffef;border:1px solid #477b55;border-radius:6px;padding:6px;font-size:10px}
+#carried-items-hud button{background:#1b693b;color:#eaffef;border:1px solid #9bffb2;border-radius:6px;padding:6px 8px;font-size:9px}
+@media(max-width:520px){#carried-items-hud{top:auto;bottom:max(170px,calc(env(safe-area-inset-bottom) + 170px));left:12px;max-width:calc(100vw - 24px)}}
