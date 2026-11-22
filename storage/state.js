@@ -1368,7 +1368,7 @@ class RustbucketGame {
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
       if (state.stage === "gameplay") {
-        extranet.setLocation(state.currentScene);
+        extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
         if(PLANET_WORLDS[state.currentScene]&&entities?.rustbucket&&regionGroup?.userData.marketPosition){
           const near=entities.rustbucket.position.distanceTo(regionGroup.userData.marketPosition)<15;
           const marketButtonVisible=near&&marketPanel.style.display!=="flex";
