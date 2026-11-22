@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createAlienSystems } from "./alien-systems.js";
+import { AlienSystems } from "./alien-systems.js";
 
 export class GalvanSystem {
   constructor(parent) {
-    const result = createAlienSystems(parent, "galvan");
+    const result = new AlienSystems(parent, "galvan");
     this.root = result.root;
     this.group = result.systems[0];
     this.starfield = this.createStarfield();
