@@ -527,26 +527,19 @@ class RustbucketGame {
 
     const joystick = createJoystick();
     joystick.setVisible(false);
-    const pauseButton = document.createElement("button");
-    pauseButton.id = "pause-button";
-    pauseButton.type = "button";
-    pauseButton.setAttribute("aria-label", "Pause game");
-    pauseButton.textContent = "Ⅱ";
     const pauseOverlay = document.createElement("div");
     pauseOverlay.id = "pause-overlay";
     pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><nav id="pause-tabs"><button data-pause-tab="settings" class="active">SETTINGS</button><button data-pause-tab="help">HELP</button><button data-pause-tab="credits">CREDITS</button></nav><div id="pause-content"></div><button id="resume-button" type="button">RESUME</button></div>';
-    document.body.append(pauseButton, pauseOverlay);
+    document.body.append(pauseOverlay);
     function setPaused(value) {
       state.paused = Boolean(value);
       pauseOverlay.style.display = state.paused ? "flex" : "none";
-      pauseButton.textContent = state.paused ? "▶" : "Ⅱ";
-      pauseButton.setAttribute("aria-label", state.paused ? "Resume game" : "Pause game");
       if (musicTrack) {
         if (state.paused) musicTrack.pause();
         else if (audioUnlocked) musicTrack.play().catch(() => {});
       }
     }
-    pauseButton.addEventListener("click", () => setPaused(!state.paused));
+
     const pauseContent=pauseOverlay.querySelector("#pause-content");
     const pauseViews={
       settings:'<h3>SETTINGS</h3><label>CAMERA SENSITIVITY <input type="range" min="1" max="15" value="6"></label><label>MASTER VOLUME <input type="range" min="0" max="100" value="70"></label>',
@@ -613,10 +606,49 @@ class RustbucketGame {
       if(previous!==""&&list[Number(previous)])carriedSelect.value=previous;
       carriedHud.style.display=state.stage==="gameplay"&&selected!=="rustbucket"?"flex":"none";
     }
-    const omnitrixControl=document.createElement("label");omnitrixControl.id="omnitrix-control";
-    omnitrixControl.innerHTML='<span>OMNITRIX</span><input id="omnitrix-slider" type="range" min="0" max="1" step="1" value="0"><b id="omnitrix-alien-label">BEN</b>';
-    document.body.appendChild(omnitrixControl);
-    const omnitrixSlider=omnitrixControl.querySelector("input");
+    const abilityDial=document.createElement("div");
+    abilityDial.id="ability-dial";
+    abilityDial.innerHTML='<div id="ability-dial-title">OMNITRIX</div><div id="ability-dial-ring"><div id="ability-dial-indicator"></div><div id="ability-dial-center">BEN</div></div><div id="ability-dial-mode">HUMAN</div>';
+    document.body.appendChild(abilityDial);
+    const abilityDialRing=abilityDial.querySelector("#ability-dial-ring");
+    const abilityDialIndicator=abilityDial.querySelector("#ability-dial-indicator");
+    const abilityDialCenter=abilityDial.querySelector("#ability-dial-center");
+    const abilityDialMode=abilityDial.querySelector("#ability-dial-mode");
+    const abilityModes={ben:["HUMAN","CHROMASTONE"],kevin:["METAL","STONE","CRYSTAL","RUBBER"],gwen:["SHIELD","BOLT","HEAL","BIND"],rook:["GUN","SWORD"]};
+    const abilityState={ben:simulation.getChromastoneActive()?1:0,kevin:0,gwen:0,rook:0};
+    let abilityPointer=null;
+    function setAbilityMode(character,index){
+      const modes=abilityModes[character]||[];if(!modes.length)return;
+      const next=(index+modes.length)%modes.length;abilityState[character]=next;
+      const mode=modes[next];
+      abilityDial.querySelector("#ability-dial-title").textContent=({ben:"OMNITRIX",kevin:"MATERIAL",gwen:"SPELLBOOK",rook:"PROTO-TOOL"})[character];
+      abilityDialCenter.textContent=character==="ben"?(next?"CH":"B"):character[0].toUpperCase();
+      abilityDialMode.textContent=mode;
+      abilityDialIndicator.style.transform="rotate("+(next/modes.length*360)+"deg) translateY(-34px)";
+      if(character==="ben"){
+        simulation.setChromastoneActive(next===1);
+        const visual=entities?.ben?.userData.chromastoneVisual;
+        if(visual)visual.visible=next===1;
+        entities?.ben?.children?.forEach(child=>{if(child!==visual)child.visible=next===0;});
+        const pickButton=joystick.buttons.querySelector("#pick-button");if(pickButton)pickButton.textContent=next?"↯":"✋";
+      }
+      if(entities?.[character])entities[character].userData.toolMode=mode;
+    }
+    function updateAbilityDial(character){
+      const active=abilityModes[character];
+      abilityDial.style.display=state.stage==="gameplay"&&Boolean(active)?"flex":"none";
+      if(active)setAbilityMode(character,abilityState[character]||0);
+    }
+    function chooseAbilityFromPointer(event){
+      const rect=abilityDialRing.getBoundingClientRect();
+      const angle=(Math.atan2(event.clientX-(rect.left+rect.width/2),-(event.clientY-(rect.top+rect.height/2)))+Math.PI*2)%(Math.PI*2);
+      const character=keyboardController?.selected||"ben",modes=abilityModes[character]||[];
+      setAbilityMode(character,Math.round(angle/(Math.PI*2)*modes.length)%modes.length);
+    }
+    abilityDialRing.addEventListener("pointerdown",event=>{event.preventDefault();abilityPointer=event.pointerId;abilityDialRing.setPointerCapture(event.pointerId);chooseAbilityFromPointer(event);});
+    abilityDialRing.addEventListener("pointermove",event=>{if(event.pointerId===abilityPointer&&event.buttons)chooseAbilityFromPointer(event);});
+    abilityDialRing.addEventListener("pointerup",event=>{if(event.pointerId===abilityPointer)abilityPointer=null;});
+    abilityDialRing.addEventListener("pointercancel",()=>{abilityPointer=null;});
     const extranetButton = document.createElement("button");
     extranetButton.id = "extranet-button";
     extranetButton.type = "button";
@@ -1048,18 +1080,11 @@ class RustbucketGame {
           const chromastoneVisual=new ChromastoneTransformation().model;
           benCharacter.group.add(chromastoneVisual);
           chromastoneVisual.visible=simulation.getChromastoneActive();
-          omnitrixSlider.value=simulation.getChromastoneActive()?"1":"0";
+          benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
           if(simulation.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
           joystick.buttons.querySelector("#pick-button").textContent=simulation.getChromastoneActive()?"↯":"✋";
-          omnitrixControl.querySelector("b").textContent=simulation.getChromastoneActive()?"CHROMASTONE":"BEN";
-          omnitrixSlider.oninput=()=>{
-            const active=Number(omnitrixSlider.value)===1;
-            simulation.setChromastoneActive(active);
-            chromastoneVisual.visible=active;
-            benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=!active;});
-            joystick.buttons.querySelector("#pick-button").textContent=active?"↯":"✋";
-            omnitrixControl.querySelector("b").textContent=active?"CHROMASTONE":"BEN";
-          };
+          benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
+          setAbilityMode("ben",simulation.getChromastoneActive()?1:0);
           benCharacter.group.userData.performChromastoneAttack=()=>{
             if(!simulation.spendEnergy("Chromastone",8))return;
             const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
@@ -1206,21 +1231,40 @@ class RustbucketGame {
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const PLANET_ORBITS={augstaka:new THREE.Vector3(174,12,-115),anodyne:new THREE.Vector3(-148,18,-125),galvan:new THREE.Vector3(191,8,145),incursia:new THREE.Vector3(-168,-8,150)};
     let planetEntryCooldown=0;
+    let planetTransitionBusy=false;
     const enterNearbyPlanet = async () => {
-      if(state.currentScene!=="space"||loadedRegion!=="space"||!entities?.rustbucket||planetEntryCooldown>0)return;
+      if(planetTransitionBusy||state.currentScene!=="space"||loadedRegion!=="space"||!entities?.rustbucket||planetEntryCooldown>0)return;
       const ship=entities.rustbucket;
       for(const [key,center] of Object.entries(PLANET_ORBITS)){
-        if(ship.position.distanceTo(center)<13){
+        const horizontalDistance=Math.hypot(ship.position.x-center.x,ship.position.z-center.z);
+        if(horizontalDistance<13 && ship.position.y<center.y+2){
+          planetTransitionBusy=true;
           state.spaceReturnPosition=center.clone().add(new THREE.Vector3(0,15,0));
           planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
           warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
           await new Promise(resolve=>window.setTimeout(resolve,1250));
           state.currentScene=key;await loadRegion(key);setCameraPreset(cameraConfig.gameplay);
           extranet.setLocation(key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
+          planetTransitionBusy=false;
           return;
         }
       }
     };
+    async function leavePlanetInterior(){
+      if(planetTransitionBusy||!PLANET_WORLDS[state.currentScene]||!entities?.rustbucket)return;
+      const planet=state.currentScene,orbit=PLANET_ORBITS[planet];if(!orbit)return;
+      planetTransitionBusy=true;
+      warpOverlay.querySelector("#warp-caption").textContent="CLEARING ATMOSPHERE";
+      warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";
+      warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
+      await new Promise(resolve=>window.setTimeout(resolve,1250));
+      state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,15,0));
+      state.currentScene="space";await loadRegion("space");
+      if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
+      setCameraPreset(cameraConfig.gameplay);extranet.setLocation("space");
+      warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
+      planetTransitionBusy=false;planetEntryCooldown=2;
+    }
     const clock = new THREE.Clock();
     let animationFrame = 0;
 
@@ -1231,12 +1275,11 @@ class RustbucketGame {
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
-      pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       simulationButton.style.display=state.stage==="gameplay"?"grid":"none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
-      omnitrixControl.style.display=state.stage==="gameplay"&&keyboardController?.selected==="ben"?"flex":"none";
+      updateAbilityDial(keyboardController?.selected||"ben");
       if (state.stage !== "gameplay") { rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
@@ -1248,6 +1291,7 @@ class RustbucketGame {
         keyboardController.update(delta);
       }
       if (!state.paused && state.stage==="gameplay"&&state.currentScene==="space") enterNearbyPlanet();
+      if (!state.paused && state.stage==="gameplay" && PLANET_WORLDS[state.currentScene] && entities?.rustbucket && !planetTransitionBusy && entities.rustbucket.position.y > 30) leavePlanetInterior();
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
@@ -1263,7 +1307,7 @@ class RustbucketGame {
         const status=simulation.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&simulation.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
         hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
-        omnitrixControl.style.display=selectedName==="ben"?"flex":"none";
+        updateAbilityDial(selectedName);
         refreshCarriedHud();
       }
 
@@ -1305,7 +1349,6 @@ class RustbucketGame {
       document.removeEventListener("keydown", requestFullscreenOnGesture);
       document.removeEventListener("keydown", pauseKey);
       sceneLoadError.remove();
-      pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
       rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
