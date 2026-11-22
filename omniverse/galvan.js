@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, capsule, part, finishModel } from "./model-utils.js";
 
-export function createGalvan(parent = null, options = {}) {
+export class Galvan {
+  constructor(parent = null, options = {}) {
   const g = new THREE.Group();
   const skin=toon(0x8d9b8c), light=toon(0xb8c5ae), dark=toon(0x202b25);
   const green=toon(0x20d51d), suit=toon(0x087d2b), trim=toon(0x101b18);
@@ -28,5 +29,7 @@ export function createGalvan(parent = null, options = {}) {
   // Small black-and-green chest panel evokes the Galvan tech uniform.
   box(g,dark,[.26,.23,.04],[0,1.43,.155]);
   box(g,green,[.12,.12,.025],[0,1.43,.185]);
-  return finishModel(g,"Galvan",parent,options.scale ?? 1);
+  this.group = finishModel(g,"Galvan",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
