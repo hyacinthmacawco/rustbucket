@@ -55,8 +55,11 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     const header = "<thead><tr><th>FROM / TO</th>" + relationshipNames.map(name => "<th>" + name + "</th>").join("") + "</tr></thead>";
     const body = relationshipNames.map(from => {
       const cells = relationshipNames.map(to => {
-        const value = from === to ? 0 : (simulation?.getRelationship(from, to) ?? 50);
-        return "<td class=\"" + (from === to ? "self" : "") + "\"><span>" + Number(value).toFixed(0) + "%</span><i><b style=\"width:" + value + "%\"></b></i></td>";
+        const value = from === to ? 0 : (simulation?.getRelationship(from, to) ?? 0);
+        const fillLeft = value >= 0 ? 50 : 50 + value / 2;
+        const fillWidth = Math.abs(value) / 2;
+        const fillColor = value < 0 ? "#ff8178" : "#80ffa6";
+        return "<td class=\"" + (from === to ? "self" : "") + "\"><span>" + Number(value).toFixed(0) + "%</span><i><b style=\"left:" + fillLeft + "%;width:" + fillWidth + "%;background:" + fillColor + "\"></b></i></td>";
       }).join("");
       return "<tr><th>" + from + "</th>" + cells + "</tr>";
     }).join("");
