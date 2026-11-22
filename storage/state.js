@@ -367,7 +367,7 @@ function createSimulationSystem() {
 
 class PhysicsEngine {
   static async create() {
-    return createPhysics();
+    return Object.assign(new PhysicsEngine(), await createPhysics());
   }
 }
 
