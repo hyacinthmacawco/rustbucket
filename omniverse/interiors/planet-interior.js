@@ -51,7 +51,7 @@ export class PlanetInterior {
     const lamp=new THREE.Mesh(new THREE.SphereGeometry(.35,12,8),new THREE.MeshBasicMaterial({color:world.accent}));
     lamp.position.set(i%2?5:-5,1,-i*5);root.add(lamp);
   }
-  return {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world};
+  Object.assign(this, {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world});
 }
 
 export const PLANET_WORLDS=WORLDS;
