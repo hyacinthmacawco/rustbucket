@@ -553,7 +553,10 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 
     async function loadRegion(name) {
       if (loadingRegion === name || loadedRegion === name) return;
-      loadingRegion = name;\n      sceneLoadError.style.display = "none";\n      failedRegion = null;\n      disposeRegion();
+      loadingRegion = name;
+      sceneLoadError.style.display = "none";
+      failedRegion = null;
+      disposeRegion();
       if (!name) { loadedRegion = null; loadingRegion = null; return; }
       const group = new THREE.Group();
       group.name = name === "space" ? "SolarSystemScene" : name === "moon" ? "MoonScene" : "EarthScene";
@@ -907,7 +910,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       document.removeEventListener("touchend", requestFullscreenOnGesture);
       document.removeEventListener("keydown", requestFullscreenOnGesture);
       document.removeEventListener("keydown", pauseKey);
-      sceneLoadError.remove();\n      pauseButton.remove();
+      sceneLoadError.remove();
+      pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
       liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
