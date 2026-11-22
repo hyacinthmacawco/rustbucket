@@ -1,11 +1,11 @@
 import * as THREE from "three";
 
 export class Rook {
-  constructor({ createHumanRig }) {
+  constructor({ HumanRig }) {
     this.startPosition = [7,-0.5,-7];
     this.startScale = [0.52,0.52,0.52];
-  if (typeof createHumanRig !== "function") throw new TypeError("createRook requires createHumanRig.");
-  const rig = createHumanRig({ boneRadius: 0.05, jointRadius: 0.07 });
+  if (typeof HumanRig !== "function") throw new TypeError("createRook requires createHumanRig.");
+  const rig = new HumanRig({ boneRadius: 0.05, jointRadius: 0.07 });
   const { group, joints } = rig;
   group.name = "RookBlonko";
   group.traverse(o => { if (o.isMesh) o.visible = false; });
