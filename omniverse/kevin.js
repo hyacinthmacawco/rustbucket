@@ -4,7 +4,7 @@ export class Kevin {
   constructor({ HumanRig }) {
     this.startPosition = [0,-0.5,-9];
     this.startScale = [0.52,0.52,0.52];
-  if (typeof HumanRig !== "function") throw new TypeError("createKevin requires createHumanRig.");
+  if (typeof HumanRig !== "function") throw new TypeError(" Kevin requires the HumanRig class.");
   const rig = new HumanRig();
   const { group, joints } = rig;
   group.name = "KevinLevin";
