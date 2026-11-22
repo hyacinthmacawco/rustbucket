@@ -12,3 +12,8 @@ export function createMoonInterior(parent) {
   }
   return {ground};
 }
+export class MoonInterior {
+  constructor(...args) {
+    Object.assign(this, createMoonInterior(...args));
+  }
+}
