@@ -55,6 +55,7 @@ export function createPhaseTwo() {
   const data = loadData();
   const healthEnergy = {
     Ben:{health:100,energy:100,energyLabel:"OMNITRIX"},
+    Chromastone:{health:100,energy:100,energyLabel:"CHROMASTONE"},
     Gwen:{health:100,energy:100,energyLabel:"MANA"},
     Kevin:{health:100,energy:100,energyLabel:"ABSORBED MATERIAL"},
     Rook:{health:100,energy:100,energyLabel:"PROTO-TOOL"},
