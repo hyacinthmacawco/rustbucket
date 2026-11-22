@@ -16,7 +16,7 @@ import { createBen } from "../omniverse/ben.js";
 import { createGwen } from "../omniverse/gwen.js";
 import { createKevin } from "../omniverse/kevin.js";
 import { createRook } from "../omniverse/rook.js";
-import { createSimulationCloud } from "../hud/phase2-cloud.js";
+import { createSimulationCloud } from "../hud/simulation-cloud.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
 import { ChromastoneTransformation } from "../omniverse/transformations/chromastone.js";
 
@@ -190,7 +190,7 @@ const defaults = {
 
 function loadData() {
   try {
-    const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
+    const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.simulation"));
     if (saved) return { ...structuredClone(defaults), ...saved,
       relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
       team:{...structuredClone(defaults.team),...(saved.team||{})} };
@@ -548,7 +548,7 @@ class RustbucketGame {
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
     const simulation = new SimulationSystem();
-    const eventNotice=document.createElement("div");eventNotice.id="phase2-event-notice";document.body.appendChild(eventNotice);
+    const eventNotice=document.createElement("div");eventNotice.id="simulation-event-notice";document.body.appendChild(eventNotice);
     let eventNoticeTimer=0;
     simulation.onEvent=event=>{
       eventNotice.textContent=event.description;
@@ -571,7 +571,7 @@ class RustbucketGame {
     });
     const simulationCloud=createSimulationCloud(simulation);
     const simulationButton=document.createElement("button");
-    simulationButton.id="phase2-cloud-button";simulationButton.type="button";simulationButton.textContent="DATA";
+    simulationButton.id="simulation-cloud-button";simulationButton.type="button";simulationButton.textContent="DATA";
     simulationButton.setAttribute("aria-label","Open Private Cloud data hub");
     simulationButton.addEventListener("click",()=>simulationCloud.open());
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
