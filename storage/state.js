@@ -112,10 +112,10 @@ async function createPhysics() {
       // Drive horizontal velocity directly from the left joystick. This avoids
       // tiny impulses being lost to contact friction or the planet's damping.
       const velocity=body.linvel();
-      const horizontalSpeed=environment==="space"?18:13;
+      const horizontalSpeed=environment==="space"?1800:13;
       const targetX=THREE.MathUtils.clamp(forward,-1,1)*horizontalSpeed;
       const targetZ=THREE.MathUtils.clamp(right,-1,1)*horizontalSpeed;
-      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?16:12);
+      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?1600:12);
       body.setLinvel({
         x:THREE.MathUtils.damp(velocity.x,targetX,5,dt),
         y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
