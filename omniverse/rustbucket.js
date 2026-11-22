@@ -33,10 +33,10 @@ export class Rustbucket {
   ship.add(exteriorLamp);
   const headlightLens = new THREE.MeshStandardMaterial({color:0xe8f5ff,emissive:0xc9e7ff,emissiveIntensity:3,roughness:.25});
   for(const side of [-1,1]){
-    mesh(new THREE.SphereGeometry(.19,12,8),headlightLens,[side*.82,.12,5.48]);
+    mesh(new THREE.SphereGeometry(.19,12,8),headlightLens,[side*.62,.12,7.72]);
     const headlight = new THREE.SpotLight(0xd9edff, 720, 220, Math.PI/5.2, .62, 1.1);
-    headlight.position.set(side*.82,.12,5.5);
-    headlight.target.position.set(side*.82,-.15,90);
+    headlight.position.set(side*.62,.12,7.72);
+    headlight.target.position.set(side*.62,-.15,90);
     ship.add(headlight);
     ship.add(headlight.target);
   }
