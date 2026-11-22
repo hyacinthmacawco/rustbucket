@@ -16,7 +16,7 @@ import { createBen } from "../omniverse/ben.js";
 import { createGwen } from "../omniverse/gwen.js";
 import { createKevin } from "../omniverse/kevin.js";
 import { createRook } from "../omniverse/rook.js";
-import { createPhaseTwoCloud } from "../hud/phase2-cloud.js";
+import { createSimulationCloud } from "../hud/phase2-cloud.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
 import { ChromastoneTransformation } from "../omniverse/transformations/chromastone.js";
 
@@ -190,7 +190,7 @@ const defaults = {
 
 function loadData() {
   try {
-    const saved = JSON.parse(localStorage.getItem("rustbucket.phase2"));
+    const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
     if (saved) return { ...structuredClone(defaults), ...saved,
       relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
       team:{...structuredClone(defaults.team),...(saved.team||{})} };
@@ -198,7 +198,7 @@ function loadData() {
   return structuredClone(defaults);
 }
 
-function createPhaseTwo() {
+function createSimulation() {
   const data = loadData();
   const healthEnergy = {
     Ben:{health:100,energy:100,energyLabel:"OMNITRIX"},
@@ -215,7 +215,7 @@ function createPhaseTwo() {
   let onEvent = () => {};
 
   function save() {
-    try { localStorage.setItem("rustbucket.phase2", JSON.stringify(data)); }
+    try { localStorage.setItem("rustbucket.simulation", JSON.stringify(data)); }
     catch (error) { console.warn("Phase 2 save could not be stored", error); }
   }
   function getRelationship(from,to) {
@@ -371,9 +371,9 @@ class PhysicsEngine {
   }
 }
 
-class PhaseTwoSystem {
+class SimulationSystem {
   constructor() {
-    this.system = createPhaseTwo();
+    this.system = createSimulation();
     return new Proxy(this, {
       get: (target, property) => property in target ? target[property] : target.system[property],
       set: (target, property, value) => {
@@ -547,10 +547,10 @@ class RustbucketGame {
     pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
-    const phaseTwo = new PhaseTwoSystem();
+    const simulation = new SimulationSystem();
     const eventNotice=document.createElement("div");eventNotice.id="phase2-event-notice";document.body.appendChild(eventNotice);
     let eventNoticeTimer=0;
-    phaseTwo.onEvent=event=>{
+    simulation.onEvent=event=>{
       eventNotice.textContent=event.description;
       eventNotice.style.display="block";
       eventNotice.classList.toggle("hostile",event.type==="attack"||event.type==="war");
@@ -558,26 +558,26 @@ class RustbucketGame {
       eventNoticeTimer=window.setTimeout(()=>{eventNotice.style.display="none";},4800);
     };
     function configureShip(ship){
-      ship.userData.onFuelUse=amount=>phaseTwo.consumeFuel(amount*0.45);
+      ship.userData.onFuelUse=amount=>simulation.consumeFuel(amount*0.45);
       const fire=ship.userData.performAttack;
-      ship.userData.performAttack=()=>{if(phaseTwo.consumeFuel(1))fire?.();};
+      ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
       return ship;
     }
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
-      phaseTwo,
-      onData: () => phaseTwoCloud.open()
+      simulation,
+      onData: () => simulationCloud.open()
     });
-    const phaseTwoCloud=createPhaseTwoCloud(phaseTwo);
-    const phaseTwoButton=document.createElement("button");
-    phaseTwoButton.id="phase2-cloud-button";phaseTwoButton.type="button";phaseTwoButton.textContent="DATA";
-    phaseTwoButton.setAttribute("aria-label","Open Private Cloud data hub");
-    phaseTwoButton.addEventListener("click",()=>phaseTwoCloud.open());
+    const simulationCloud=createSimulationCloud(simulation);
+    const simulationButton=document.createElement("button");
+    simulationButton.id="phase2-cloud-button";simulationButton.type="button";simulationButton.textContent="DATA";
+    simulationButton.setAttribute("aria-label","Open Private Cloud data hub");
+    simulationButton.addEventListener("click",()=>simulationCloud.open());
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
     hep.innerHTML='<span class="hep-meter"><i id="hep-health-fill"></i><b>H</b></span><span class="hep-meter"><i id="hep-energy-fill"></i><b>E</b></span>';
     hep.addEventListener("click",()=>setPaused(!state.paused));
-    document.body.append(phaseTwoButton,hep);
+    document.body.append(simulationButton,hep);
     const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
     const carriedHud=document.createElement("div");carriedHud.id="carried-items-hud";
     carriedHud.innerHTML='<span>IN HAND</span><select id="carried-item-select"><option value="">NO ITEMS</option></select><button id="use-carried-item">USE</button>';
@@ -586,14 +586,14 @@ class RustbucketGame {
     carriedHud.querySelector("button").addEventListener("click",()=>{
       const selected=keyboardController?.selected||"ben";
       if(carriedSelect.value==="")return;
-      const result=phaseTwo.useCarriedItem(selected[0].toUpperCase()+selected.slice(1),Number(carriedSelect.value));
+      const result=simulation.useCarriedItem(selected[0].toUpperCase()+selected.slice(1),Number(carriedSelect.value));
       if(!result.ok)carriedHud.title=result.reason;
       refreshCarriedHud();
     });
     function refreshCarriedHud(){
       const selected=keyboardController?.selected||"ben";
       const who=selected[0].toUpperCase()+selected.slice(1);
-      const list=phaseTwo.data.team.carried[who]||[];
+      const list=simulation.data.team.carried[who]||[];
       const previous=carriedSelect.value;
       carriedSelect.innerHTML=list.map((name,i)=>'<option value="'+i+'">'+name+'</option>').join("")||'<option value="">NO ITEMS</option>';
       if(previous!==""&&list[Number(previous)])carriedSelect.value=previous;
@@ -633,9 +633,9 @@ class RustbucketGame {
     function openPlanetMarket(){
       const key=state.currentScene;
       const world=PLANET_WORLDS[key];if(!world)return;
-      const stock=phaseTwo.data.resources[world.species]||[];
+      const stock=simulation.data.resources[world.species]||[];
       marketPanel.querySelector("#planet-market-title").textContent=world.name+" MARKET";
-      marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+phaseTwo.data.team.cash.toLocaleString()+" TAYDENITE";
+      marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+simulation.data.team.cash.toLocaleString()+" TAYDENITE";
       const list=marketPanel.querySelector("#planet-market-stock");list.replaceChildren();
       for(const item of stock){
         const row=document.createElement("div");row.className="planet-market-item";
@@ -647,10 +647,10 @@ class RustbucketGame {
         buy.addEventListener("click",()=>{
           const selected=keyboardController?.selected||"ben";
           const buyer=selected==="ben"?"Ben":selected==="gwen"?"Gwen":selected==="kevin"?"Kevin":"Rook";
-          const result=phaseTwo.tradeWithSpecies(buyer,world.species,item.id,1);
+          const result=simulation.tradeWithSpecies(buyer,world.species,item.id,1);
           const message=marketPanel.querySelector("#planet-market-message");
           message.textContent=result.ok?"PURCHASE COMPLETE • "+result.cost+" TAYDENITE":result.reason;
-          marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+phaseTwo.data.team.cash.toLocaleString()+" TAYDENITE";
+          marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+simulation.data.team.cash.toLocaleString()+" TAYDENITE";
           detail.textContent=item.quantity+" AVAILABLE • "+item.price+" T EACH";
           buy.disabled=item.quantity<=0;
         });
@@ -1037,21 +1037,21 @@ class RustbucketGame {
           const benCharacter = createBen({ createHumanRig });
           const chromastoneVisual=new ChromastoneTransformation().model;
           benCharacter.group.add(chromastoneVisual);
-          chromastoneVisual.visible=phaseTwo.getChromastoneActive();
-          omnitrixSlider.value=phaseTwo.getChromastoneActive()?"1":"0";
-          if(phaseTwo.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
-          joystick.buttons.querySelector("#pick-button").textContent=phaseTwo.getChromastoneActive()?"↯":"✋";
-          omnitrixControl.querySelector("b").textContent=phaseTwo.getChromastoneActive()?"CHROMASTONE":"BEN";
+          chromastoneVisual.visible=simulation.getChromastoneActive();
+          omnitrixSlider.value=simulation.getChromastoneActive()?"1":"0";
+          if(simulation.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
+          joystick.buttons.querySelector("#pick-button").textContent=simulation.getChromastoneActive()?"↯":"✋";
+          omnitrixControl.querySelector("b").textContent=simulation.getChromastoneActive()?"CHROMASTONE":"BEN";
           omnitrixSlider.oninput=()=>{
             const active=Number(omnitrixSlider.value)===1;
-            phaseTwo.setChromastoneActive(active);
+            simulation.setChromastoneActive(active);
             chromastoneVisual.visible=active;
             benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=!active;});
             joystick.buttons.querySelector("#pick-button").textContent=active?"↯":"✋";
             omnitrixControl.querySelector("b").textContent=active?"CHROMASTONE":"BEN";
           };
           benCharacter.group.userData.performChromastoneAttack=()=>{
-            if(!phaseTwo.spendEnergy("Chromastone",8))return;
+            if(!simulation.spendEnergy("Chromastone",8))return;
             const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
             beam.rotation.x=Math.PI/2;beam.position.set(0,1.65,-3.8);chromastoneVisual.add(beam);
             window.setTimeout(()=>{chromastoneVisual.remove(beam);beam.geometry.dispose();beam.material.dispose();},180);
@@ -1093,13 +1093,13 @@ class RustbucketGame {
             character.group.setAnimation("idle");
             character.group.userData.performPickup = () => tryPickup(name, character.group, character.rig);
             character.group.userData.performAttack = () => {
-              if(name==="ben"&&phaseTwo.getChromastoneActive()){character.group.userData.performChromastoneAttack?.();return;}
+              if(name==="ben"&&simulation.getChromastoneActive()){character.group.userData.performChromastoneAttack?.();return;}
               character.group.userData.actionActive = true;
               character.group.userData.actionRemaining = 0.78;
               character.rig.playAnimation("punch");
             };
             character.group.userData.performPickup = () => {
-              if(name==="ben"&&phaseTwo.getChromastoneActive()){phaseTwo.recharge("Chromastone",12);return;}
+              if(name==="ben"&&simulation.getChromastoneActive()){simulation.recharge("Chromastone",12);return;}
               tryPickup(name, character.group, character.rig);
             };
             characterEntities[name] = character.group;
@@ -1226,7 +1226,7 @@ class RustbucketGame {
       joystick.setVisible(isMobile && state.stage === "gameplay");
       pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
-      phaseTwoButton.style.display=state.stage==="gameplay"?"grid":"none";
+      simulationButton.style.display=state.stage==="gameplay"?"grid":"none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
       omnitrixControl.style.display=state.stage==="gameplay"&&keyboardController?.selected==="ben"?"flex":"none";
@@ -1251,9 +1251,9 @@ class RustbucketGame {
           const marketButtonVisible=near&&marketPanel.style.display!=="flex";
           marketButton.style.display=marketButtonVisible?"block":"none";
         } else marketButton.style.display="none";
-        if(!state.paused)phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),PLANET_WORLDS[state.currentScene]?.species||state.currentScene,state.currentScene!=="space");
+        if(!state.paused)simulation.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),PLANET_WORLDS[state.currentScene]?.species||state.currentScene,state.currentScene!=="space");
         const selectedName=keyboardController?.selected||"ben";
-        const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&phaseTwo.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
+        const status=simulation.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&simulation.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
         hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
         omnitrixControl.style.display=selectedName==="ben"?"flex":"none";
