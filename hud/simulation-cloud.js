@@ -1,6 +1,6 @@
 export function createSimulationCloud(simulation) {
   const root=document.createElement("section"); root.id="simulation-cloud";
-  root.innerHTML="<div id=\"simulation-cloud-window\"><header><b>PRIVATE CLOUD / OMNIVERSE DATA</b><button id=\"simulation-cloud-close\">×</button></header><nav id=\"simulation-cloud-nav\"><button data-view=\"relationships\">RELATIONSHIPS</button><button data-view=\"accounting\">ACCOUNTING</button><button data-view=\"items\">ITEMS</button><button data-view=\"resources\">RESOURCES / TRADE</button><button data-view=\"events\">EVENTS</button></nav><main id=\"simulation-cloud-content\"></main></div>";
+  root.innerHTML="<div id=\"simulation-cloud-window\"><header><b>PRIVATE CLOUD</b><button id=\"simulation-cloud-close\">×</button></header><nav id=\"simulation-cloud-nav\"><button data-view=\"accounting\">ACCOUNTS</button><button data-view=\"items\">INVENTORY</button><button data-view=\"events\">EVENT LOG</button></nav><main id=\"simulation-cloud-content\"></main></div>";
   document.body.appendChild(root);
   const content=root.querySelector("#simulation-cloud-content");
   const data=simulation.data;
@@ -37,11 +37,11 @@ export function createSimulationCloud(simulation) {
     species.addEventListener("change",render);person.addEventListener("change",render);render();
   }
   function events(){content.innerHTML="<h2>OMNIVERSE EVENT MANAGER</h2>"+(data.eventLog.map(e=>"<article class=\"sim-event\"><b>"+e.type.toUpperCase()+"</b><p>"+e.description+"</p><small>STARTED "+new Date(e.at).toLocaleString()+" • "+e.status.toUpperCase()+(e.endedAt?" • ENDED "+new Date(e.endedAt).toLocaleString():"")+"</small></article>").join("")||"<p>No recorded events.</p>");}
-  function open(view="relationships", host=null){
+  function open(view="accounting", host=null){
     if(host){root.classList.add("embedded");host.appendChild(root);}else{root.classList.remove("embedded");if(!root.isConnected)document.body.appendChild(root);}
     root.style.display="flex";show(view);
   }
-  function show(view){root.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));({relationships,accounting,items,resources,events}[view]||relationships)();}
+  function show(view){root.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));({accounting,items,events}[view]||accounting)();}
   root.querySelector("#simulation-cloud-close").onclick=()=>{root.style.display="none";root.classList.remove("embedded");document.body.appendChild(root);};
   root.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>show(b.dataset.view));
   root.style.display="none";
