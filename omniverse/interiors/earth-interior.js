@@ -1,16 +1,16 @@
 import * as THREE from "three";
-import { dimensions } from "../../storage/dimensions.js";
 
 // Earth interior environment: Bellwood sky, atmosphere, roads,
 // sidewalks, low-rise buildings, and roadside trees.
-export function createEarthInterior(scene, parent = scene) {
+export class EarthInterior {
+  constructor(scene, parent = scene) {
   scene.background = new THREE.Color(0x78b9f5);
   scene.fog = new THREE.Fog(0xa6cbed, 75, 260);
 
   const root = new THREE.Group();
   root.name = "EarthInterior";
-  root.position.set(...dimensions.earthInterior.position);
-  root.scale.set(...dimensions.bellwood.scale);
+  root.position.set(0, 0, 0);
+  root.scale.set(1, 1, 1);
   parent.add(root);
 
   const sunlight = new THREE.DirectionalLight(0xffd39a, 3.0);
@@ -121,12 +121,13 @@ export function createEarthInterior(scene, parent = scene) {
     }
   }
 
-  return { bellwood: root, sunlight };
+  Object.assign(this, { bellwood: root, sunlight });
 }
 
 
 // Kevin's storage unit and the team's suitcases are part of the Earth interior.
-export function createKevinStorageUnit(scene) {
+export class KevinStorageUnit {
+  constructor(scene) {
   function standardMaterial(color, roughness = 0.9, extra = {}) {
     return new THREE.MeshStandardMaterial({
       color,
@@ -153,8 +154,8 @@ export function createKevinStorageUnit(scene) {
 
   const unit = new THREE.Group();
   unit.name = "KevinStorageUnit";
-  unit.position.set(...dimensions.kevinStorageUnit.position);
-  unit.scale.set(...dimensions.kevinStorageUnit.scale);
+  unit.position.set(0, -0.5, 0);
+  unit.scale.set(1.5, 1.5, 1.5);
   scene.add(unit);
 
   // Interior ceiling and side lights belong to the storage-unit model.
@@ -284,10 +285,11 @@ export function createKevinStorageUnit(scene) {
     addBox(0.025, 0.012, 29, floorLines, x, 0.013, -1);
   }
 
-  return { unit };
+  this.unit = unit;
 }
 
-export function createSuitcases(parent) {
+export class Suitcases {
+  constructor(parent) {
   const owners = ["Ben", "Gwen", "Kevin", "Rook"];
   const colors = [0x263d35, 0x9a4f36, 0x394b69, 0x77715b];
   const suitcases = owners.map((owner, index) => {
@@ -321,19 +323,6 @@ export function createSuitcases(parent) {
     parent.add(group);
     return group;
   });
-  return { suitcases };
+  this.suitcases = suitcases;
 }
 
-export class EarthInterior {
-  constructor(...args) {
-    Object.assign(this, createEarthInterior(...args));
-  }
-}
-
-export class KevinStorageUnit {
-  constructor(...args) { Object.assign(this, createKevinStorageUnit(...args)); }
-}
-
-export class Suitcases {
-  constructor(...args) { Object.assign(this, createSuitcases(...args)); }
-}
