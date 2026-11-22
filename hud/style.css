@@ -931,3 +931,13 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 @media (hover:hover) and (pointer:fine) {
   #lift-joystick { display:none!important; }
 }
+
+/* Circular selector dial for character equipment and abilities. */
+#ability-dial{display:none;position:fixed;z-index:126;right:max(18px,env(safe-area-inset-right));bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));width:126px;align-items:center;flex-direction:column;gap:5px;color:#e1ffea;font-size:9px;font-weight:800;letter-spacing:.12em;text-shadow:0 1px 4px #001b09;pointer-events:auto;touch-action:none}
+#ability-dial-title,#ability-dial-mode{max-width:126px;text-align:center;padding:4px 7px;border:1px solid rgba(135,255,170,.48);border-radius:7px;background:rgba(3,28,13,.82)}
+#ability-dial-ring{position:relative;width:104px;height:104px;border:2px solid rgba(105,255,150,.8);border-radius:50%;background:radial-gradient(circle,rgba(105,255,150,.12) 0 35%,rgba(5,45,22,.82) 36% 100%);box-shadow:0 0 22px rgba(60,255,125,.25),inset 0 0 16px rgba(60,255,125,.14);touch-action:none}
+#ability-dial-center{position:absolute;inset:31px;display:grid;place-items:center;border:1px solid rgba(190,255,210,.8);border-radius:50%;background:rgba(15,100,48,.85);font-size:11px}
+#ability-dial-indicator{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border:1px solid #eaffef;border-radius:50%;background:#80ffa6;box-shadow:0 0 12px #80ffa6;transform:rotate(0deg) translateY(-34px);pointer-events:none}
+@media(hover:hover) and (pointer:fine){#ability-dial{display:none!important}}
+@media(max-width:520px){#ability-dial{right:14px;bottom:max(116px,calc(env(safe-area-inset-bottom) + 116px));width:112px}#ability-dial-ring{width:96px;height:96px}#ability-dial-center{inset:29px}}
+#pause-button{display:none!important}
