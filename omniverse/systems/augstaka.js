@@ -6,7 +6,7 @@ export class AugstakaSystem {
     this.root = result.root;
     this.group = result.systems[0];
     this.root.position.copy(this.group.position).negate();
-    this.starfield.position.copy(this.group.position);
     this.starfield = result.starfield;
+    this.starfield.position.copy(this.group.position);
   }
 }
