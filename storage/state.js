@@ -594,7 +594,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
             omnitrixControl.querySelector("b").textContent=active?"CHROMASTONE":"BEN";
           };
           benCharacter.group.userData.performChromastoneAttack=()=>{
-            if(!phaseTwo.spendEnergy("Ben",8))return;
+            if(!phaseTwo.spendEnergy("Chromastone",8))return;
             const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
             beam.rotation.x=Math.PI/2;beam.position.set(0,1.65,-3.8);chromastoneVisual.add(beam);
             window.setTimeout(()=>{chromastoneVisual.remove(beam);beam.geometry.dispose();beam.material.dispose();},180);
@@ -642,7 +642,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
               character.rig.playAnimation("punch");
             };
             character.group.userData.performPickup = () => {
-              if(name==="ben"&&phaseTwo.getChromastoneActive()){phaseTwo.recharge("Ben",12);return;}
+              if(name==="ben"&&phaseTwo.getChromastoneActive()){phaseTwo.recharge("Chromastone",12);return;}
               tryPickup(name, character.group, character.rig);
             };
             characterEntities[name] = character.group;
@@ -749,7 +749,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         extranet.setLocation(state.currentScene);
         if(!state.paused)phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),state.currentScene,state.currentScene!=="space");
         const selectedName=keyboardController?.selected||"ben";
-        const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName[0].toUpperCase()+selectedName.slice(1));
+        const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&phaseTwo.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
         hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
         omnitrixControl.style.display=selectedName==="ben"?"flex":"none";
