@@ -1,4 +1,4 @@
-export function createExtranet({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {} } = {}) {
+export function createExtranet({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {}, onJumpSystem = () => {} } = {}) {
   const root = document.createElement("section");
   root.id = "extranet-overlay";
   root.innerHTML = `
@@ -36,8 +36,15 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     page.innerHTML = `<div class="cloud-links">
       <button data-page="tasks">▤ <span><b>Tasks</b></span> ›</button>
       <button data-page="relationships">♡ <span><b>Relationships</b></span> ›</button>
-      <button data-page="memories">▧ <span><b>Memories</b></span> ›</button><button data-page="data">▤ <span><b>Accounting, Items & Events</b></span> ›</button></div>`;
-    page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => b.dataset.page === "data" ? onData(page) : ({tasks,relationships:showRelationships,memories}[b.dataset.page])()));
+      <button data-page="memories">▧ <span><b>Memories</b></span> ›</button>
+      <button data-page="accounts">▤ <span><b>Accounts</b></span> ›</button>
+      <button data-page="inventory">▧ <span><b>Inventory</b></span> ›</button>
+      <button data-page="event-log">◷ <span><b>Event Log</b></span> ›</button></div>`;
+    page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => {
+      const views = { accounts: "accounting", inventory: "items", "event-log": "events" };
+      if (views[b.dataset.page]) onData(page, views[b.dataset.page]);
+      else ({tasks,relationships:showRelationships,memories}[b.dataset.page])();
+    }));
   }
   function tasks() {
     current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";
@@ -83,8 +90,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
             <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
             <rect width="900" height="520" rx="14" fill="#06140e"/>
             <ellipse cx="455" cy="255" rx="420" ry="245" fill="url(#omni-nebula)"/>
-            <g class="omni-routes"><path d="M130 370 L335 155 L560 105 L770 280 L565 425 L130 370"/><path d="M335 155 L565 425"/><path d="M560 105 L770 280"/></g>
-            <g class="omni-stars"><circle cx="65" cy="65" r="1.5"/><circle cx="250" cy="70" r="2"/><circle cx="430" cy="65" r="1.4"/><circle cx="700" cy="70" r="1.6"/><circle cx="840" cy="150" r="1.5"/><circle cx="90" cy="250" r="1.4"/><circle cx="430" cy="300" r="1.4"/><circle cx="830" cy="440" r="2"/><circle cx="300" cy="450" r="1.5"/></g>
+                    <g class="omni-stars"><circle cx="65" cy="65" r="1.5"/><circle cx="250" cy="70" r="2"/><circle cx="430" cy="65" r="1.4"/><circle cx="700" cy="70" r="1.6"/><circle cx="840" cy="150" r="1.5"/><circle cx="90" cy="250" r="1.4"/><circle cx="430" cy="300" r="1.4"/><circle cx="830" cy="440" r="2"/><circle cx="300" cy="450" r="1.5"/></g>
             <g class="omni-node" data-system="solar" tabindex="0" role="button" aria-label="Solar System"><circle class="omni-halo" cx="130" cy="370" r="30"/><circle class="omni-core solar" cx="130" cy="370" r="10"/><text x="130" y="414" text-anchor="middle">SOLAR</text></g>
             <g class="omni-node" data-system="highbreed" tabindex="0" role="button" aria-label="Highbreed System"><circle class="omni-halo" cx="335" cy="155" r="30"/><circle class="omni-core highbreed" cx="335" cy="155" r="10"/><text x="335" y="199" text-anchor="middle">HIGHBREED</text></g>
             <g class="omni-node" data-system="incursean" tabindex="0" role="button" aria-label="Incursean System"><circle class="omni-halo" cx="560" cy="105" r="30"/><circle class="omni-core incursean" cx="560" cy="105" r="10"/><text x="560" y="149" text-anchor="middle">INCURSEAN</text></g>
@@ -99,7 +105,8 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     const selectSystem = key => {
       const item = systems[key]; if (!item) return;
       page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
-      detail.innerHTML = `<h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds">${item.worlds}</div>`;
+      detail.innerHTML = `<h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds">${item.worlds}</div><p class="omni-status">${item.status}</p><button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>`;
+      detail.querySelector("#omnidata-jump").addEventListener("click",()=>onJumpSystem(key));
     };
     page.querySelectorAll(".omni-node").forEach(node => {
       node.addEventListener("click",()=>selectSystem(node.dataset.system));
@@ -166,7 +173,8 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     else if (url === "extranet://home") home();
   });
   function open() { root.style.display="flex"; home(); }
+  function openOmnidata() { root.style.display="flex"; omnidata(); }
   function close() { root.style.display="none"; }
   home();
-  return { open, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return relationships;} };
+  return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return relationships;} };
 }
