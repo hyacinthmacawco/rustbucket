@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PlanetPopulation } from "./planet-population.js";
 
 const WORLDS = {
   augstaka:{name:"Augstaka",species:"Highbreed",sky:0x9fcfbd,ground:0x527b54,accent:0xb8d69a,resource:"BIOLOGICAL"},
@@ -51,7 +52,8 @@ export class PlanetInterior {
     const lamp=new THREE.Mesh(new THREE.SphereGeometry(.35,12,8),new THREE.MeshBasicMaterial({color:world.accent}));
     lamp.position.set(i%2?5:-5,1,-i*5);root.add(lamp);
   }
-  Object.assign(this, {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world});
+  const population = new PlanetPopulation(root, key);
+  Object.assign(this, {root,marketplace:market,marketPosition:new THREE.Vector3(0,0,-24),world,inhabitants:population.inhabitants});
   }
 }
 
