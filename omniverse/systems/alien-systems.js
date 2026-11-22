@@ -105,7 +105,7 @@ function makeOrbit(parent, radius, color = 0x9bb8c7) {
   return line;
 }
 
-export function createAlienSystems(parent) {
+export function createAlienSystems(parent, only = null) {
   const root = new THREE.Group();
   root.name = "Ben10AlienSystems";
   parent.add(root);
@@ -113,7 +113,7 @@ export function createAlienSystems(parent) {
 
   // Augstaka — the Highbreed homeworld: restored green hills, coastal blue
   // and clean city clusters. A moon is shown in orbit.
-  {
+  if (!only || only === "augstaka") {
     const group = new THREE.Group(); group.name = "AugstakaSystem";
     group.position.set(155, 12, -115); root.add(group);
     makeStar(group, 0xffd9a0, 5.5);
@@ -133,9 +133,10 @@ export function createAlienSystems(parent) {
     const label = labelSprite("AUGSTAKA • HIGHBREED"); label.position.set(19, 8, 0); group.add(label);
     systems.push(group);
   }
+  }
 
   // Anodyne — dark red world with the distinctive pair of orange rings.
-  {
+  if (!only || only === "anodyne") {
     const group = new THREE.Group(); group.name = "AnodyneSystem";
     group.position.set(-165, 18, -125); root.add(group);
     makeStar(group, 0xffb36b, 4.5);
@@ -148,10 +149,11 @@ export function createAlienSystems(parent) {
     const label = labelSprite("ANODYNE • ANODITES", "#ffd1b2"); label.position.set(17, 8, 0); group.add(label);
     systems.push(group);
   }
+  }
 
   // Galvan Prime — small green technological world with its enormous
   // crater-like marking and Galvan B moon.
-  {
+  if (!only || only === "galvan") {
     const group = new THREE.Group(); group.name = "GalvanSystem";
     group.position.set(175, 8, 145); root.add(group);
     makeStar(group, 0xffd38a, 4.2);
@@ -163,10 +165,11 @@ export function createAlienSystems(parent) {
     const label = labelSprite("GALVAN PRIME • GALVANS"); label.position.set(16, 7, 0); group.add(label);
     systems.push(group);
   }
+  }
 
   // Incursia — its canonical appearance is a peach-like planet with huge
   // black scorch marks. The exploded state is represented by a broken shell.
-  {
+  if (!only || only === "incursia") {
     const group = new THREE.Group(); group.name = "IncursiaSystem";
     group.position.set(-185, -8, 150); root.add(group);
     makeStar(group, 0xffc17b, 4.8);
@@ -185,6 +188,7 @@ export function createAlienSystems(parent) {
     planet.scale.setScalar(.82);
     const label = labelSprite("INCURSIA • INCURSEAN REMNANTS", "#ffd8c2"); label.position.set(17, 8, 0); group.add(label);
     systems.push(group);
+  }
   }
 
   root.traverse(object => {
