@@ -3,7 +3,7 @@ import { createTitleScreen } from "../hud/title.js";
 import { createJoystick, createKeyboard } from "../hud/joystick.js";
 import { createExtranet } from "../hud/extranet.js";
 import { createSolarSystem } from "../omniverse/systems/solar-system.js";
-import { createEarthInterior } from "../omniverse/interiors/earth-interior.js";
+import { createEarthInterior, createKevinStorageUnit, createSuitcases } from "../omniverse/interiors/earth-interior.js";
 import { createMoonInterior } from "../omniverse/interiors/moon-interior.js";
 import { createPlanetInterior, PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
 import { createRustbucket } from "../omniverse/rustbucket.js";
