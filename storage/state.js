@@ -496,6 +496,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     // found to be near that region. Each region is held in one removable group.
     let loadedRegion = null;
     let loadingRegion = null;
+    let regionLoadId = 0;
     let regionGroup = null;
     let titleObjects = null;
 
@@ -553,6 +554,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 
     async function loadRegion(name) {
       if (loadingRegion === name || loadedRegion === name) return;
+      const requestId = ++regionLoadId;
       loadingRegion = name;
       sceneLoadError.style.display = "none";
       failedRegion = null;
@@ -567,7 +569,13 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           if (state.stage === "gameplay") {
             const { ship } = createRustbucket(group); configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
-            physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
+            const nextPhysics = await createPhysics();
+          if (requestId !== regionLoadId) {
+            nextPhysics.dispose();
+            disposeObjectTree(group);
+            return;
+          }
+          physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
               entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
@@ -611,7 +619,13 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           const { unit } = createKevinStorageUnit(group);
           const { ship } = createRustbucket(group);
 
-          physics = await createPhysics();
+          const nextPhysics = await createPhysics();
+          if (requestId !== regionLoadId) {
+            nextPhysics.dispose();
+            disposeObjectTree(group);
+            return;
+          }
+          physics = nextPhysics;
           physics.setEnvironment("planet");
           physics.addStaticScene(group);
           const { suitcases } = createSuitcases(group);
@@ -745,6 +759,10 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         }
         regionGroup=group;scene.add(regionGroup);loadedRegion=name;
       } catch (error) {
+        if (requestId !== regionLoadId) {
+          disposeObjectTree(group);
+          return;
+        }
         console.error("Could not load scene:", name, error);
         loadedRegion = null;
         keyboardController?.destroy();
@@ -763,7 +781,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           : "The " + name + " scene failed to initialize. Check the browser console for details.";
         sceneLoadError.style.display = "flex";
       } finally {
-        loadingRegion = null;
+        if (requestId === regionLoadId) loadingRegion = null;
       }
     }
     loadRegion("space");
