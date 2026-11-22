@@ -347,7 +347,7 @@ function createSimulationSystem() {
       }
       save();
     }
-Remove trader convoy event    const person=crew.includes(selected)?selected:null;
+    const person=crew.includes(selected)?selected:null;
     const worldSpecies=species.find(name=>key(name)===key(location));
     if (person && isNearHome && worldSpecies && isHostile(person,worldSpecies) && elapsed-lastHostileAt>12) {
       lastHostileAt=elapsed;
