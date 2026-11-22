@@ -321,6 +321,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       state.currentScene = destination;
+      if(PLANET_ORBITS[destination])state.spaceReturnPosition=PLANET_ORBITS[destination].clone().add(new THREE.Vector3(0,15,0));
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
         await loadRegion("space");
@@ -830,7 +831,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           const marketButtonVisible=near&&marketPanel.style.display!=="flex";
           marketButton.style.display=marketButtonVisible?"block":"none";
         } else marketButton.style.display="none";
-        if(!state.paused)phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),state.currentScene,state.currentScene!=="space");
+        if(!state.paused)phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),PLANET_WORLDS[state.currentScene]?.species||state.currentScene,state.currentScene!=="space");
         const selectedName=keyboardController?.selected||"ben";
         const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&phaseTwo.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
