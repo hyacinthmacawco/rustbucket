@@ -870,3 +870,8 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 #planet-market-message{min-height:18px;margin:12px 0 0;color:#aaffc0;font-size:10px;line-height:1.5}
 #planet-market-button{display:none;position:fixed;z-index:130;left:50%;bottom:max(88px,calc(env(safe-area-inset-bottom) + 88px));transform:translateX(-50%);padding:13px 20px;border:1px solid #a4ffbd;border-radius:10px;background:rgba(8,65,34,.92);color:#effff3;font-size:10px;font-weight:800;letter-spacing:.14em;box-shadow:0 0 24px #53ff8733}
 #planet-market-button:active{transform:translateX(-50%) scale(.97)}
+
+#warp-overlay.atmospheric{background:radial-gradient(ellipse at 50% 55%,rgba(238,255,244,.98),rgba(181,224,215,.88) 42%,rgba(65,108,115,.94) 100%)}
+#warp-overlay.atmospheric #warp-flash{inset:-15%;filter:blur(18px);background:radial-gradient(ellipse at 45% 55%,rgba(255,255,255,.98) 0 12%,rgba(235,255,250,.78) 35%,rgba(210,245,235,.08) 72%);transform:none;animation:planet-fog-in 1.25s ease-in-out both}
+#warp-overlay.atmospheric #warp-caption{color:#123c2a;text-shadow:0 0 20px #fff;animation:rustbucket-warp-caption 1.25s ease-in-out both}
+@keyframes planet-fog-in{0%{opacity:0;transform:scale(.55)}38%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1.8)}}
