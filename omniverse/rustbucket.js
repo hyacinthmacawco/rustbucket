@@ -11,14 +11,14 @@ export class Rustbucket {
   const metal=new THREE.MeshStandardMaterial({color:0x424b50,metalness:.45,roughness:.5});
   function mesh(g,m,p,r=[0,0,0]){const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.castShadow=true;o.receiveShadow=true;o.userData.noPhysics=true;ship.add(o);return o;}
 
-  // Open-top cuboid fuselage. Flat walls and floor form a rectangular cabin;
-  // the rear remains open for the loading ramp.
+  // Enclosed cabin roof; the rear loading ramp remains the only large opening.
   mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[-1.35,0,0]);
   mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[1.35,0,0]);
   mesh(new THREE.BoxGeometry(2.7,.14,9.7),inner,[0,-1.18,0]);
   mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[-1.22,1.22,0]);
   mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[1.22,1.22,0]);
   mesh(new THREE.BoxGeometry(2.7,2.5,.16),hull,[0,0,-5.18]);
+  mesh(new THREE.BoxGeometry(2.82,.18,10.7),hull,[0,1.38,0]);
   // Nose only; no solid rear cap, so the troop/cargo bay stays accessible.
   mesh(new THREE.ConeGeometry(1.52,2.6,12),hull,[0,0,6.45],[Math.PI/2,0,0]);
   mesh(new THREE.BoxGeometry(2.78,.18,.24),orange,[0,0,5.12]);
@@ -26,6 +26,19 @@ export class Rustbucket {
   for(const side of [-1,1]){
     mesh(new THREE.BoxGeometry(6.2,.16,2.1),hull,[side*3.8,-.08,-1.15],[0,0,side*.035]);
     mesh(new THREE.BoxGeometry(.72,.19,2),orange,[side*7.15,-.08,-1.15],[0,0,side*.035]);
+  }
+
+  const exteriorLamp = new THREE.PointLight(0xbfe5ff, 85, 110, 1.5);
+  exteriorLamp.position.set(0,1.9,0);
+  ship.add(exteriorLamp);
+  const headlightLens = new THREE.MeshStandardMaterial({color:0xe8f5ff,emissive:0xc9e7ff,emissiveIntensity:3,roughness:.25});
+  for(const side of [-1,1]){
+    mesh(new THREE.SphereGeometry(.19,12,8),headlightLens,[side*.82,.12,5.48]);
+    const headlight = new THREE.SpotLight(0xd9edff, 720, 220, Math.PI/5.2, .62, 1.1);
+    headlight.position.set(side*.82,.12,5.5);
+    headlight.target.position.set(side*.82,-.15,90);
+    ship.add(headlight);
+    ship.add(headlight.target);
   }
 
   // Hinged rear loading ramp: closed vertically, lowered onto the ground when open.
