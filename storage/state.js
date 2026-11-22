@@ -546,6 +546,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           benCharacter.group.add(chromastoneVisual);
           chromastoneVisual.visible=phaseTwo.getChromastoneActive();
           omnitrixSlider.value=phaseTwo.getChromastoneActive()?"1":"0";
+          if(phaseTwo.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
+          omnitrixControl.querySelector("b").textContent=phaseTwo.getChromastoneActive()?"CHROMASTONE":"BEN";
           omnitrixSlider.oninput=()=>{
             const active=Number(omnitrixSlider.value)===1;
             phaseTwo.setChromastoneActive(active);
@@ -691,6 +693,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       phaseTwoButton.style.display=state.stage==="gameplay"?"grid":"none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
+      omnitrixControl.style.display=state.stage==="gameplay"&&keyboardController?.selected==="ben"?"flex":"none";
       if (state.stage !== "gameplay") { liftControl.style.display = "none"; rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
@@ -705,7 +708,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene);
-        phaseTwo.update(delta,keyboardController?.selected||"Ben",state.currentScene,false);
+        phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),state.currentScene,state.currentScene!=="space");
         const selectedName=keyboardController?.selected||"ben";
         const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
