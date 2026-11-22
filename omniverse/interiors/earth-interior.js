@@ -329,3 +329,11 @@ export class EarthInterior {
     Object.assign(this, createEarthInterior(...args));
   }
 }
+
+export class KevinStorageUnit {
+  constructor(...args) { Object.assign(this, createKevinStorageUnit(...args)); }
+}
+
+export class Suitcases {
+  constructor(...args) { Object.assign(this, createSuitcases(...args)); }
+}
