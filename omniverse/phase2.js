@@ -95,6 +95,12 @@ export function createPhaseTwo() {
   }
   function update(dt, selected="Ben", location="earth", isNearHome=false) {
     elapsed+=dt; eventCooldown-=dt;
+    const now=Date.now();
+    for(const event of data.eventLog){
+      if(event.status==="active"&&now-Date.parse(event.at)>90000){
+        event.status="ended";event.endedAt=new Date(now).toISOString();
+      }
+    }
     if (elapsed>=30) {
       elapsed=0;
       for (const name of species) {
