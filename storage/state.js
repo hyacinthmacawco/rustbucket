@@ -251,6 +251,10 @@ function loadData() {
       }
       delete merged.relationships;
       merged.eventLog = (merged.eventLog || []).filter(event => !/passing trader convoy/i.test(event.description || ""));
+      for (const speciesName of ["Highbreed", "Incursean", "Galvan"]) {
+        merged.entities.Anodite.relationships[speciesName] = 3;
+        merged.entities[speciesName].relationships.Anodite = 3;
+      }
       for (const name of species) merged.populations[name] = clamp(Number(merged.populations[name]) || 0, 0, 999);
       return merged;
     }
