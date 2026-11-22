@@ -1,6 +1,6 @@
 export function createPhaseTwoCloud(phaseTwo) {
   const root=document.createElement("section"); root.id="phase2-cloud";
-  root.innerHTML="<div id=\"phase2-cloud-window\"><header><b>PRIVATE CLOUD / OMNIVERSE DATA</b><button id=\"phase2-cloud-close\">×</button></header><nav id=\"phase2-cloud-nav\"><button data-view=\"relationships\">RELATIONSHIPS</button><button data-view=\"accounting\">ACCOUNTING</button><button data-view=\"items\">ITEMS</button><button data-view=\"events\">EVENTS</button></nav><main id=\"phase2-cloud-content\"></main></div>";
+  root.innerHTML="<div id=\"phase2-cloud-window\"><header><b>PRIVATE CLOUD / OMNIVERSE DATA</b><button id=\"phase2-cloud-close\">×</button></header><nav id=\"phase2-cloud-nav\"><button data-view=\"relationships\">RELATIONSHIPS</button><button data-view=\"accounting\">ACCOUNTING</button><button data-view=\"items\">ITEMS</button><button data-view=\"resources\">RESOURCES / TRADE</button><button data-view=\"events\">EVENTS</button></nav><main id=\"phase2-cloud-content\"></main></div>";
   document.body.appendChild(root);
   const content=root.querySelector("#phase2-cloud-content");
   const data=phaseTwo.data;
