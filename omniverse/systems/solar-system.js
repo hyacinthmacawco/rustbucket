@@ -1,9 +1,4 @@
 import * as THREE from "three";
-import { AugstakaSystem } from "./augstaka.js";
-import { AnodyneSystem } from "./anodyne.js";
-import { GalvanSystem } from "./galvan.js";
-import { IncursiaSystem } from "./incursia.js";
-
 // A complete system is the scene unit: its stars and all external celestial
 // bodies are owned and disposed together when the player enters a planet.
 // Create the distant starfield only when the camera is in the space region.
@@ -111,14 +106,8 @@ export class SolarSystem {
   moon.position.set(...moonConfig.position);
   parent.add(moon);
 
-  const alienSystems = [
-    new AugstakaSystem(parent),
-    new AnodyneSystem(parent),
-    new GalvanSystem(parent),
-    new IncursiaSystem(parent)
-  ];
   const { stars } = createStarfield(parent);
   parent.traverse(object => { object.userData.noPhysics = true; });
-  Object.assign(this, { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars, alienSystems });
+  Object.assign(this, { sun, sunAura, sunOuterGlow, sunlight, earth, moon, stars });
   }
 }
