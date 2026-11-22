@@ -2,8 +2,8 @@ import * as THREE from "three";
 
 export function createStarfieldTexture(parent, name = "StarfieldTexture") {
   const canvas = document.createElement("canvas");
-  canvas.width = 4096;
-  canvas.height = 2048;
+  canvas.width = 2048;
+  canvas.height = 1024;
   const context = canvas.getContext("2d");
   context.fillStyle = "#02040a";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -13,7 +13,7 @@ export function createStarfieldTexture(parent, name = "StarfieldTexture") {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
-  for (let i = 0; i < 7200; i++) {
+  for (let i = 0; i < 4200; i++) {
     const x = random() * canvas.width;
     const y = random() * canvas.height;
     const radius = random() > 0.985 ? 2.2 : random() > 0.72 ? 1.25 : 0.65;
