@@ -6,6 +6,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
 import { createSolarSystem } from "../omniverse/solar-system.js";
 import { createEarthInterior } from "../omniverse/earth.js";
 import { createMoonInterior } from "../omniverse/moon-interior.js";
+import { createPlanetInterior, PLANET_WORLDS } from "../omniverse/planet-interior.js";
 import { createKevinStorageUnit } from "../omniverse/kevin-storage-unit.js";
 import { createRustbucket } from "../omniverse/rustbucket.js";
 import { createHumanRig } from "../omniverse/human-rig.js";
@@ -269,8 +270,43 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     rampButton.addEventListener("click", () => { const ship = entities?.rustbucket; ship?.userData.toggleRamp?.(); rampButton.textContent = ship?.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; });
     const mapOverlay = document.createElement("div");
     mapOverlay.id = "system-map-overlay";
-    mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">SOLAR SYSTEM</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button></div><div id="system-map-actions"><button data-destination="space">REMAIN IN ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
+    mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">PLANETARY NAVIGATION</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button><button class="system-map-node" style="left:8%;top:8%" data-destination="augstaka">AUGSTAKA</button><button class="system-map-node" style="left:70%;top:8%" data-destination="anodyne">ANODYNE</button><button class="system-map-node" style="left:12%;top:68%" data-destination="galvan">GALVAN PRIME</button><button class="system-map-node" style="right:8%;top:68%" data-destination="incursia">INCURSIA</button></div><div id="system-map-actions"><button data-destination="space">TAKE OFF / RETURN TO ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
     document.body.appendChild(mapOverlay);
+
+    const marketPanel=document.createElement("div");
+    marketPanel.id="planet-market";
+    marketPanel.innerHTML='<div class="planet-market-card"><button id="planet-market-close" aria-label="Close marketplace">×</button><p class="planet-market-kicker">LOCAL TRADE EXCHANGE</p><h2 id="planet-market-title">MARKETPLACE</h2><p id="planet-market-cash"></p><div id="planet-market-stock"></div><p id="planet-market-message"></p></div>';
+    document.body.appendChild(marketPanel);
+    marketPanel.querySelector("#planet-market-close").addEventListener("click",()=>marketPanel.style.display="none");
+    function openPlanetMarket(){
+      const key=state.currentScene;
+      const world=PLANET_WORLDS[key];if(!world)return;
+      const stock=phaseTwo.data.resources[world.species]||[];
+      marketPanel.querySelector("#planet-market-title").textContent=world.name+" MARKET";
+      marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+phaseTwo.data.team.cash.toLocaleString()+" TAYDENITE";
+      const list=marketPanel.querySelector("#planet-market-stock");list.replaceChildren();
+      for(const item of stock){
+        const row=document.createElement("div");row.className="planet-market-item";
+        const info=document.createElement("div");const name=document.createElement("b");name.textContent=item.name;
+        const detail=document.createElement("small");detail.textContent=item.quantity+" AVAILABLE • "+item.price+" T EACH";
+        info.append(name,detail);
+        const buy=document.createElement("button");buy.textContent="BUY 1";
+        buy.disabled=item.quantity<=0;
+        buy.addEventListener("click",()=>{
+          const selected=keyboardController?.selected||"ben";
+          const buyer=selected==="ben"?"Ben":selected==="gwen"?"Gwen":selected==="kevin"?"Kevin":"Rook";
+          const result=phaseTwo.tradeWithSpecies(buyer,world.species,item.id,1);
+          const message=marketPanel.querySelector("#planet-market-message");
+          message.textContent=result.ok?"PURCHASE COMPLETE • "+result.cost+" TAYDENITE":result.reason;
+          marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+phaseTwo.data.team.cash.toLocaleString()+" TAYDENITE";
+          detail.textContent=item.quantity+" AVAILABLE • "+item.price+" T EACH";
+          buy.disabled=item.quantity<=0;
+        });
+        row.append(info,buy);list.append(row);
+      }
+      marketPanel.querySelector("#planet-market-message").textContent="Select a resource to purchase. Trade access depends on crew relationships.";
+      marketPanel.style.display="flex";
+    }
     const warpOverlay = document.createElement("div");
     warpOverlay.id = "warp-overlay";
     warpOverlay.innerHTML = '<div id="warp-flash"></div><div id="warp-caption">SPACE WARP</div>';
@@ -280,16 +316,20 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     }
     async function warpTo(destination) {
       mapOverlay.style.display = "none";
-      if (!["earth","moon","space"].includes(destination)) return;
+      if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
       warpOverlay.style.display = "flex";
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       state.currentScene = destination;
       state.arrivingInShip = true;
-      await loadRegion(destination);
+      if(destination==="space"&&state.spaceReturnPosition){
+        await loadRegion("space");
+        if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
+      } else await loadRegion(destination);
       setCameraPreset(dimensions.camera.gameplay);
       warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
       extranet.setLocation(destination);
+      marketPanel.style.display="none";
     }
     mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => warpTo(button.dataset.destination)));
     mapOverlay.querySelector("#system-map-close").addEventListener("click", () => { mapOverlay.style.display = "none"; });
@@ -510,6 +550,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           titleObjects = createSolarSystem(group);
           if (state.stage === "gameplay") {
             const { ship } = createRustbucket(group); configureShip(ship);
+            if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
@@ -530,6 +571,22 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
             onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
+          loadedRegion=name;loadingRegion=null;return;
+
+        } else if (PLANET_WORLDS[name]) {
+          const world=PLANET_WORLDS[name];
+          scene.background=new THREE.Color(world.sky);
+          scene.fog=new THREE.Fog(world.sky,38,190);
+          const {marketPosition}=createPlanetInterior(group,name);
+          const {ship}=createRustbucket(group);configureShip(ship);ship.position.set(0,2,13);
+          physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
+          entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
+          keyboardController=createKeyboard({
+            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
+            onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
+            onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+          });
+          regionGroup.userData.marketPosition=marketPosition;
           loadedRegion=name;loadingRegion=null;return;
         } else if (name === "earth") {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
@@ -718,6 +775,24 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       }
     }
 
+    const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
+    const PLANET_ORBITS={augstaka:new THREE.Vector3(174,12,-115),anodyne:new THREE.Vector3(-148,18,-125),galvan:new THREE.Vector3(191,8,145),incursia:new THREE.Vector3(-168,-8,150)};
+    let planetEntryCooldown=0;
+    async function enterNearbyPlanet(){
+      if(state.currentScene!=="space"||loadedRegion!=="space"||!entities?.rustbucket||planetEntryCooldown>0)return;
+      const ship=entities.rustbucket;
+      for(const [key,center] of Object.entries(PLANET_ORBITS)){
+        if(ship.position.distanceTo(center)<13){
+          state.spaceReturnPosition=center.clone().add(new THREE.Vector3(0,15,0));
+          planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
+          warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
+          await new Promise(resolve=>window.setTimeout(resolve,1250));
+          state.currentScene=key;await loadRegion(key);setCameraPreset(dimensions.camera.gameplay);
+          extranet.setLocation(key);warpOverlay.classList.remove("warp-active");warpOverlay.style.display="none";
+          return;
+        }
+      }
+    }
     const clock = new THREE.Clock();
     let animationFrame = 0;
 
@@ -739,15 +814,22 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
+      planetEntryCooldown=Math.max(0,planetEntryCooldown-delta);
 
       if (!state.paused && state.stage === "gameplay" && keyboardController && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") {
         keyboardController.update(delta);
       }
+      if (!state.paused && state.stage==="gameplay"&&state.currentScene==="space") enterNearbyPlanet();
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene);
+        if(PLANET_WORLDS[state.currentScene]&&entities?.rustbucket&&regionGroup?.userData.marketPosition){
+          const near=entities.rustbucket.position.distanceTo(regionGroup.userData.marketPosition)<15;
+          const marketButtonVisible=near&&marketPanel.style.display!=="flex";
+          marketButton.style.display=marketButtonVisible?"block":"none";
+        } else marketButton.style.display="none";
         if(!state.paused)phaseTwo.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),state.currentScene,state.currentScene!=="space");
         const selectedName=keyboardController?.selected||"ben";
         const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&phaseTwo.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
@@ -797,7 +879,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
-      liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove();
+      liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
       extranet.close();
       disposeRegion();
       titleScreen.destroy();
