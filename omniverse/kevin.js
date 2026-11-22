@@ -1,11 +1,11 @@
 import * as THREE from "three";
 
 export class Kevin {
-  constructor({ createHumanRig }) {
+  constructor({ HumanRig }) {
     this.startPosition = [0,-0.5,-9];
     this.startScale = [0.52,0.52,0.52];
-  if (typeof createHumanRig !== "function") throw new TypeError("createKevin requires createHumanRig.");
-  const rig = createHumanRig();
+  if (typeof HumanRig !== "function") throw new TypeError("createKevin requires createHumanRig.");
+  const rig = new HumanRig();
   const { group, joints } = rig;
   group.name = "KevinLevin";
   group.traverse(o => { if (o.isMesh) o.visible = false; });
