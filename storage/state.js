@@ -723,7 +723,11 @@ class RustbucketGame {
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
         await loadRegion("space");
-        if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
+        if(entities?.rustbucket){
+          entities.rustbucket.position.copy(state.spaceReturnPosition);
+          entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
+          entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
+        }
       } else await loadRegion(destination);
       setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
