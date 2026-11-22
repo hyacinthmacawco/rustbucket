@@ -30,9 +30,15 @@ export function createPhaseTwoCloud(phaseTwo) {
       carried.querySelectorAll("[data-store]").forEach(b=>b.onclick=()=>{phaseTwo.moveItemToShip(carrier.value,Number(b.dataset.store));render();});};
     carrier.addEventListener("change",render);render();
   }
+  function resources(){
+    content.innerHTML="<h2>SPECIES RESOURCE MARKETS</h2><label>SPECIES <select id=\"p2-market-species\">"+phaseTwo.species.map(n=>"<option>"+n+"</option>").join("")+"</select></label><label>BUYING AS <select id=\"p2-market-person\"><option>Ben</option><option>Gwen</option><option>Kevin</option><option>Rook</option></select></label><div id=\"p2-market-stock\"></div><p id=\"p2-market-message\"></p>";
+    const species=content.querySelector("#p2-market-species"),person=content.querySelector("#p2-market-person"),stock=content.querySelector("#p2-market-stock"),message=content.querySelector("#p2-market-message");
+    const render=()=>{const allowed=phaseTwo.canTrade(person.value,species.value);stock.innerHTML=(data.resources[species.value]||[]).map(x=>"<div class=\"p2-item\"><span>"+x.name+" ×"+x.quantity+"<small>"+x.price+" Taydenite each</small></span><button data-buy=\""+x.id+"\" "+(!allowed?"disabled":"")+">BUY 1</button></div>").join("");stock.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>{const result=phaseTwo.tradeWithSpecies(person.value,species.value,b.dataset.buy,1);message.textContent=result.ok?"PURCHASED • "+result.cost+" T":result.reason;render();});message.textContent=allowed?"TRADE PERMITTED • RELATIONSHIP "+phaseTwo.getRelationship(person.value,species.value).toFixed(0)+"%":"TRADE BLOCKED • RELATIONSHIP BELOW 30%";};
+    species.addEventListener("change",render);person.addEventListener("change",render);render();
+  }
   function events(){content.innerHTML="<h2>OMNIVERSE EVENT MANAGER</h2>"+(data.eventLog.map(e=>"<article class=\"p2-event\"><b>"+e.type.toUpperCase()+"</b><p>"+e.description+"</p><small>"+new Date(e.at).toLocaleString()+"</small></article>").join("")||"<p>No recorded events.</p>");}
   function open(view="relationships"){root.style.display="flex";show(view);}
-  function show(view){root.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));({relationships,accounting,items,events}[view]||relationships)();}
+  function show(view){root.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));({relationships,accounting,items,resources,events}[view]||relationships)();}
   root.querySelector("#phase2-cloud-close").onclick=()=>root.style.display="none";
   root.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>show(b.dataset.view));
   root.style.display="none";
