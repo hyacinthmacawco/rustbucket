@@ -6,6 +6,7 @@ export class IncursiaSystem {
     const result = new AlienSystems(parent, "incursia");
     this.root = result.root;
     this.group = result.systems[0];
+    this.root.position.copy(this.group.position).negate();
     this.starfield = this.createStarfield();
   }
   createStarfield() {
