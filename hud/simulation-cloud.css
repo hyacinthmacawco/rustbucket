@@ -1,36 +1,19 @@
-#simulation-cloud{position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,8,4,.88);backdrop-filter:blur(14px);color:#eaffef;font:13px Arial,sans-serif}
-#simulation-cloud-window{width:min(760px,100%);max-height:min(88vh,900px);overflow:auto;border:1px solid rgba(120,255,160,.45);border-radius:18px;background:rgba(4,24,13,.97);box-shadow:0 20px 80px #000;padding:18px}
-#simulation-cloud header{display:flex;justify-content:space-between;align-items:center;letter-spacing:.12em;padding-bottom:14px;border-bottom:1px solid #31543d}
-#simulation-cloud button,#simulation-cloud select{background:#102e1c;color:#eaffef;border:1px solid #477b55;border-radius:7px;padding:9px}
-#simulation-cloud header button{font-size:22px;line-height:1}
-#simulation-cloud nav{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
-#simulation-cloud nav button{font-size:10px;letter-spacing:.08em}
-#simulation-cloud nav button.active,#simulation-cloud .sim-tabs button.active{background:#1b693b;border-color:#9bffb2}
-#simulation-cloud main{overflow:auto;max-height:68vh}
-#simulation-cloud h2{font-size:13px;letter-spacing:.14em;margin:20px 0 10px}
-#simulation-cloud label{display:flex;align-items:center;gap:12px;color:#a9d9b7;font-size:10px;letter-spacing:.12em;margin:12px 0}
-#simulation-cloud .sim-row{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 5px;border-bottom:1px solid rgba(130,190,145,.15)}
-#simulation-cloud .sim-row span{min-width:110px}
-#simulation-cloud .sim-row i{display:block;flex:1;height:7px;border-radius:8px;background:#183c28;overflow:hidden}
-#simulation-cloud .sim-row i b{display:block;height:100%;background:#65df87;border-radius:8px}
-#simulation-cloud .sim-row strong{min-width:100px;text-align:right}
-#simulation-cloud .sim-tabs{display:flex;gap:7px;flex-wrap:wrap}
-#simulation-cloud .sim-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 5px;border-bottom:1px solid rgba(130,190,145,.15)}
-#simulation-cloud .sim-item span{flex:1}
-#simulation-cloud .sim-item small{display:block;color:#8aaf96;margin-top:4px}
-#simulation-cloud .sim-item button{font-size:10px}
-#simulation-cloud .sim-event{padding:12px;margin:9px 0;border-left:2px solid #68d98a;background:rgba(35,90,53,.18)}
-#simulation-cloud .sim-event p{margin:7px 0}
-#simulation-cloud .sim-event small{color:#91b99c}
-
-/* Embedded data hub inside Extranet Private Cloud. */
-#simulation-cloud.embedded{position:relative;inset:auto;z-index:auto;display:block!important;min-height:100%;padding:0;background:transparent;backdrop-filter:none}
-#simulation-cloud.embedded #simulation-cloud-window{width:100%;max-height:none;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 0}
-#simulation-cloud.embedded main{max-height:none}
-
-/* Private Cloud pages use flat, unblurred translucent surfaces. */
-#simulation-cloud,#simulation-cloud-window{background:rgba(0,0,0,.3)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-#simulation-cloud header{border:0!important}
-#simulation-cloud .sim-row,#simulation-cloud .sim-item{border:0!important}
-
-#simulation-cloud.embedded #simulation-cloud-close{display:none!important}
+#simulation-cloud-page{width:min(760px,100%);min-height:100%;margin:0 auto;padding:10px 0;color:#eaffef;font:13px "Industry",Arial,sans-serif}
+#simulation-cloud-page .sim-page-title{margin:4px 0 22px;font-size:clamp(18px,3vw,25px);letter-spacing:.16em}
+#simulation-cloud-page h3{margin:22px 0 10px;font-size:12px;letter-spacing:.13em;color:#c8f6d3}
+#simulation-cloud-page button,#simulation-cloud-page select{padding:9px 12px;background:rgba(0,0,0,.3);color:#eaffef;font:inherit;letter-spacing:.06em}
+#simulation-cloud-page .sim-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 18px}
+#simulation-cloud-page .sim-tabs button{font-size:10px}
+#simulation-cloud-page .sim-tabs button.active{background:rgba(45,135,75,.55)}
+#simulation-cloud-page .sim-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px}
+#simulation-cloud-page .sim-row span{min-width:110px}
+#simulation-cloud-page .sim-row strong{min-width:100px;text-align:right}
+#simulation-cloud-page label{display:flex;align-items:center;gap:12px;margin:14px 0;color:#a9d9b7;font-size:10px;letter-spacing:.12em}
+#simulation-cloud-page .sim-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 4px}
+#simulation-cloud-page .sim-item span{flex:1}
+#simulation-cloud-page .sim-item small{display:block;margin-top:4px;color:#8aaf96}
+#simulation-cloud-page .sim-item button{font-size:10px}
+#simulation-cloud-page .sim-event{padding:13px 4px;margin:10px 0;background:rgba(0,0,0,.18)}
+#simulation-cloud-page .sim-event p{margin:7px 0}
+#simulation-cloud-page .sim-event small{color:#91b99c;font-size:10px}
+@media(max-width:520px){#simulation-cloud-page .sim-row{align-items:flex-start;flex-direction:column;gap:5px}#simulation-cloud-page .sim-row strong{text-align:left}}
