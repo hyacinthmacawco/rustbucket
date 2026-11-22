@@ -125,14 +125,10 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {} } 
     catch (error) { console.warn("Could not capture memory", error); }
   }
   function addRelationship(picker, owner) {
-    picker = String(picker).toLowerCase();
-    owner = String(owner).toLowerCase();
-    if (picker === owner || !relationships[picker] || !relationships[owner]) return;
-    const value = Math.min(100, relationships[picker][owner] + 0.1);
-    relationships[picker][owner] = value;
-    const pair = [picker, owner].sort((a,b) => relationshipNames.indexOf(a)-relationshipNames.indexOf(b));
-    const label = pair.map(name => name[0].toUpperCase()+name.slice(1)).join("-");
-    completionValues.push(label + " +0.1%");
+    if (!phaseTwo) return;
+    const from=String(picker).toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const to=String(owner).toLowerCase().replace(/^./,c=>c.toUpperCase());
+    phaseTwo.setRelationship(from,to,phaseTwo.getRelationship(from,to)+0.1);
   }
   function updateTask(count = storedCount + 1) {
     storedCount = Math.max(storedCount, count);
