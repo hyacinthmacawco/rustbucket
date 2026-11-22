@@ -1274,7 +1274,7 @@ class RustbucketGame {
         if (loadedRegion !== state.currentScene && !loadingRegion) loadRegion(state.currentScene);
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
-        joystick.setVisible(isMobile);
+        joystick.setVisible(true);
         
         
         setCameraPreset(cameraConfig.gameplay);
@@ -1282,7 +1282,7 @@ class RustbucketGame {
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
-        joystick.setVisible(isMobile && activeStage === "gameplay");
+        joystick.setVisible(activeStage === "gameplay");
         
         stopMusic();
       }
