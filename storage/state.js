@@ -747,7 +747,8 @@ class RustbucketGame {
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       state.currentScene = destination;
-      if(PLANET_ORBITS[destination])state.spaceReturnPosition=PLANET_ORBITS[destination].clone().add(new THREE.Vector3(0,15,0));
+      const destinationOrbit = SYSTEM_PLANET_ORBITS[activeSystem]?.[destination];
+      if(destinationOrbit)state.spaceReturnPosition=destinationOrbit.clone().add(new THREE.Vector3(0,15,0));
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
         await loadRegion("space");
