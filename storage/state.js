@@ -1353,10 +1353,10 @@ class RustbucketGame {
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
       solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1547,0,0)},
-      augstaka: {augstaka:new THREE.Vector3(97300,0,0)},
-      anodyne: {anodyne:new THREE.Vector3(92300,0,0)},
-      galvan: {galvan:new THREE.Vector3(91300,0,0)},
-      incursia: {incursia:new THREE.Vector3(93300,0,0)}
+      augstaka: {augstaka:new THREE.Vector3(274300,0,0)},
+      anodyne: {anodyne:new THREE.Vector3(274300,0,0)},
+      galvan: {galvan:new THREE.Vector3(274300,0,0)},
+      incursia: {incursia:new THREE.Vector3(274300,0,0)}
     };
     const SYSTEM_PLANET_RADII = { earth:1300, moon:217, augstaka:1300, anodyne:1300, galvan:1300, incursia:1066 };
     const getPlanetClearance = key => (SYSTEM_PLANET_RADII[key] || 1050) * 1.6;
