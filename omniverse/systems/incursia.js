@@ -33,7 +33,7 @@ export class IncursiaSystem {
       size: 0.14, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false
     }));
     stars.name = "IncursiaStarfield";
-    this.root.add(stars);
+    this.group.add(stars);
     return stars;
   }
 
