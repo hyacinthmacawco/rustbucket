@@ -186,12 +186,13 @@ export function createPhaseTwo() {
   }
   function getChromastoneActive(){return chromastoneActive;}
   function setChromastoneActive(value){chromastoneActive=Boolean(value);}
+  function consumeFuel(amount){const status=getStatus("Rustbucket");if(status.energy<amount)return false;status.energy=clamp(status.energy-amount);data.team.fuel=status.energy;save();return true;}
   function damage(name,amount){setHealth(name,getStatus(name).health-amount);}
   function recharge(name,amount){setEnergy(name,getStatus(name).energy+amount);}
   return {
     data, ENTITY_NAMES, crew, species, healthEnergy, getRelationship,setRelationship,canTrade,isHostile,
     recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,useCarriedItem,tradeWithSpecies,
-    getChromastoneActive,setChromastoneActive,damage,recharge,save,
+    getChromastoneActive,setChromastoneActive,damage,recharge,consumeFuel,save,
     set onEvent(fn){onEvent=fn||(()=>{});}
   };
 }
