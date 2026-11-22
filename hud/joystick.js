@@ -134,11 +134,12 @@ export function createJoystick() {
   };
 }
 
-export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, getLift = () => 0 }) {
+export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, getLift = () => 0, onJump = () => {}, onToggleRamp = () => {}, initialSelected = "ben" }) {
   const keys = new Set();
-  let selected = "ben";
+  let selected = initialSelected;
   let lastAttackAt = 0;
   joystick.setTeamOptions(selected);
+  onSelect(selected);
 
   function keydown(event) {
     const key = event.key.toLowerCase();
@@ -149,6 +150,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       event.preventDefault();
       return;
     }
+    if (key === "r" && !event.repeat && selected === "rustbucket") { onToggleRamp(); event.preventDefault(); return; }
     if (["w", "a", "s", "d", " ", "q"].includes(key)) {
       keys.add(key);
       event.preventDefault();
@@ -171,6 +173,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     if (!next) return;
     selected = next;
     joystick.setTeamOptions(selected);
+    onSelect(selected);
     onSelect(selected);
     updateCamera();
   }
@@ -205,11 +208,12 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const speed = selected === "rustbucket" ? 18 : 3.5;
 
     if (joy.jumpRequested) {
-      object.userData.requestJump?.();
+      if (selected === "rustbucket") onJump();
+      else object.userData.requestJump?.();
       joy.jumpRequested = false;
     }
     if (selected === "rustbucket" && object.userData.moveVehicle) {
-      object.userData.moveVehicle(mx * speed * dt, mz * speed * dt, getLift(), dt, right, Math.atan2(fx, fz));
+      object.userData.moveVehicle(mx, mz, getLift(), dt, right, Math.atan2(fx, fz));
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
