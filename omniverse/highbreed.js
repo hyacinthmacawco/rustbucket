@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, capsule, part, finishModel } from "./model-utils.js";
 
-export function createHighbreed(parent = null, options = {}) {
+export class Highbreed {
+  constructor(parent = null, options = {}) {
   const g = new THREE.Group();
   const white = toon(0xe8f2f1), shadow = toon(0x9ba9a9), black = toon(0x111319);
   const red = toon(0xb91f26), purple = toon(0x51228e), violet = toon(0x9a48d1);
@@ -40,5 +41,7 @@ export function createHighbreed(parent = null, options = {}) {
     capsule(g,black,.075,.24,[side*.18,.18,0]);
     for(let j=-1;j<=1;j++) cylinder(g,black,.015,.045,.18,[side*.18+j*.07,.04,.1],[.25,0,0],7);
   }
-  return finishModel(g,"Highbreed",parent,options.scale ?? 1);
+  this.group = finishModel(g,"Highbreed",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
