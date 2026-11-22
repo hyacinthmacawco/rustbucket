@@ -11,6 +11,7 @@ export class PassengerTransport {
     this.panel.innerHTML = '<h2 id="passenger-quest-title">PASSENGER REQUEST</h2><p id="passenger-quest-description"></p><button id="passenger-quest-accept" type="button">ACCEPT</button><button id="passenger-quest-decline" type="button">DECLINE</button>';
     document.body.appendChild(this.panel);
     this.description = this.panel.querySelector("#passenger-quest-description");
+    this.panel.querySelectorAll("button").forEach(button => { button.style.cssText = "margin:6px;padding:10px 16px;border:0;border-radius:0;background:rgba(0,0,0,.3);color:#eaffef;font:inherit;letter-spacing:.08em"; });
     this.panel.querySelector("#passenger-quest-accept").addEventListener("click", () => this.accept());
     this.panel.querySelector("#passenger-quest-decline").addEventListener("click", () => this.decline());
     this.ship = null;
