@@ -180,10 +180,10 @@ export function createAlienSystems(parent) {
       const a = i * TAU / 13, r = 4.5 + (i % 3) * .65;
       const shard = new THREE.Mesh(new THREE.DodecahedronGeometry(.55 + (i % 4) * .16, 0), shardMaterial);
       shard.position.set(Math.cos(a) * r, Math.sin(a * 1.7) * 1.5, Math.sin(a) * r);
-      shard.rotation.set(a, a * .7, a * .3); group.add(shard);
+      shard.rotation.set(a, a * .7, a * .3); shell.add(shard);
     }
     planet.scale.setScalar(.82);
-    const label = labelSprite("INCURSIA • INCOURSEAN REMNANTS", "#ffd8c2"); label.position.set(17, 8, 0); group.add(label);
+    const label = labelSprite("INCURSIA • INCURSEAN REMNANTS", "#ffd8c2"); label.position.set(17, 8, 0); group.add(label);
     systems.push(group);
   }
 
