@@ -194,6 +194,12 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
     const phaseTwo = createPhaseTwo();
+    function configureShip(ship){
+      ship.userData.onFuelUse=amount=>phaseTwo.consumeFuel(amount*0.45);
+      const fire=ship.userData.performAttack;
+      ship.userData.performAttack=()=>{if(phaseTwo.consumeFuel(1))fire?.();};
+      return ship;
+    }
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
@@ -493,7 +499,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = createSolarSystem(group);
           if (state.stage === "gameplay") {
-            const { ship } = createRustbucket(group);
+            const { ship } = createRustbucket(group); configureShip(ship);
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
@@ -506,7 +512,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
         } else if (name === "moon") {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
           createMoonInterior(group);
-          const {ship}=createRustbucket(group);
+          const {ship}=createRustbucket(group);configureShip(ship);
           physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
