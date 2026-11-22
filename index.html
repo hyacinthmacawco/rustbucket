@@ -16,27 +16,6 @@
 </head>
 <body>
   <canvas id="omniverse"></canvas>
-  <script>
-    (() => {
-      const showFatalError = (label, detail) => {
-        let panel = document.getElementById("rustbucket-fatal-error");
-        if (!panel) {
-          panel = document.createElement("pre");
-          panel.id = "rustbucket-fatal-error";
-          panel.style.cssText = "position:fixed;z-index:2147483647;inset:12px;overflow:auto;margin:0;padding:18px;background:#160909;color:#ffbcbc;border:2px solid #ff5555;font:13px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere";
-          document.body.appendChild(panel);
-        }
-        panel.textContent = "RUSTBUCKET STARTUP ERROR\\n\\n" + label + "\\n" + String(detail || "No additional details.");
-      };
-      window.addEventListener("error", event => {
-        showFatalError("JavaScript error", event.message + (event.filename ? "\\n" + event.filename + ":" + event.lineno + ":" + event.colno : ""));
-      });
-      window.addEventListener("unhandledrejection", event => {
-        const reason = event.reason;
-        showFatalError("Unhandled promise rejection", reason?.stack || reason?.message || reason);
-      });
-    })();
-  </script>
   <script type="module" src="./storage/state.js"></script>
 </body>
 </html>
