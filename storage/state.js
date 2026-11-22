@@ -5,7 +5,11 @@ import { createExtranet } from "../hud/extranet.js";
 import { createSolarSystem } from "../omniverse/systems/solar-system.js";
 import { createEarthInterior, createKevinStorageUnit, createSuitcases } from "../omniverse/interiors/earth-interior.js";
 import { createMoonInterior } from "../omniverse/interiors/moon-interior.js";
-import { createPlanetInterior, PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
+import { PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
+import { AugstakaInterior } from "../omniverse/interiors/augstaka-interior.js";
+import { AnodyneInterior } from "../omniverse/interiors/anodyne-interior.js";
+import { GalvanPrimeInterior } from "../omniverse/interiors/galvan-interior.js";
+import { IncursiaInterior } from "../omniverse/interiors/incursia-interior.js";
 import { createRustbucket } from "../omniverse/rustbucket.js";
 import { createHumanRig } from "../omniverse/human-rig.js";
 import { createBen } from "../omniverse/ben.js";
@@ -951,7 +955,7 @@ class RustbucketGame {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
           createMoonInterior(group);
           const {ship}=createRustbucket(group);configureShip(ship);
-          physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
+          physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
             entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
@@ -964,9 +968,11 @@ class RustbucketGame {
           const world=PLANET_WORLDS[name];
           scene.background=new THREE.Color(world.sky);
           scene.fog=new THREE.Fog(world.sky,38,190);
-          const {marketPosition}=createPlanetInterior(group,name);
+          const InteriorClass = { augstaka: AugstakaInterior, anodyne: AnodyneInterior, galvan: GalvanPrimeInterior, incursia: IncursiaInterior }[name];
+          const interior = new InteriorClass(group);
+          const { marketPosition } = interior.environment;
           const {ship}=createRustbucket(group);configureShip(ship);ship.position.set(0,2,13);
-          physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
+          physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
             entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
@@ -982,7 +988,7 @@ class RustbucketGame {
           const { unit } = createKevinStorageUnit(group);
           const { ship } = createRustbucket(group);
 
-          const nextPhysics = await createPhysics();
+          const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
             nextPhysics.dispose();
             disposeObjectTree(group);
