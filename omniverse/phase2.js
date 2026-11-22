@@ -116,13 +116,15 @@ export function createPhaseTwo() {
       if (Math.random()<0.28) recordEvent("encounter","A passing trader convoy has been detected.",{location});
     }
     const person=crew.includes(selected)?selected:null;
-    if (person && isNearHome && location!=="earth" && eventCooldown<0.5) {
-      const hostile=species.find(s=>isHostile(person,s));
-      if (hostile && elapsed-lastHostileAt>12) {
-        lastHostileAt=elapsed;
-        healthEnergy[person].health=clamp(healthEnergy[person].health-8);
-        recordEvent("attack",hostile+" forces attacked "+person+" near their territory.",{attacker:hostile,target:person});
-      }
+    const worldSpecies=species.find(name=>key(name)===key(location));
+    if (person && isNearHome && worldSpecies && isHostile(person,worldSpecies) && elapsed-lastHostileAt>12) {
+      lastHostileAt=elapsed;
+      healthEnergy[person].health=clamp(healthEnergy[person].health-8);
+      recordEvent("attack",worldSpecies+" forces attacked "+person+" in "+worldSpecies+" territory.",{attacker:worldSpecies,target:person});
+    }
+    if (worldSpecies && elapsed-lastHostileAt>12) {
+      const rival=species.find(name=>name!==worldSpecies&&isHostile(worldSpecies,name));
+      if(rival){lastHostileAt=elapsed;recordEvent("attack",worldSpecies+" forces engaged "+rival+" near the homeworld.",{attacker:worldSpecies,target:rival});}
     }
   }
   function getStatus(name) { return healthEnergy[name] || healthEnergy.Ben; }
