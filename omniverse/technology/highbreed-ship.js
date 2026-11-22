@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, part, finishModel } from "../model-utils.js";
 
-export function createHighbreedShip(parent = null, options = {}) {
+export class HighbreedShip {
+  constructor(parent = null, options = {}) {
   const g=new THREE.Group();
   const black=toon(0x101116), charcoal=toon(0x34363a), silver=toon(0xc4c5bd), shade=toon(0x777b7a), red=toon(0xe31d20);
   // Black stealth wings with silver spherical engine nacelles and red ports.
@@ -25,5 +26,7 @@ export function createHighbreedShip(parent = null, options = {}) {
   part(g,new THREE.ConeGeometry(.48,2.4,5),black,[0,.1,-3.6],[Math.PI/2,0,0]);
   box(g,black,[.62,.24,2.2],[0,.04,3.5]);
   for(const side of [-1,1]) box(g,black,[.42,.16,3.4],[side*.72,.04,-1.8],[0,0,side*.12]);
-  return finishModel(g,"HighbreedShip",parent,options.scale ?? 1);
+  this.group = finishModel(g,"HighbreedShip",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
