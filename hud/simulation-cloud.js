@@ -37,10 +37,13 @@ export function createSimulationCloud(simulation) {
     species.addEventListener("change",render);person.addEventListener("change",render);render();
   }
   function events(){content.innerHTML="<h2>OMNIVERSE EVENT MANAGER</h2>"+(data.eventLog.map(e=>"<article class=\"sim-event\"><b>"+e.type.toUpperCase()+"</b><p>"+e.description+"</p><small>STARTED "+new Date(e.at).toLocaleString()+" • "+e.status.toUpperCase()+(e.endedAt?" • ENDED "+new Date(e.endedAt).toLocaleString():"")+"</small></article>").join("")||"<p>No recorded events.</p>");}
-  function open(view="relationships"){root.style.display="flex";show(view);}
+  function open(view="relationships", host=null){
+    if(host){root.classList.add("embedded");host.appendChild(root);}else{root.classList.remove("embedded");if(!root.isConnected)document.body.appendChild(root);}
+    root.style.display="flex";show(view);
+  }
   function show(view){root.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));({relationships,accounting,items,resources,events}[view]||relationships)();}
-  root.querySelector("#simulation-cloud-close").onclick=()=>root.style.display="none";
+  root.querySelector("#simulation-cloud-close").onclick=()=>{root.style.display="none";root.classList.remove("embedded");document.body.appendChild(root);};
   root.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>show(b.dataset.view));
   root.style.display="none";
-  return {open,close(){root.style.display="none";},refresh(){if(root.style.display==="flex")show(root.querySelector("[data-view].active")?.dataset.view||"events");}};
+  return {open,close(){root.style.display="none";root.classList.remove("embedded");document.body.appendChild(root);},refresh(){if(root.style.display==="flex")show(root.querySelector("[data-view].active")?.dataset.view||"events");}};
 }
