@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { dimensions } from "../storage/dimensions.js";
+import { dimensions } from "../../storage/dimensions.js";
 import { createStarfield } from "./starfield.js";
 import { createAlienSystems } from "./alien-systems.js";
 
