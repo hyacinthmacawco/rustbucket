@@ -6,7 +6,10 @@ import * as THREE from "three";
  * the Omnitrix face are drawn into textures rather than built from overlays.
  */
 
-export function createBen({ createHumanRig }) {
+export class Ben {
+  constructor({ createHumanRig }) {
+    this.startPosition = [-3,-0.5,5];
+    this.startScale = [0.5,0.5,0.5];
   if (typeof createHumanRig !== "function") {
     throw new TypeError("createBen requires the createHumanRig rig factory.");
   }
@@ -220,5 +223,6 @@ export function createBen({ createHumanRig }) {
   // The Omnitrix is painted onto the existing left wrist cuboid: no separate
   // watch case, strap meshes, or faceplate geometry.
 
-  return { group, rig, joints };
+  Object.assign(this, { group, rig, joints });
+  }
 }
