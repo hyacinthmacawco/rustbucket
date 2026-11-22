@@ -174,5 +174,5 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
   function openOmnidata() { root.style.display="flex"; omnidata(true); }
   function close() { root.style.display="none"; }
   home();
-  return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return relationships;} };
+  return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return simulation?.data?.relationships || {};} };
 }
