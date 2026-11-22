@@ -174,7 +174,6 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     selected = next;
     joystick.setTeamOptions(selected);
     onSelect(selected);
-    onSelect(selected);
     updateCamera();
   }
 
