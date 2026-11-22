@@ -31,7 +31,10 @@ export class PlanetPopulation {
     const localSpecies = Object.keys(HOME_PLANETS).find(name => HOME_PLANETS[name] === planetKey) || "Human";
     const visitors = planetKey === "earth" ? [] : Object.keys(HOME_PLANETS).filter(name => name !== localSpecies);
     this.clock = 0;
-    const layout = [
+    const layout = planetKey === "earth" ? [
+      [-26,0,-14],[-30,0,-6],[-25,0,3],[-31,0,14],
+      [26,0,-14],[30,0,-6],[25,0,3],[31,0,14]
+    ] : [
       [-9, 0, 7], [-5, 0, 1], [0, 0, -3], [5, 0, 1], [9, 0, 7], [-11, 0, -8],
       [-7, 0, 10], [7, 0, 10]
     ];
@@ -44,7 +47,9 @@ export class PlanetPopulation {
       const person = this.createPerson(species, name, homePlanet, isVisitor, i);
       person.position.set(...layout[i]);
       person.rotation.y = (i % 2 ? 1 : -1) * 0.35;
-      person.userData.wanderTarget = new THREE.Vector3(...layout[i]);
+      person.userData.wanderOrigin = person.position.clone();
+      person.userData.wanderRange = planetKey === "earth" ? {x:4,z:14} : {x:19,z:19};
+      person.userData.wanderTarget = person.position.clone();
       person.userData.wanderTimer = 1 + Math.random() * 4;
       person.userData.wanderSpeed = 0.65 + Math.random() * 0.55;
       person.userData.walkPhase = Math.random() * Math.PI * 2;
@@ -106,7 +111,11 @@ export class PlanetPopulation {
       if (data.boarded) continue;
       data.wanderTimer -= delta;
       if (data.wanderTimer <= 0 || !data.wanderTarget) {
-        data.wanderTarget = new THREE.Vector3((Math.random() - 0.5) * 38, 0, (Math.random() - 0.5) * 38);
+        data.wanderTarget = new THREE.Vector3(
+          data.wanderOrigin.x + (Math.random() - 0.5) * data.wanderRange.x * 2,
+          0,
+          data.wanderOrigin.z + (Math.random() - 0.5) * data.wanderRange.z * 2
+        );
         data.wanderTimer = 4 + Math.random() * 7;
       }
       const dx = data.wanderTarget.x - person.position.x;
