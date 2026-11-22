@@ -635,9 +635,14 @@ class RustbucketGame {
       if(entities?.[character])entities[character].userData.toolMode=mode;
     }
     function updateAbilityDial(character){
-      const active=abilityModes[character];
-      abilityDial.style.display=state.stage==="gameplay"&&Boolean(active)?"flex":"none";
-      if(active)setAbilityMode(character,abilityState[character]||0);
+      const modes=abilityModes[character];
+      abilityDial.style.display=state.stage==="gameplay"&&Boolean(modes)?"flex":"none";
+      if(!modes)return;
+      const index=abilityState[character]||0;
+      abilityDial.querySelector("#ability-dial-title").textContent=({ben:"OMNITRIX",kevin:"MATERIAL",gwen:"SPELLBOOK",rook:"PROTO-TOOL"})[character];
+      abilityDialCenter.textContent=character==="ben"?(index?"CH":"B"):character[0].toUpperCase();
+      abilityDialMode.textContent=modes[index];
+      abilityDialIndicator.style.transform="rotate("+(index/modes.length*360)+"deg) translateY(-34px)";
     }
     function chooseAbilityFromPointer(event){
       const rect=abilityDialRing.getBoundingClientRect();
