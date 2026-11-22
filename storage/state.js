@@ -3,7 +3,7 @@ import { createTitleScreen } from "../hud/title.js";
 import { createJoystick, createKeyboard } from "../hud/joystick.js";
 import { createExtranet } from "../hud/extranet.js";
 import { SolarSystem } from "../omniverse/systems/solar-system.js";
-import { EarthInterior, createKevinStorageUnit, createSuitcases } from "../omniverse/interiors/earth-interior.js";
+import { EarthInterior, KevinStorageUnit, Suitcases } from "../omniverse/interiors/earth-interior.js";
 import { MoonInterior } from "../omniverse/interiors/moon-interior.js";
 import { PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
 import { AugstakaInterior } from "../omniverse/interiors/augstaka-interior.js";
@@ -985,7 +985,7 @@ class RustbucketGame {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           new EarthInterior(scene, group);
-          const { unit } = createKevinStorageUnit(group);
+          const { unit } = new KevinStorageUnit(group);
           const { ship } = createRustbucket(group);
 
           const nextPhysics = await PhysicsEngine.create();
@@ -997,7 +997,7 @@ class RustbucketGame {
           physics = nextPhysics;
           physics.setEnvironment("planet");
           physics.addStaticScene(group);
-          const { suitcases } = createSuitcases(group);
+          const { suitcases } = new Suitcases(group);
           physics.addVehicle(ship);
           const carriedSuitcases = new Map();
           let storedSuitcaseCount = 0;
