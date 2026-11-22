@@ -112,10 +112,10 @@ async function createPhysics() {
       // Drive horizontal velocity directly from the left joystick. This avoids
       // tiny impulses being lost to contact friction or the planet's damping.
       const velocity=body.linvel();
-      const horizontalSpeed=environment==="space"?1800:13;
+      const horizontalSpeed=environment==="space"?1000000:13;
       const targetX=THREE.MathUtils.clamp(forward,-1,1)*horizontalSpeed;
       const targetZ=THREE.MathUtils.clamp(right,-1,1)*horizontalSpeed;
-      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?1600:12);
+      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?1000000:12);
       body.setLinvel({
         x:THREE.MathUtils.damp(velocity.x,targetX,5,dt),
         y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
@@ -179,7 +179,7 @@ const initialRelationships = {
 
 const defaults = {
   relationships: initialRelationships,
-  populations: { Highbreed:820000000, Incursean:540000000, Anodite:180000000, Galvan:240000000, Human:8100000000 },
+  populations: { Highbreed:820, Incursean:540, Anodite:180, Galvan:240, Human:810 },
   treasury: { Highbreed:920000, Incursean:510000, Anodite:740000, Galvan:1250000, Human:1800000 },
   revenue: { Highbreed:12500, Incursean:9200, Anodite:6500, Galvan:18000, Human:22000 },
   expenses: { Highbreed:14500, Incursean:16000, Anodite:6100, Galvan:12500, Human:19000 },
@@ -203,9 +203,15 @@ const defaults = {
 function loadData() {
   try {
     const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
-    if (saved) return { ...structuredClone(defaults), ...saved,
-      relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
-      team:{...structuredClone(defaults.team),...(saved.team||{})} };
+    if (saved) {
+      const merged = { ...structuredClone(defaults), ...saved,
+        relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
+        team:{...structuredClone(defaults.team),...(saved.team||{})},
+        populations:{...structuredClone(defaults.populations),...(saved.populations||{})}
+      };
+      for (const name of species) merged.populations[name] = clamp(Number(merged.populations[name]) || 0, 0, 999);
+      return merged;
+    }
   } catch (error) { console.warn("Simulation save could not be read", error); }
   return structuredClone(defaults);
 }
@@ -279,7 +285,7 @@ function createSimulationSystem() {
       for (const name of species) {
         const growth=(data.populations[name]||0)*0.00002;
         const warLoss=data.eventLog.some(e=>e.type==="war"&&e.status==="active"&&(e.details.attacker===name||e.details.defender===name)) ? (data.populations[name]||0)*0.00001 : 0;
-        data.populations[name]=Math.max(0,Math.round(data.populations[name]+growth-warLoss));
+        data.populations[name]=clamp(Math.round(data.populations[name]+growth-warLoss),0,999);
         const net=(data.revenue[name]||0)-(data.expenses[name]||0);
         data.treasury[name]=Math.max(0,(data.treasury[name]||0)+net);
         if (data.expenses[name] > data.revenue[name]*1.5 && Math.random()<0.22) {
@@ -402,8 +408,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 class RustbucketGame {
   constructor() {
     this.cameraConfig = {
-      title: { position: [0, 0, 3000], target: [-2100, 0, 0], fov: 55, near: 0.1, far: 100000, distance: 3663, minDistance: 2000, maxDistance: 30000, yaw: 0, pitch: 0 },
-      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 50000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
+      title: { position: [0, 0, 25000000], target: [-11232150, 0, 0], fov: 55, near: 0.1, far: 100000000, distance: 27409000, minDistance: 1000000, maxDistance: 100000000, yaw: 0, pitch: 0 },
+      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 100000000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
       dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
     };
     
@@ -1291,10 +1297,10 @@ class RustbucketGame {
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
       solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1547,0,0)},
-      augstaka: {augstaka:new THREE.Vector3(15130,0,0)},
-      anodyne: {anodyne:new THREE.Vector3(15080,0,0)},
-      galvan: {galvan:new THREE.Vector3(15070,0,0)},
-      incursia: {incursia:new THREE.Vector3(15090,0,0)}
+      augstaka: {augstaka:new THREE.Vector3(97300,0,0)},
+      anodyne: {anodyne:new THREE.Vector3(92300,0,0)},
+      galvan: {galvan:new THREE.Vector3(91300,0,0)},
+      incursia: {incursia:new THREE.Vector3(93300,0,0)}
     };
     const SYSTEM_PLANET_RADII = { earth:1300, moon:217, augstaka:1300, anodyne:1300, galvan:1300, incursia:1066 };
     const getPlanetClearance = key => (SYSTEM_PLANET_RADII[key] || 1050) * 1.6;
