@@ -394,6 +394,7 @@ class RustbucketGame {
     };
     
 
+    const cameraConfig = this.cameraConfig;
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
     scene.name = "omniverse";
@@ -685,7 +686,7 @@ class RustbucketGame {
         await loadRegion("space");
         if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
       } else await loadRegion(destination);
-      setCameraPreset(this.cameraConfig.gameplay);
+      setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination);
       marketPanel.style.display="none";
@@ -825,11 +826,11 @@ class RustbucketGame {
       const dy = event.clientY - lastPointerY;
       lastPointerX = event.clientX;
       lastPointerY = event.clientY;
-      cameraYaw -= dx * this.cameraConfig.dragSensitivity;
+      cameraYaw -= dx * cameraConfig.dragSensitivity;
       cameraPitch = THREE.MathUtils.clamp(
-        cameraPitch + dy * this.cameraConfig.pitchSensitivity,
-        this.cameraConfig.minPitch,
-        this.cameraConfig.maxPitch
+        cameraPitch + dy * cameraConfig.pitchSensitivity,
+        cameraConfig.minPitch,
+        cameraConfig.maxPitch
       );
       updateCamera();
     }
