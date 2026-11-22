@@ -3,21 +3,13 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
   root.id = "extranet-overlay";
   root.innerHTML = `
     <div id="extranet-window">
-      <nav id="extranet-toolbar"><button id="extranet-back" aria-label="Back">‹</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home" aria-label="Home">⌂</button><button id="extranet-close" aria-label="Close">×</button></nav>
+      <nav id="extranet-toolbar"><button id="extranet-back" aria-label="Back">BACK</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home" aria-label="Home">HOME</button><button id="extranet-close" aria-label="Close">CLOSE</button></nav>
       <main id="extranet-page"></main>
     </div>`;
   document.body.appendChild(root);
   const page = root.querySelector("#extranet-page");
   const address = root.querySelector("#extranet-address");
-  // Directional relationship values: each character has an independent
-  // opinion of every other character. Self-relationships remain zero.
-  const relationshipNames = ["ben","gwen","kevin","rook"];
-  const relationships = {
-    ben:   { ben:0, gwen:92, kevin:95, rook:90 },
-    gwen:  { ben:90, gwen:0, kevin:95, rook:80 },
-    kevin: { ben:95, gwen:95, kevin:0, rook:85 },
-    rook:  { ben:98, gwen:80, kevin:85, rook:0 }
-  };
+  const relationshipNames = ["Ben","Gwen","Kevin","Rook","Highbreed","Incursean","Anodite","Galvan","Human"];
   const photos = [];
   let current = "home";
   let completed = false;
@@ -28,27 +20,29 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
 
   function home() {
     current = "home"; address.value = "extranet://home";
-    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private">▣ <span><b>Private Cloud</b></span></button><button data-url="omnidata">◎ <span><b>Omnidata</b></span></button></div>`;
+    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private"><span><b>Private Cloud</b></span></button><button data-url="omnidata"><span><b>Omnidata</b></span></button></div>`;
     page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
   }
   function privateCloud() {
     current = "private"; address.value = "ottps://bgkr.omnicloud.com";
-    page.innerHTML = `<div class="cloud-links">
-      <button data-page="tasks">▤ <span><b>Tasks</b></span> ›</button>
-      <button data-page="relationships">♡ <span><b>Relationships</b></span> ›</button>
-      <button data-page="memories">▧ <span><b>Memories</b></span> ›</button>
-      <button data-page="accounts">▤ <span><b>Accounts</b></span> ›</button>
-      <button data-page="inventory">▧ <span><b>Inventory</b></span> ›</button>
-      <button data-page="event-log">◷ <span><b>Event Log</b></span> ›</button></div>`;
-    page.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => {
+    page.innerHTML = '<div class="cloud-links">' +
+      '<button data-page="tasks"><span><b>Tasks</b></span></button>' +
+      '<button data-page="relationships"><span><b>Relationships</b></span></button>' +
+      '<button data-page="memories"><span><b>Memories</b></span></button>' +
+      '<button data-page="accounts"><span><b>Accounts</b></span></button>' +
+      '<button data-page="inventory"><span><b>Inventory</b></span></button>' +
+      '<button data-page="event-log"><span><b>Event Log</b></span></button></div>';
+    page.querySelectorAll("[data-page]").forEach(button => button.addEventListener("click", () => {
+      const target = button.dataset.page;
       const views = { accounts: "accounting", inventory: "items", "event-log": "events" };
-      if (views[b.dataset.page]) {
-        current = b.dataset.page;
-        address.value = "ottps://bgkr.omnicloud.com/" + b.dataset.page;
-        onData(page, views[b.dataset.page]);
-      } else ({tasks,relationships:showRelationships,memories}[b.dataset.page])();
+      if (views[target]) {
+        current = target;
+        address.value = "ottps://bgkr.omnicloud.com/" + target;
+        onData(page, views[target]);
+      } else ({ tasks, relationships: showRelationships, memories })[target]();
     }));
   }
+
   function tasks() {
     current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";
     const count = storedCount;
@@ -56,29 +50,25 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     if (completed) showCompletion();
   }
   function showRelationships() {
-    current = "relationships"; address.value = "ottps://bgkr.omnicloud.com/relationships";
-    const people = ["ben","gwen","kevin","rook"];
-    page.innerHTML = `<div class="relationship-tabs">${people.map(p=>`<button data-person="${p}">${p.toUpperCase()}</button>`).join("")}</div><div id="relationship-list"></div>`;
-    const render = selected => {
-      page.querySelectorAll("[data-person]").forEach(b=>b.classList.toggle("active",b.dataset.person===selected));
-      const list = page.querySelector("#relationship-list");
-      list.innerHTML = relationshipNames.filter(name => name !== selected).map(name => {
-        const from = selected[0].toUpperCase() + selected.slice(1);
-        const to = name[0].toUpperCase() + name.slice(1);
-        const value = simulation?.getRelationship(from, to) ?? relationships[selected][name];
-        const label = name[0].toUpperCase() + name.slice(1);
-        return `<div class="relationship-row"><span>${label}</span><div class="relationship-meter"><i style="width:${value}%"></i></div><b>${value.toFixed(1)}%</b></div>`;
+    current = "relationships";
+    address.value = "ottps://bgkr.omnicloud.com/relationships";
+    const header = "<thead><tr><th>FROM / TO</th>" + relationshipNames.map(name => "<th>" + name + "</th>").join("") + "</tr></thead>";
+    const body = relationshipNames.map(from => {
+      const cells = relationshipNames.map(to => {
+        const value = from === to ? 0 : (simulation?.getRelationship(from, to) ?? 50);
+        return "<td class=\"" + (from === to ? "self" : "") + "\"><span>" + Number(value).toFixed(0) + "%</span><i><b style=\"width:" + value + "%\"></b></i></td>";
       }).join("");
-    };
-    page.querySelectorAll("[data-person]").forEach(b=>b.addEventListener("click",()=>render(b.dataset.person)));
-    render("ben");
+      return "<tr><th>" + from + "</th>" + cells + "</tr>";
+    }).join("");
+    page.innerHTML = "<div class=\"relationship-matrix-wrap\"><table class=\"relationship-matrix\">" + header + "<tbody>" + body + "</tbody></table></div>";
   }
+
   function memories() {
     current = "memories"; address.value = "ottps://bgkr.omnicloud.com/memories";
     page.innerHTML = `<button id="capture-memory" class="cloud-action">◎ CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
     page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
   }
-  function omnidata() {
+  function omnidata(allowSystemJump = false) {
     current = "omnidata"; address.value = "ottps://en.omnidata.org";
     const systems = {
       solar: {name:"SOLAR SYSTEM", body:"Earth, the Moon, Mars and other known worlds orbit the Sun. Earth is the team's homeworld.", worlds:"Earth • Moon • Mars • Saturn • Pluto", status:"ACTIVE / HOME SYSTEM", source:"https://ben10.fandom.com/wiki/Solar_System"},
@@ -108,8 +98,8 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     const selectSystem = key => {
       const item = systems[key]; if (!item) return;
       page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
-      detail.innerHTML = `<h2>${item.name}</h2><p>${item.body}</p><div class="omni-worlds">${item.worlds}</div><p class="omni-status">${item.status}</p><button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>`;
-      detail.querySelector("#omnidata-jump").addEventListener("click",()=>onJumpSystem(key));
+      detail.innerHTML = "<h2>" + item.name + "</h2><p>" + item.body + "</p><div class=\"omni-worlds\">" + item.worlds + "</div><p class=\"omni-status\">" + item.status + "</p>" + (allowSystemJump ? '<button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>' : "");
+      if (allowSystemJump) detail.querySelector("#omnidata-jump").addEventListener("click",()=>onJumpSystem(key));
     };
     page.querySelectorAll(".omni-node").forEach(node => {
       node.addEventListener("click",()=>selectSystem(node.dataset.system));
@@ -173,12 +163,15 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
       if (url.endsWith("/tasks")) tasks();
       else if (url.endsWith("/relationships")) showRelationships();
       else if (url.endsWith("/memories")) memories();
+      else if (url.endsWith("/accounts")) { current="accounts"; onData(page,"accounting"); }
+      else if (url.endsWith("/inventory")) { current="inventory"; onData(page,"items"); }
+      else if (url.endsWith("/event-log")) { current="event-log"; onData(page,"events"); }
       else privateCloud();
     } else if (url.includes("en.omnidata.org")) omnidata();
     else if (url === "extranet://home") home();
   });
   function open() { root.style.display="flex"; home(); }
-  function openOmnidata() { root.style.display="flex"; omnidata(); }
+  function openOmnidata() { root.style.display="flex"; omnidata(true); }
   function close() { root.style.display="none"; }
   home();
   return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return relationships;} };
