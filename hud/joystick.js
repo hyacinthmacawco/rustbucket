@@ -213,6 +213,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       joy.jumpRequested = false;
     }
     if (selected === "rustbucket" && object.userData.moveVehicle) {
+      if(magnitude>0.08||Math.abs(getLift())>0.05)object.userData.onFuelUse?.((magnitude+Math.abs(getLift()))*dt);
       object.userData.moveVehicle(mx, mz, getLift(), dt, right, Math.atan2(fx, fz));
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
