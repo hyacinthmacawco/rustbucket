@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { dimensions } from "../storage/state.js";
+import { dimensions } from "../storage/dimensions.js";
 
 // Earth interior environment: Bellwood sky, atmosphere, roads,
 // sidewalks, low-rise buildings, and roadside trees.
