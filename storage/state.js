@@ -250,6 +250,7 @@ function loadData() {
         }
       }
       delete merged.relationships;
+      merged.eventLog = (merged.eventLog || []).filter(event => !/passing trader convoy/i.test(event.description || ""));
       for (const name of species) merged.populations[name] = clamp(Number(merged.populations[name]) || 0, 0, 999);
       return merged;
     }
