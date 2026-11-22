@@ -71,6 +71,15 @@ export class AlienShip {
   update(delta, target, hostile, onAttack = () => {}) {
     if (this.destroyed) return;
     this.attackCooldown -= delta;
+    if (this.attackFlash) {
+      this.attackFlashLife -= delta;
+      if (this.attackFlashLife <= 0) {
+        this.attackFlash.parent?.remove(this.attackFlash);
+        this.attackFlash.geometry.dispose();
+        this.attackFlash.material.dispose();
+        this.attackFlash = null;
+      }
+    }
     const position = this.group.position;
     if (hostile && target) {
       const direction = new THREE.Vector3().subVectors(target.position, position);
@@ -113,6 +122,12 @@ export class AlienShip {
   }
 
   dispose() {
+    if (this.attackFlash) {
+      this.attackFlash.parent?.remove(this.attackFlash);
+      this.attackFlash.geometry.dispose();
+      this.attackFlash.material.dispose();
+      this.attackFlash = null;
+    }
     this.group.parent?.remove(this.group);
     this.group.traverse(object => {
       if (!object.isMesh) return;
