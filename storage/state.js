@@ -1032,6 +1032,7 @@ class RustbucketGame {
       }
       regionGroup = null;
       titleObjects = null;
+      alienPatrols = [];
     }
 
     const sceneLoadError = document.createElement("section");
@@ -1071,6 +1072,7 @@ class RustbucketGame {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = new SolarSystem(group);
           if (state.stage === "gameplay") {
+            spawnPatrols(group,"solar");
             const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
             const nextPhysics = await PhysicsEngine.create();
@@ -1095,6 +1097,7 @@ class RustbucketGame {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = new SystemClass(group);
           if (state.stage === "gameplay") {
+            spawnPatrols(group,systemKey);
             const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
             ship.position.set(-20,12,0);
             const nextPhysics = await PhysicsEngine.create();
@@ -1129,6 +1132,7 @@ class RustbucketGame {
           const interior = new InteriorClass(group);
           const { marketPosition } = interior.environment;
           const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship); ship.position.set(0,2,13);
+          passengerTransport.bindShip(ship,interior.environment.inhabitants);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
@@ -1142,8 +1146,10 @@ class RustbucketGame {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           new EarthInterior(scene, group);
+          const population = new PlanetPopulation(group,"earth");
           const storageUnit = new KevinStorageUnit(group); const unit = storageUnit.unit;
-          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
+          passengerTransport.bindShip(ship,population.inhabitants);
 
           const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
@@ -1375,6 +1381,7 @@ class RustbucketGame {
         warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
         await new Promise(resolve=>window.setTimeout(resolve,1250));
         state.currentScene=nearestPlanet.key;await loadRegion(nearestPlanet.key);setCameraPreset(cameraConfig.gameplay);
+        passengerTransport.complete(nearestPlanet.key,entities?.rustbucket);
         extranet.setLocation(nearestPlanet.key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
         planetTransitionBusy=false;
       }
@@ -1431,6 +1438,7 @@ class RustbucketGame {
       }
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
+      if (!state.paused && state.stage === "gameplay") updatePatrolCombat(delta);
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
@@ -1490,6 +1498,7 @@ class RustbucketGame {
       extranetButton.remove();
       rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
       extranet.close();
+      passengerTransport.destroy();
       disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
