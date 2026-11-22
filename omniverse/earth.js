@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { dimensions } from "../storage/state.js";
 
-// Bellwood outdoor environment: sky, atmospheric fog, sunlight, roads,
+// Earth interior environment: Bellwood sky, atmosphere, roads,
 // sidewalks, low-rise buildings, and roadside trees.
 export function createEarthInterior(scene, parent = scene) {
   scene.background = new THREE.Color(0x78b9f5);
@@ -9,7 +9,7 @@ export function createEarthInterior(scene, parent = scene) {
 
   const root = new THREE.Group();
   root.name = "EarthInterior";
-  root.position.set(...dimensions.bellwood.position);
+  root.position.set(...dimensions.earthInterior.position);
   root.scale.set(...dimensions.bellwood.scale);
   parent.add(root);
 
