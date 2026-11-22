@@ -411,7 +411,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 class RustbucketGame {
   constructor() {
     this.cameraConfig = {
-      title: { position: [0, 0, 480000], target: [-137150, 0, 0], fov: 55, near: 0.1, far: 2000000, distance: 499000, minDistance: 10000, maxDistance: 1000000, yaw: 0, pitch: 0 },
+      title: { position: [0, 0, 600000], target: [-137150, 0, 0], fov: 55, near: 0.1, far: 2000000, distance: 615500, minDistance: 10000, maxDistance: 1000000, yaw: 0, pitch: 0 },
       gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 2000000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
       dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
     };
