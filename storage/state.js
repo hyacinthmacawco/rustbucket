@@ -397,7 +397,7 @@ class SimulationSystem {
   }
 }
 
-export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 1680, 0) };
+export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 2080, 0) };
 
 class RustbucketGame {
   constructor() {
@@ -1290,13 +1290,13 @@ class RustbucketGame {
 
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
-      solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1255,0,0)},
-      augstaka: {augstaka:new THREE.Vector3(12380,0,0)},
-      anodyne: {anodyne:new THREE.Vector3(12330,0,0)},
-      galvan: {galvan:new THREE.Vector3(12320,0,0)},
-      incursia: {incursia:new THREE.Vector3(12340,0,0)}
+      solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1547,0,0)},
+      augstaka: {augstaka:new THREE.Vector3(15130,0,0)},
+      anodyne: {anodyne:new THREE.Vector3(15080,0,0)},
+      galvan: {galvan:new THREE.Vector3(15070,0,0)},
+      incursia: {incursia:new THREE.Vector3(15090,0,0)}
     };
-    const SYSTEM_PLANET_RADII = { earth:1050, moon:175, augstaka:1050, anodyne:1050, galvan:1050, incursia:1050 };
+    const SYSTEM_PLANET_RADII = { earth:1300, moon:217, augstaka:1300, anodyne:1300, galvan:1300, incursia:1066 };
     const getPlanetClearance = key => (SYSTEM_PLANET_RADII[key] || 1050) * 1.6;
     let planetEntryCooldown=0;
     let planetTransitionBusy=false;
