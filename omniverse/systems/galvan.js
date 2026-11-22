@@ -6,6 +6,7 @@ export class GalvanSystem {
     const result = new AlienSystems(parent, "galvan");
     this.root = result.root;
     this.group = result.systems[0];
+    this.root.position.copy(this.group.position).negate();
     this.starfield = this.createStarfield();
   }
   createStarfield() {
