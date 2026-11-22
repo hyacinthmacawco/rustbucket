@@ -75,6 +75,10 @@ export async function createPhysics() {
       RAPIER.ColliderDesc.cuboid(s(0.12),s(0.82),s(5.0)).setTranslation(s(-1.38),0,0),
       RAPIER.ColliderDesc.cuboid(s(0.12),s(0.82),s(5.0)).setTranslation(s(1.38),0,0),
       RAPIER.ColliderDesc.cuboid(s(1.32),s(0.82),s(0.12)).setTranslation(0,0,s(5.0)),
+      // External landing skids support the hull without creating a floor inside the cabin.
+      RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(s(-0.92),s(-0.82),s(-3.35)),
+      RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(s(0.92),s(-0.82),s(-3.35)),
+      RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(0,s(-0.82),s(3.0))
     ];
     for(const desc of walls) world.createCollider(desc,body);
     const attitude={yaw:0,pitch:0,roll:0};
