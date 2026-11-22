@@ -25,6 +25,7 @@ export const dimensions = {
   rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
   kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
   earthInterior: { position: [0, 0, 0], scale: [1, 1, 1] },
+  bellwood: { scale: [1, 1, 1] },
   earth: { position: [4.5, 0, 0], radius: 2.05 },
   moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
   sun: { position: [-50, 0, 0], radius: 30 },
@@ -508,7 +509,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = createSolarSystem(group);
           if (state.stage === "gameplay") {
-            const { ship } = createRustbucket(group); configureShip(ship); configureShip(ship);
+            const { ship } = createRustbucket(group); configureShip(ship);
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
