@@ -11,26 +11,17 @@ export class Rustbucket {
   const metal=new THREE.MeshStandardMaterial({color:0x424b50,metalness:.45,roughness:.5});
   function mesh(g,m,p,r=[0,0,0]){const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.castShadow=true;o.receiveShadow=true;o.userData.noPhysics=true;ship.add(o);return o;}
 
-  // Hollow fuselage: the aft end is left open for the cargo ramp.
-  function createFuselageGeometry(){
-    const axial=32,radial=64,length=10.5,positions=[],indices=[];
-    for(let j=0;j<=axial;j++){
-      const along=j/axial,axisY=-length/2+along*length,radius=1.25+along*.3;
-      for(let i=0;i<=radial;i++){const a=i/radial*Math.PI*2;positions.push(radius*Math.cos(a),axisY,radius*Math.sin(a));}
-    }
-    for(let j=0;j<axial;j++)for(let i=0;i<radial;i++){
-      const a=j*(radial+1)+i,b=a+radial+1,c=b+1,d=a+1;
-      indices.push(a,b,d,b,c,d);
-    }
-    const g=new THREE.BufferGeometry();
-    g.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
-    g.setIndex(indices);g.computeVertexNormals();return g;
-  }
-  mesh(createFuselageGeometry(),hull,[0,0,0],[Math.PI/2,0,0]);
-  mesh(new THREE.BoxGeometry(2.5,.12,9.7),inner,[0,-.55,0]);
+  // Open-top cuboid fuselage. Flat walls and floor form a rectangular cabin;
+  // the rear remains open for the loading ramp.
+  mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[-1.35,0,0]);
+  mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[1.35,0,0]);
+  mesh(new THREE.BoxGeometry(2.7,.14,9.7),inner,[0,-1.18,0]);
+  mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[-1.22,1.22,0]);
+  mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[1.22,1.22,0]);
+  mesh(new THREE.BoxGeometry(2.7,2.5,.16),hull,[0,0,-5.18]);
   // Nose only; no solid rear cap, so the troop/cargo bay stays accessible.
   mesh(new THREE.ConeGeometry(1.52,2.6,12),hull,[0,0,6.45],[Math.PI/2,0,0]);
-  mesh(new THREE.CylinderGeometry(1.52,1.52,.22,12),orange,[0,0,5.25],[Math.PI/2,0,0]);
+  mesh(new THREE.BoxGeometry(2.78,.18,.24),orange,[0,0,5.12]);
   for(let i=0;i<3;i++)mesh(new THREE.BoxGeometry(.42,.62,.08),metal,[-.48+i*.48,.7,3.5-i*.32],[-.12,0,0]);
   for(const side of [-1,1]){
     mesh(new THREE.BoxGeometry(6.2,.16,2.1),hull,[side*3.8,-.08,-1.15],[0,0,side*.035]);
