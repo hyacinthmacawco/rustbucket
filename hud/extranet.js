@@ -65,7 +65,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
 
   function memories() {
     current = "memories"; address.value = "ottps://bgkr.omnicloud.com/memories";
-    page.innerHTML = `<button id="capture-memory" class="cloud-action">◎ CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
+    page.innerHTML = `<button id="capture-memory" class="cloud-action">CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
     page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
   }
   function omnidata(allowSystemJump = false) {
