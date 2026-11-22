@@ -1336,7 +1336,6 @@ class RustbucketGame {
       }
       setCameraPreset(cameraConfig.gameplay);extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
-      extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       planetTransitionBusy=false;planetEntryCooldown=2;
     }
     const clock = new THREE.Clock();
