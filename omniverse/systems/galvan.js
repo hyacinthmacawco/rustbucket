@@ -33,7 +33,7 @@ export class GalvanSystem {
       size: 0.14, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false
     }));
     stars.name = "GalvanPrimeStarfield";
-    this.root.add(stars);
+    this.group.add(stars);
     return stars;
   }
 
