@@ -16,7 +16,7 @@ export function createPhaseTwoCloud(phaseTwo) {
     const ledger=content.querySelector("#p2-ledger");
     const render=tab=>{content.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
       if(tab==="balance"){const value=data.team.inventory.reduce((n,x)=>n+x.quantity*(x.value||10),0);ledger.innerHTML="<h2>TEAM BALANCE SHEET</h2>"+row("Cash and Taydenite",data.team.cash+" T")+row("Stored resources",value+" T")+row("Fuel",phaseTwo.getStatus("Rustbucket").energy.toFixed(0)+"%")+row("Tracked assets",(data.team.cash+value).toLocaleString()+" T");}
-      else if(tab==="income"){ledger.innerHTML="<h2>SPECIES INCOME STATEMENT</h2>"+phaseTwo.species.map(n=>row(n,data.revenue[n].toLocaleString()+" T revenue / "+data.expenses[n].toLocaleString()+" T expenses")).join("");}
+      else if(tab==="income"){ledger.innerHTML="<h2>SPECIES INCOME STATEMENT</h2>"+phaseTwo.species.map(n=>row(n,data.populations[n].toLocaleString()+" population • "+data.revenue[n].toLocaleString()+" T revenue / "+data.expenses[n].toLocaleString()+" T expenses")).join("");}
       else {ledger.innerHTML="<h2>TEAM CASH FLOW STATEMENT</h2>"+row("Opening cash",data.team.cash.toLocaleString()+" T")+row("Operating cash flow","0 T")+row("Investing cash flow","0 T")+row("Financing cash flow","0 T")+"<p>Transactions will be recorded here as trade and operating costs are implemented.</p>";}};
     content.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>render(b.dataset.tab)));render("balance");
   }
