@@ -646,11 +646,11 @@ export const state = { stage: "title", currentScene: "space" };
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
 
-      if (!state.paused && state.stage === "gameplay" && keyboardController) {
+      if (!state.paused && state.stage === "gameplay" && keyboardController && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") {
         keyboardController.update(delta);
       }
-      if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
-      if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
+      if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
+      if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
       if (state.stage === "gameplay") extranet.setLocation(state.currentScene);
 
