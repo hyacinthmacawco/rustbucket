@@ -88,7 +88,7 @@ async function createPhysics() {
       RAPIER.RigidBodyDesc.dynamic().setTranslation(p.x,p.y,p.z)
         .setLinearDamping(0).setAngularDamping(0).setCanSleep(false)
     );
-    body.setGravityScale(environment==="space"?0:1,true);
+    body.setGravityScale(0,true);
     // Only the hull walls collide. There is deliberately no collider across
     // the cabin floor or interior, so passengers can walk through the ship.
     const walls=[
@@ -106,7 +106,15 @@ async function createPhysics() {
     object.userData.vehicleBody=body;
     object.userData.moveVehicle=(forward,right,lift,dt,steerInput=0,heading=attitude.yaw)=>{
       const thrust=environment==="space"?15:22;
-      body.applyImpulse({x:forward*thrust*dt,y:lift*thrust*dt,z:right*thrust*dt},true);
+      body.applyImpulse({x:forward*thrust*dt,y:0,z:right*thrust*dt},true);
+      // Actively regulate vertical speed so planetary gravity cannot pin the ship down.
+      const velocity=body.linvel();
+      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?16:12);
+      body.setLinvel({
+        x:velocity.x,
+        y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
+        z:velocity.z
+      },true);
       attitude.yaw=heading;
       attitude.roll=THREE.MathUtils.damp(attitude.roll,THREE.MathUtils.clamp(steerInput,-1,1)*0.32,5,dt);
       attitude.pitch=THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
@@ -121,8 +129,8 @@ async function createPhysics() {
     environment=next==="space"?"space":"planet";
     for(const entry of bodies){
       if(entry.kind!=="vehicle")continue;
-      entry.body.setGravityScale(environment==="space"?0:1,true);
-      entry.body.setLinearDamping(environment==="space"?0:0.12);
+      entry.body.setGravityScale(0,true);
+      entry.body.setLinearDamping(environment==="space"?0.02:0.08);
       entry.body.setAngularDamping(environment==="space"?0:0.25);
     }
   }
@@ -613,11 +621,7 @@ class RustbucketGame {
     extranetButton.setAttribute("aria-label", "Open Extranet");
     extranetButton.textContent = "🌐";
     extranetButton.addEventListener("click", () => extranet.open());
-    const liftControl = document.createElement("label");
-    liftControl.id = "vehicle-lift-control";
-    liftControl.innerHTML = '<span>LIFT</span><input id="vehicle-lift-slider" type="range" min="-1" max="1" step="0.02" value="0" orient="vertical"><span>HOVER</span>';
-    document.body.append(extranetButton, liftControl);
-    const liftInput = liftControl.querySelector("#vehicle-lift-slider");
+    document.body.appendChild(extranetButton);
     const rampButton = document.createElement("button");
     rampButton.id = "ramp-toggle-button";
     rampButton.type = "button";
@@ -949,9 +953,9 @@ class RustbucketGame {
           physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
-              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
+              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
-              onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+              onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
             });
           } else { regionGroup=group; scene.add(regionGroup); }
           loadedRegion=name; loadingRegion=null; return;
@@ -962,9 +966,9 @@ class RustbucketGame {
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
-            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
+            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
-            onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+            onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
           loadedRegion=name;loadingRegion=null;return;
 
@@ -979,9 +983,9 @@ class RustbucketGame {
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
-            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
+            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
-            onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+            onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
           regionGroup.userData.marketPosition=marketPosition;
           loadedRegion=name;loadingRegion=null;return;
@@ -1117,11 +1121,9 @@ class RustbucketGame {
             entities, camera, joystick, updateCamera, isMobile, initialSelected: state.arrivingInShip ? "rustbucket" : "ben",
             onJump: openSystemMap,
             onToggleRamp: () => { ship.userData.toggleRamp?.(); rampButton.textContent = ship.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; },
-            getLift: () => Number(liftInput.value),
+            
             onSelect: selected => {
-              liftControl.style.display = selected === "rustbucket" ? "flex" : "none";
               rampButton.style.display = selected === "rustbucket" ? "block" : "none";
-              if (selected !== "rustbucket") liftInput.value = "0";
             }
           });
           loadedRegion = name;
@@ -1233,7 +1235,7 @@ class RustbucketGame {
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
       omnitrixControl.style.display=state.stage==="gameplay"&&keyboardController?.selected==="ben"?"flex":"none";
-      if (state.stage !== "gameplay") { liftControl.style.display = "none"; rampButton.style.display = "none"; }
+      if (state.stage !== "gameplay") { rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
       const delta = Math.min(clock.getDelta(), 0.05);
@@ -1304,7 +1306,7 @@ class RustbucketGame {
       pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
-      liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
+      rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
       extranet.close();
       disposeRegion();
       titleScreen.destroy();
