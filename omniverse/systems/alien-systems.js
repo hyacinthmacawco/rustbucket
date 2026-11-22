@@ -133,7 +133,6 @@ export function createAlienSystems(parent, only = null) {
     const label = labelSprite("AUGSTAKA • HIGHBREED"); label.position.set(19, 8, 0); group.add(label);
     systems.push(group);
   }
-  }
 
   // Anodyne — dark red world with the distinctive pair of orange rings.
   if (!only || only === "anodyne") {
@@ -149,7 +148,6 @@ export function createAlienSystems(parent, only = null) {
     const label = labelSprite("ANODYNE • ANODITES", "#ffd1b2"); label.position.set(17, 8, 0); group.add(label);
     systems.push(group);
   }
-  }
 
   // Galvan Prime — small green technological world with its enormous
   // crater-like marking and Galvan B moon.
@@ -164,7 +162,6 @@ export function createAlienSystems(parent, only = null) {
     moon.position.set(16, 0, 6.7); moon.name = "Galvan B"; group.add(moon);
     const label = labelSprite("GALVAN PRIME • GALVANS"); label.position.set(16, 7, 0); group.add(label);
     systems.push(group);
-  }
   }
 
   // Incursia — its canonical appearance is a peach-like planet with huge
@@ -188,7 +185,6 @@ export function createAlienSystems(parent, only = null) {
     planet.scale.setScalar(.82);
     const label = labelSprite("INCURSIA • INCURSEAN REMNANTS", "#ffd8c2"); label.position.set(17, 8, 0); group.add(label);
     systems.push(group);
-  }
   }
 
   root.traverse(object => {
