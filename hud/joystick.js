@@ -195,6 +195,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
   let lastAttackAt = 0;
   const selectableMembers = TEAM_MEMBERS.filter(name => entities[name]);
   joystick.setTeamOptions(selected, selectableMembers);
+  joystick.setVehicleMode(selected === "rustbucket");
   onSelect(selected);
 
   function keydown(event) {
@@ -229,6 +230,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     if (!next) return;
     selected = next;
     joystick.setTeamOptions(selected, selectableMembers);
+    joystick.setVehicleMode(selected === "rustbucket");
     onSelect(selected);
     updateCamera();
   }
