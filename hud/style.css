@@ -958,3 +958,18 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
 @media(hover:hover) and (pointer:fine){#ability-dial{display:none!important}}
 @media(max-width:520px){#ability-dial{right:14px;bottom:max(116px,calc(env(safe-area-inset-bottom) + 116px));width:112px}#ability-dial-ring{width:96px;height:96px}#ability-dial-center{inset:29px}}
 #pause-button{display:none!important}
+
+
+/* Unified flat UI: no borders, shadows, or backdrop blur anywhere. */
+:root *:not(canvas){backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:none!important}
+button,input,select,textarea,#extranet-overlay,#extranet-window,#extranet-page,#system-map-overlay,#system-map-panel,#system-map-graphic,#planet-market,.planet-market-card,#simulation-cloud,#simulation-cloud-window,#omnidata-map-wrap,#omnidata-detail,#movement-joystick,#joystick-base,#joystick-knob,#lift-joystick-base,#lift-joystick-knob,#ability-dial-title,#ability-dial-mode,#ability-dial-ring,#ability-dial-center,#ability-dial-indicator,#hep-control,#carried-items-hud,#simulation-event-notice{background:rgba(0,0,0,.3)!important}
+#extranet-overlay,#system-map-overlay,#planet-market,#simulation-cloud{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#extranet-window,#system-map-panel,.planet-market-card,#simulation-cloud-window{background:rgba(0,0,0,.3)!important}
+#action-controls{left:max(18px,env(safe-area-inset-left))!important;right:auto!important;bottom:max(164px,calc(env(safe-area-inset-bottom) + 164px))!important;gap:8px!important}
+#action-controls button{width:58px!important;height:58px!important;background:rgba(0,0,0,.3)!important}
+#ramp-toggle-button{left:max(20px,env(safe-area-inset-left))!important;right:auto!important;bottom:24px!important;background:rgba(0,0,0,.3)!important}
+#extranet-button{top:auto!important;right:max(20px,env(safe-area-inset-right))!important;bottom:max(20px,env(safe-area-inset-bottom))!important;background:rgba(0,0,0,.3)!important}
+#movement-joystick{background:transparent!important}
+#joystick-base,#lift-joystick-base,#ability-dial-ring{background:rgba(0,0,0,.3)!important}
+#extranet-window{border-radius:0!important}
+@media(max-width:520px){#action-controls{bottom:max(164px,calc(env(safe-area-inset-bottom) + 164px))!important}#ramp-toggle-button{bottom:max(248px,calc(env(safe-area-inset-bottom) + 248px))!important}}
