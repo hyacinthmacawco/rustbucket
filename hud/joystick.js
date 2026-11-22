@@ -134,7 +134,7 @@ export function createJoystick() {
   };
 }
 
-export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, getLift = () => 0, onJump = () => {}, onToggleRamp = () => {}, initialSelected = "ben" }) {
+export function createKeyboard({ entities, camera, joystick, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, initialSelected = "ben" }) {
   const keys = new Set();
   let selected = initialSelected;
   let lastAttackAt = 0;
@@ -213,9 +213,11 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       joy.jumpRequested = false;
     }
     if (selected === "rustbucket" && object.userData.moveVehicle) {
-      const fuelDemand=magnitude>0.08||Math.abs(getLift())>0.05;
-      const hasFuel=!fuelDemand||object.userData.onFuelUse?.((magnitude+Math.abs(getLift()))*dt)!==false;
-      if(hasFuel)object.userData.moveVehicle(mx, mz, getLift(), dt, right, Math.atan2(fx, fz));
+      // Camera pitch controls lift; a small dead zone prevents accidental drift.
+      const lift=Math.abs(direction.y)<0.06?0:THREE.MathUtils.clamp(direction.y*1.5,-1,1);
+      const fuelDemand=magnitude>0.08||Math.abs(lift)>0.05;
+      const hasFuel=!fuelDemand||object.userData.onFuelUse?.((magnitude+Math.abs(lift))*dt)!==false;
+      if(hasFuel)object.userData.moveVehicle(mx, mz, lift, dt, right, Math.atan2(fx, fz));
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
