@@ -122,6 +122,7 @@ export class EarthInterior {
   }
 
   Object.assign(this, { bellwood: root, sunlight });
+  }
 }
 
 
@@ -286,6 +287,7 @@ export class KevinStorageUnit {
   }
 
   this.unit = unit;
+  }
 }
 
 export class Suitcases {
@@ -324,5 +326,6 @@ export class Suitcases {
     return group;
   });
   this.suitcases = suitcases;
+  }
 }
 
