@@ -801,3 +801,29 @@ input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);
  #omnidata-detail{width:100%;padding:12px}
  #extranet-toolbar{gap:6px;padding-left:8px!important;padding-right:8px!important}
 }
+
+/* Phase 1: system map, warp transition, and Rustbucket loading-ramp control. */
+#system-map-overlay{display:none;position:fixed;inset:0;z-index:180;align-items:center;justify-content:center;padding:20px;background:rgba(1,8,5,.88);backdrop-filter:blur(14px);color:#eaffef}
+#system-map-panel{width:min(680px,100%);padding:clamp(18px,4vw,34px);border:1px solid rgba(135,255,170,.55);border-radius:20px;background:rgba(5,28,15,.94);box-shadow:0 0 42px rgba(55,255,120,.15)}
+#system-map-title{text-align:center;font-size:clamp(19px,4vw,28px);font-weight:850;letter-spacing:.2em;color:#e1ffea}
+#system-map-graphic{position:relative;height:min(48vh,310px);min-height:230px;margin:18px 0;border:1px solid rgba(135,255,170,.22);border-radius:14px;background:radial-gradient(ellipse at 50% 50%,rgba(30,100,58,.18),rgba(0,0,0,.12) 70%),repeating-linear-gradient(0deg,transparent 0 38px,rgba(135,255,170,.04) 39px 40px)}
+#system-map-graphic:before{content:"";position:absolute;left:16%;right:16%;top:51%;height:1px;background:linear-gradient(90deg,rgba(255,190,95,.65),rgba(135,255,170,.55));transform:rotate(-10deg)}
+.system-map-node{position:absolute;z-index:1;min-width:78px;min-height:62px;padding:10px;border:1px solid rgba(135,255,170,.75);border-radius:50%;background:rgba(9,65,35,.9);color:#eaffef;font-size:11px;font-weight:800;letter-spacing:.1em;box-shadow:0 0 22px rgba(55,255,120,.2);cursor:pointer}
+.system-map-node small{font-size:8px;color:#aaffc0}
+.system-map-node:disabled{opacity:1;cursor:default}
+.sun-node{left:12%;top:38%;border-color:#ffc77b;background:radial-gradient(circle,#ffbd63,#9b4c1c);color:#251306;box-shadow:0 0 36px rgba(255,155,55,.35)}
+.earth-node{left:52%;top:38%;transform:translate(-50%,-50%)}
+.moon-node{right:12%;top:16%;min-width:66px;min-height:54px;background:rgba(83,93,88,.88);border-color:#b8d1c1}
+#system-map-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+#system-map-actions button{min-width:130px;padding:11px 16px;border:1px solid rgba(135,255,170,.62);border-radius:10px;background:rgba(12,75,38,.55);color:#eaffef;letter-spacing:.1em;font-size:10px}
+#warp-overlay{display:none;position:fixed;inset:0;z-index:220;overflow:hidden;align-items:center;justify-content:center;background:#02040a;color:#eaffef;pointer-events:none}
+#warp-flash{position:absolute;inset:-50%;background:repeating-linear-gradient(90deg,transparent 0 8%,rgba(180,255,210,.18) 8.2% 8.35%,transparent 8.6% 16%);transform:perspective(180px) rotateX(72deg) scale(1.5);opacity:0}
+#warp-caption{position:relative;font-size:clamp(18px,5vw,34px);font-weight:900;letter-spacing:.35em;text-shadow:0 0 24px #80ffa6;opacity:0}
+#warp-overlay.warp-active #warp-flash{animation:rustbucket-warp 1.25s ease-in-out both}
+#warp-overlay.warp-active #warp-caption{animation:rustbucket-warp-caption 1.25s ease-in-out both}
+@keyframes rustbucket-warp{0%{opacity:0;transform:perspective(180px) rotateX(72deg) scale(.25)}35%{opacity:1}100%{opacity:0;transform:perspective(180px) rotateX(72deg) scale(2.8)}}
+@keyframes rustbucket-warp-caption{0%,25%{opacity:0;letter-spacing:.7em}48%,72%{opacity:1;letter-spacing:.28em}100%{opacity:0;letter-spacing:.8em}}
+#ramp-toggle-button{display:none;position:fixed;z-index:112;right:max(22px,env(safe-area-inset-right));bottom:max(30px,calc(env(safe-area-inset-bottom) + 30px));padding:11px 15px;border:1px solid rgba(135,255,170,.85);border-radius:10px;background:rgba(12,75,38,.8);color:#e1ffea;font-size:10px;font-weight:800;letter-spacing:.12em;box-shadow:0 0 16px rgba(55,255,120,.2)}
+#ramp-toggle-button:active{transform:scale(.96)}
+@media(hover:hover) and (pointer:fine){#ramp-toggle-button{bottom:24px}}
+@media(max-width:520px){#system-map-panel{padding:16px}#system-map-graphic{height:42vh;min-height:210px}.sun-node{left:7%}.earth-node{left:51%}.moon-node{right:6%}#ramp-toggle-button{bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));right:24px}}
