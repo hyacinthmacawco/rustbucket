@@ -977,10 +977,10 @@ button,input,select,textarea,#extranet-overlay,#extranet-window,#extranet-page,#
 
 /* Text-first rectangular gameplay controls, grouped beside the HEP meters. */
 #action-controls{
-  left:50%!important;
+  left:calc(50% + 73px)!important;
   right:auto!important;
   bottom:max(14px,env(safe-area-inset-bottom))!important;
-  transform:translateX(calc(-100% - 6px));
+  transform:translateX(-100%);
   display:none;
   align-items:center!important;
   gap:4px!important;
@@ -1003,7 +1003,7 @@ button,input,select,textarea,#extranet-overlay,#extranet-window,#extranet-page,#
 }
 #action-controls button:active,#ramp-toggle-button:active{transform:translateY(1px)!important}
 #hep-control{
-  left:calc(50% + 6px)!important;
+  left:calc(50% + 79px)!important;
   right:auto!important;
   bottom:max(14px,env(safe-area-inset-bottom))!important;
   transform:none!important;
