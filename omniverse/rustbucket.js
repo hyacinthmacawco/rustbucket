@@ -1,10 +1,9 @@
 import * as THREE from "three";
-import { dimensions } from "../storage/dimensions.js";
-
-export function createRustbucket(parent) {
+export class Rustbucket {
+  constructor(parent) {
   const ship=new THREE.Group();ship.name="Rustbucket";
-  ship.position.set(...dimensions.rustbucket.position);
-  ship.scale.set(...dimensions.rustbucket.scale);
+  ship.position.set(0, 2, 0);
+  ship.scale.set(2, 2, 2);
   parent.add(ship);
   const hull=new THREE.MeshStandardMaterial({color:0xd8d0ad,roughness:.72,side:THREE.DoubleSide});
   const inner=new THREE.MeshStandardMaterial({color:0x55534a,roughness:.9});
@@ -72,5 +71,6 @@ export function createRustbucket(parent) {
   };
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(7.2,32),new THREE.MeshBasicMaterial({color:0x080a0e,transparent:true,opacity:.25,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.set(0,.025,0);shadow.scale.set(1.25,.62,1);shadow.userData.noPhysics=true;parent.add(shadow);
-  return {ship,shadow};
+  Object.assign(this, { ship, shadow });
+  }
 }
