@@ -1,6 +1,9 @@
 import * as THREE from "three";
 
-export function createRook({ createHumanRig }) {
+export class Rook {
+  constructor({ createHumanRig }) {
+    this.startPosition = [7,-0.5,-7];
+    this.startScale = [0.52,0.52,0.52];
   if (typeof createHumanRig !== "function") throw new TypeError("createRook requires createHumanRig.");
   const rig = createHumanRig({ boneRadius: 0.05, jointRadius: 0.07 });
   const { group, joints } = rig;
@@ -79,5 +82,6 @@ export function createRook({ createHumanRig }) {
   const tool = box(joints.spine, "RookProtoToolPack", [0.23, 0.55, 0.16], [0.27, 0.18, -0.22], mat.trim);
   tool.rotation.z = -0.12;
   box(joints.spine, "RookProtoToolBluePanel", [0.13, 0.38, 0.025], [0.27, 0.19, -0.31], mat.armorLight);
-  return { group, rig, joints };
+  Object.assign(this, { group, rig, joints });
+  }
 }
