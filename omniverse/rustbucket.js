@@ -39,15 +39,15 @@ export function createRustbucket(parent) {
   }
 
   // Hinged rear loading ramp: closed vertically, lowered onto the ground when open.
-  const rampPivot=new THREE.Group();rampPivot.position.set(0,-.45,-5.0);ship.add(rampPivot);
+  const rampPivot=new THREE.Group();rampPivot.position.set(0,-1.25,-5.0);ship.add(rampPivot);
   const ramp=new THREE.Mesh(new THREE.BoxGeometry(2.55,3.0,.16),metal);
-  ramp.position.set(0,-1.5,0);ramp.castShadow=true;ramp.userData.noPhysics=true;rampPivot.add(ramp);
+  ramp.position.set(0,1.25,0);ramp.castShadow=true;ramp.userData.noPhysics=true;rampPivot.add(ramp);
   const rampStripe=new THREE.Mesh(new THREE.BoxGeometry(2.4,.12,.18),orange);
-  rampStripe.position.set(0,-.3,0);rampStripe.userData.noPhysics=true;rampPivot.add(rampStripe);
+  rampStripe.position.set(0,2.1,0);rampStripe.userData.noPhysics=true;rampPivot.add(rampStripe);
   let rampOpen=false;
   function setRamp(open){
     rampOpen=Boolean(open);
-    rampPivot.rotation.x=rampOpen?Math.PI/2:0;
+    rampPivot.rotation.x=rampOpen?-Math.PI/2:0;
     rampPivot.position.z=rampOpen?-5.0:-5.0;
     ship.userData.rampOpen=rampOpen;
   }
