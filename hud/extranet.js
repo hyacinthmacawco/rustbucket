@@ -116,15 +116,17 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     setLocation(currentLocation);
   }
   function setLocation(location) {
-    const nextLocation = location === "space" ? "space" : "earth";
+    const labels = {space:"SOLAR SYSTEM",earth:"EARTH • BELLWOOD",moon:"THE MOON",augstaka:"AUGSTAKA",anodyne:"ANODYNE",galvan:"GALVAN PRIME",incursia:"INCURSIA"};
+    const nextLocation = labels[location] ? location : "earth";
     const changed = nextLocation !== currentLocation;
     currentLocation = nextLocation;
     const marker = page.querySelector("#omnidata-current-location");
-    const label = currentLocation === "space" ? "SOLAR SYSTEM" : "EARTH • BELLWOOD";
+    const label = labels[currentLocation];
     const markerChanged = Boolean(marker && marker.textContent !== label);
     if (markerChanged) marker.textContent = label;
     if (changed || markerChanged) {
-      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === "solar"));
+      const nodeKey = ({earth:"solar",moon:"solar",space:"solar",augstaka:"highbreed",anodyne:"anodite",galvan:"galvan",incursia:"incursean"})[currentLocation];
+      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === nodeKey));
     }
   }
   function capturePhoto() {
