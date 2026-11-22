@@ -32,7 +32,7 @@ export const dimensions = {
     dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
   }
 };
-export const state = { stage: "title", currentScene: "space" };
+export const state = { stage: "title", currentScene: "space", arrivingInShip: false };
 
 
     const canvas = document.getElementById("omniverse");
@@ -219,6 +219,7 @@ export const state = { stage: "title", currentScene: "space" };
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       state.currentScene = destination;
+      state.arrivingInShip = true;
       await loadRegion(destination);
       setCameraPreset(dimensions.camera.gameplay);
       warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
@@ -565,7 +566,7 @@ export const state = { stage: "title", currentScene: "space" };
           regionGroup = group;
           scene.add(regionGroup);
           keyboardController = createKeyboard({
-            entities, camera, joystick, updateCamera, isMobile, initialSelected: "ben",
+            entities, camera, joystick, updateCamera, isMobile, initialSelected: state.arrivingInShip ? "rustbucket" : "ben",
             onJump: openSystemMap,
             onToggleRamp: () => { ship.userData.toggleRamp?.(); rampButton.textContent = ship.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; },
             getLift: () => Number(liftInput.value),
