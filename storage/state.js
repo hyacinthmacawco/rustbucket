@@ -15,6 +15,9 @@ import { AnodyneInterior } from "../omniverse/interiors/anodyne-interior.js";
 import { GalvanPrimeInterior } from "../omniverse/interiors/galvan-interior.js";
 import { IncursiaInterior } from "../omniverse/interiors/incursia-interior.js";
 import { Rustbucket } from "../omniverse/rustbucket.js";
+import { AlienShip } from "../omniverse/alien-ship.js";
+import { PlanetPopulation } from "../omniverse/interiors/planet-population.js";
+import { PassengerTransport } from "../omniverse/passenger-transport.js";
 import { HumanRig } from "../omniverse/human-rig.js";
 import { Ben } from "../omniverse/ben.js";
 import { Gwen } from "../omniverse/gwen.js";
@@ -453,6 +456,7 @@ class RustbucketGame {
     let keyboardController = null;
     let physics = null;
     let entities = null;
+    let alienPatrols = [];
 
     function updateCamera() {
       const selectedName = keyboardController?.selected || "ben";
@@ -565,6 +569,7 @@ class RustbucketGame {
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
     const simulation = new SimulationSystem();
+    const passengerTransport = new PassengerTransport(simulation);
     const eventNotice=document.createElement("div");eventNotice.id="simulation-event-notice";document.body.appendChild(eventNotice);
     let eventNoticeTimer=0;
     simulation.onEvent=event=>{
@@ -575,6 +580,7 @@ class RustbucketGame {
       eventNoticeTimer=window.setTimeout(()=>{eventNotice.style.display="none";},4800);
     };
     function configureShip(ship){
+      passengerTransport.attachShip(ship);
       ship.userData.onFuelUse=amount=>simulation.consumeFuel(amount*0.45);
       const fire=ship.userData.performAttack;
       ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
