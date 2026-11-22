@@ -86,7 +86,7 @@ export async function createPhysics() {
     object.userData.vehicleBody=body;
     object.userData.moveVehicle=(forward,right,lift,dt,steerInput=0,heading=attitude.yaw)=>{
       const thrust=environment==="space"?15:22;
-      body.applyImpulse({x:right*thrust*dt,y:lift*thrust*dt,z:forward*thrust*dt},true);
+      body.applyImpulse({x:forward*thrust*dt,y:lift*thrust*dt,z:right*thrust*dt},true);
       attitude.yaw=heading;
       attitude.roll=THREE.MathUtils.damp(attitude.roll,THREE.MathUtils.clamp(steerInput,-1,1)*0.32,5,dt);
       attitude.pitch=THREE.MathUtils.damp(attitude.pitch,-lift*0.2,5,dt);
