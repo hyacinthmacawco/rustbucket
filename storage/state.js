@@ -197,7 +197,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
-      phaseTwo
+      phaseTwo,
+      onData: () => phaseTwoCloud.open()
     });
     const phaseTwoCloud=createPhaseTwoCloud(phaseTwo);
     const phaseTwoButton=document.createElement("button");
