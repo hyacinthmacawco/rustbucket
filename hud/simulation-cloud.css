@@ -32,3 +32,5 @@
 #simulation-cloud,#simulation-cloud-window{background:rgba(0,0,0,.3)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 #simulation-cloud header{border:0!important}
 #simulation-cloud .sim-row,#simulation-cloud .sim-item{border:0!important}
+
+#simulation-cloud.embedded #simulation-cloud-close{display:none!important}
