@@ -14,6 +14,8 @@ import { createGwen } from "../omniverse/gwen.js";
 import { createKevin } from "../omniverse/kevin.js";
 import { createRook } from "../omniverse/rook.js";
 import { createPhysics } from "../physics/engine.js";
+import { createPhaseTwo, createChromastone } from "../omniverse/phase2.js";
+import { createPhaseTwoCloud } from "../hud/phase2-cloud.js";
 
 export const dimensions = {
   ben: { position: [-3, -0.5, 5], scale: [0.5, 0.5, 0.5] },
@@ -164,7 +166,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     pauseButton.textContent = "Ⅱ";
     const pauseOverlay = document.createElement("div");
     pauseOverlay.id = "pause-overlay";
-    pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><button id="resume-button" type="button">RESUME</button></div>';
+    pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><nav id="pause-tabs"><button data-pause-tab="settings" class="active">SETTINGS</button><button data-pause-tab="help">HELP</button><button data-pause-tab="credits">CREDITS</button></nav><div id="pause-content"></div><button id="resume-button" type="button">RESUME</button></div>';
     document.body.append(pauseButton, pauseOverlay);
     function setPaused(value) {
       state.paused = Boolean(value);
@@ -177,13 +179,40 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       }
     }
     pauseButton.addEventListener("click", () => setPaused(!state.paused));
+    const pauseContent=pauseOverlay.querySelector("#pause-content");
+    const pauseViews={
+      settings:'<h3>SETTINGS</h3><label>CAMERA SENSITIVITY <input type="range" min="1" max="15" value="6"></label><label>MASTER VOLUME <input type="range" min="0" max="100" value="70"></label>',
+      help:'<h3>CONTROLS</h3><p>WASD / joystick: move. Drag: camera. Pinch / wheel: zoom. F / double-tap joystick: switch team member. Space / jump: system map when Rustbucket is selected. E / pick: interact. Q / attack: use weapon. R: open or close Rustbucket ramp.</p>',
+      credits:'<h3>CREDITS</h3><p>Developed by Hyacinth Macaw.</p><p>Soundtrack artists: see soundtrack credits.</p><p>Ben 10 created by Man of Action.</p>'
+    };
+    pauseContent.innerHTML=pauseViews.settings;
+    pauseOverlay.querySelectorAll("[data-pause-tab]").forEach(button=>button.addEventListener("click",()=>{
+      pauseOverlay.querySelectorAll("[data-pause-tab]").forEach(b=>b.classList.toggle("active",b===button));
+      pauseContent.innerHTML=pauseViews[button.dataset.pauseTab];
+    }));
     pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
+    const phaseTwo = createPhaseTwo();
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
-      onComplete: () => playSfx("./hud/ov-end-credits.mp3")
+      onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
+      phaseTwo
     });
+    const phaseTwoCloud=createPhaseTwoCloud(phaseTwo);
+    const phaseTwoButton=document.createElement("button");
+    phaseTwoButton.id="phase2-cloud-button";phaseTwoButton.type="button";phaseTwoButton.textContent="DATA";
+    phaseTwoButton.setAttribute("aria-label","Open Private Cloud data hub");
+    phaseTwoButton.addEventListener("click",()=>phaseTwoCloud.open());
+    const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
+    hep.innerHTML='<span class="hep-meter"><i id="hep-health-fill"></i><b>H</b></span><span class="hep-meter"><i id="hep-energy-fill"></i><b>E</b></span>';
+    hep.addEventListener("click",()=>setPaused(!state.paused));
+    document.body.append(phaseTwoButton,hep);
+    const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
+    const omnitrixControl=document.createElement("label");omnitrixControl.id="omnitrix-control";
+    omnitrixControl.innerHTML='<span>OMNITRIX</span><input id="omnitrix-slider" type="range" min="0" max="1" step="1" value="0"><b id="omnitrix-alien-label">BEN</b>';
+    document.body.appendChild(omnitrixControl);
+    const omnitrixSlider=omnitrixControl.querySelector("input");
     const extranetButton = document.createElement("button");
     extranetButton.id = "extranet-button";
     extranetButton.type = "button";
@@ -513,6 +542,23 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           }
           
           const benCharacter = createBen({ createHumanRig });
+          const chromastoneVisual=createChromastone();
+          benCharacter.group.add(chromastoneVisual);
+          chromastoneVisual.visible=phaseTwo.getChromastoneActive();
+          omnitrixSlider.value=phaseTwo.getChromastoneActive()?"1":"0";
+          omnitrixSlider.oninput=()=>{
+            const active=Number(omnitrixSlider.value)===1;
+            phaseTwo.setChromastoneActive(active);
+            chromastoneVisual.visible=active;
+            benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=!active;});
+            omnitrixControl.querySelector("b").textContent=active?"CHROMASTONE":"BEN";
+          };
+          benCharacter.group.userData.performChromastoneAttack=()=>{
+            if(!phaseTwo.spendEnergy("Ben",8))return;
+            const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
+            beam.rotation.x=Math.PI/2;beam.position.set(0,1.65,-3.8);chromastoneVisual.add(beam);
+            window.setTimeout(()=>{chromastoneVisual.remove(beam);beam.geometry.dispose();beam.material.dispose();},180);
+          };
           const gwenCharacter = createGwen({ createHumanRig });
           const kevinCharacter = createKevin({ createHumanRig });
           const rookCharacter = createRook({ createHumanRig });
@@ -550,9 +596,14 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
             character.group.setAnimation("idle");
             character.group.userData.performPickup = () => tryPickup(name, character.group, character.rig);
             character.group.userData.performAttack = () => {
+              if(name==="ben"&&phaseTwo.getChromastoneActive()){character.group.userData.performChromastoneAttack?.();return;}
               character.group.userData.actionActive = true;
               character.group.userData.actionRemaining = 0.78;
               character.rig.playAnimation("punch");
+            };
+            character.group.userData.performPickup = () => {
+              if(name==="ben"&&phaseTwo.getChromastoneActive()){phaseTwo.recharge("Ben",12);return;}
+              tryPickup(name, character.group, character.rig);
             };
             characterEntities[name] = character.group;
             group.add(character.group);
@@ -638,6 +689,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       joystick.setVisible(isMobile && state.stage === "gameplay");
       pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
+      phaseTwoButton.style.display=state.stage==="gameplay"?"grid":"none";
+      hep.style.display=state.stage==="gameplay"?"flex":"none";
       if (state.stage !== "gameplay") { liftControl.style.display = "none"; rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
 
@@ -650,7 +703,15 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
-      if (state.stage === "gameplay") extranet.setLocation(state.currentScene);
+      if (state.stage === "gameplay") {
+        extranet.setLocation(state.currentScene);
+        phaseTwo.update(delta,keyboardController?.selected||"Ben",state.currentScene,false);
+        const selectedName=keyboardController?.selected||"ben";
+        const status=phaseTwo.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName[0].toUpperCase()+selectedName.slice(1));
+        hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
+        hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
+        omnitrixControl.style.display=selectedName==="ben"?"flex":"none";
+      }
 
       if (state.stage === "title" && titleObjects) {
         titleObjects.earth.rotation.y += delta * 0.07;
