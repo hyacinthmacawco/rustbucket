@@ -397,13 +397,13 @@ class SimulationSystem {
   }
 }
 
-export const state = { stage: "title", currentScene: "space", arrivingInShip: false };
+export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 1680, 0) };
 
 class RustbucketGame {
   constructor() {
     this.cameraConfig = {
       title: { position: [-22.75, 6, 90], target: [-22.75, 0, 0], fov: 55, near: 0.1, far: 1000, distance: 90, minDistance: 45, maxDistance: 140, yaw: 0, pitch: 0.13 },
-      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 250, distance: 18.5, minDistance: 8, maxDistance: 45, yaw: 0, pitch: 0.18 },
+      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 50000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
       dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
     };
     
@@ -578,7 +578,7 @@ class RustbucketGame {
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
       simulation,
-      onData: (host, view) => simulationCloud.open(view, host),
+      onData: (host, view) => simulationCloud.render(view, host),
       onJumpSystem: key => warpToSystem(key)
     });
     const simulationCloud=createSimulationCloud(simulation);
@@ -659,7 +659,7 @@ class RustbucketGame {
     extranetButton.id = "extranet-button";
     extranetButton.type = "button";
     extranetButton.setAttribute("aria-label", "Open Extranet");
-    extranetButton.textContent = "🌐";
+    extranetButton.textContent = "EXTRANET";
     extranetButton.addEventListener("click", () => extranet.open());
     document.body.appendChild(extranetButton);
     const rampButton = document.createElement("button");
@@ -668,6 +668,7 @@ class RustbucketGame {
     rampButton.textContent = "OPEN RAMP";
     document.body.appendChild(rampButton);
     rampButton.addEventListener("click", () => { const ship = entities?.rustbucket; ship?.userData.toggleRamp?.(); rampButton.textContent = ship?.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; });
+    joystick.buttons.appendChild(rampButton);
     const mapOverlay = document.createElement("div");
     mapOverlay.id = "system-map-overlay";
     mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">PLANETARY NAVIGATION</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button><button class="system-map-node" style="left:8%;top:8%" data-destination="augstaka">AUGSTAKA</button><button class="system-map-node" style="left:70%;top:8%" data-destination="anodyne">ANODYNE</button><button class="system-map-node" style="left:12%;top:68%" data-destination="galvan">GALVAN PRIME</button><button class="system-map-node" style="right:8%;top:68%" data-destination="incursia">INCURSIA</button></div><div id="system-map-actions"><button data-destination="space">TAKE OFF / RETURN TO ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
@@ -675,7 +676,7 @@ class RustbucketGame {
 
     const marketPanel=document.createElement("div");
     marketPanel.id="planet-market";
-    marketPanel.innerHTML='<div class="planet-market-card"><button id="planet-market-close" aria-label="Close marketplace">×</button><p class="planet-market-kicker">LOCAL TRADE EXCHANGE</p><h2 id="planet-market-title">MARKETPLACE</h2><p id="planet-market-cash"></p><div id="planet-market-stock"></div><p id="planet-market-message"></p></div>';
+    marketPanel.innerHTML='<div class="planet-market-card"><button id="planet-market-close" aria-label="Close marketplace">CLOSE</button><p class="planet-market-kicker">LOCAL TRADE EXCHANGE</p><h2 id="planet-market-title">MARKETPLACE</h2><p id="planet-market-cash"></p><div id="planet-market-stock"></div><p id="planet-market-message"></p></div>';
     document.body.appendChild(marketPanel);
     marketPanel.querySelector("#planet-market-close").addEventListener("click",()=>marketPanel.style.display="none");
     function openPlanetMarket(){
@@ -726,7 +727,9 @@ class RustbucketGame {
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       activeSystem = systemKey;
       state.currentScene = "space";
-      state.spaceReturnPosition = systemKey === "solar" ? new THREE.Vector3(4.5,15,0) : new THREE.Vector3(-20,12,0);
+      const homePlanet = ({ solar: "earth", augstaka: "augstaka", anodyne: "anodyne", galvan: "galvan", incursia: "incursia" })[systemKey];
+      const homeOrbit = SYSTEM_PLANET_ORBITS[systemKey]?.[homePlanet] || new THREE.Vector3();
+      state.spaceReturnPosition = homeOrbit.clone().add(new THREE.Vector3(0, getPlanetClearance(homePlanet), 0));
       await loadRegion(systemKey === "solar" ? "space" : "system-" + systemKey);
       if (entities?.rustbucket) {
         entities.rustbucket.position.copy(state.spaceReturnPosition);
@@ -741,14 +744,14 @@ class RustbucketGame {
       mapOverlay.style.display = "none";
       if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
       const atmosphericTransition=Boolean(PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
-      warpOverlay.querySelector("#warp-caption").textContent=PLANET_WORLDS[destination]?"ATMOSPHERIC ENTRY":atmosphericTransition?"CLEARING ATMOSPHERE":"SPACE WARP";
+      warpOverlay.querySelector("#warp-caption").textContent=atmosphericTransition?"":"SPACE WARP";
       warpOverlay.classList.toggle("atmospheric",atmosphericTransition);
       warpOverlay.style.display = "flex";
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
       await new Promise(resolve => window.setTimeout(resolve, 1250));
       state.currentScene = destination;
       const destinationOrbit = SYSTEM_PLANET_ORBITS[activeSystem]?.[destination];
-      if(destinationOrbit)state.spaceReturnPosition=destinationOrbit.clone().add(new THREE.Vector3(0,15,0));
+      if(destinationOrbit)state.spaceReturnPosition=destinationOrbit.clone().add(new THREE.Vector3(0,getPlanetClearance(destination),0));
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
         const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
@@ -1287,12 +1290,14 @@ class RustbucketGame {
 
     const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
-      solar: {earth:new THREE.Vector3(4.5,0,0),moon:new THREE.Vector3(6.8,.2,-1.5)},
-      augstaka: {augstaka:new THREE.Vector3(19,0,0)},
-      anodyne: {anodyne:new THREE.Vector3(17,0,0)},
-      galvan: {galvan:new THREE.Vector3(16,0,0)},
-      incursia: {incursia:new THREE.Vector3(17,0,0)}
+      solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1255,0,0)},
+      augstaka: {augstaka:new THREE.Vector3(12380,0,0)},
+      anodyne: {anodyne:new THREE.Vector3(12330,0,0)},
+      galvan: {galvan:new THREE.Vector3(12320,0,0)},
+      incursia: {incursia:new THREE.Vector3(12340,0,0)}
     };
+    const SYSTEM_PLANET_RADII = { earth:1050, moon:175, augstaka:1050, anodyne:1050, galvan:1050, incursia:1050 };
+    const getPlanetClearance = key => (SYSTEM_PLANET_RADII[key] || 1050) * 1.6;
     let planetEntryCooldown=0;
     let planetTransitionBusy=false;
     const enterNearbyPlanet = async () => {
@@ -1302,14 +1307,15 @@ class RustbucketGame {
       let nearestPlanet=null, nearestDistance=Infinity;
       for(const [key,center] of Object.entries(SYSTEM_PLANET_ORBITS[activeSystem]||{})){
         const horizontalDistance=Math.hypot(ship.position.x-center.x,ship.position.z-center.z);
-        if(horizontalDistance<13 && ship.position.y<center.y+2 && horizontalDistance<nearestDistance){
+        const entryRange=(SYSTEM_PLANET_RADII[key] || 1050)*1.5;
+        if(horizontalDistance<entryRange && ship.position.y<center.y+2 && horizontalDistance<nearestDistance){
           nearestPlanet={key,center};nearestDistance=horizontalDistance;
         }
       }
       if(nearestPlanet){
         planetTransitionBusy=true;
-        state.spaceReturnPosition=nearestPlanet.center.clone().add(new THREE.Vector3(0,15,0));
-        planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="ATMOSPHERIC ENTRY";
+        state.spaceReturnPosition=nearestPlanet.center.clone().add(new THREE.Vector3(0,getPlanetClearance(nearestPlanet.key),0));
+        planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="";
         warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
         await new Promise(resolve=>window.setTimeout(resolve,1250));
         state.currentScene=nearestPlanet.key;await loadRegion(nearestPlanet.key);setCameraPreset(cameraConfig.gameplay);
@@ -1321,11 +1327,11 @@ class RustbucketGame {
       if(planetTransitionBusy||(state.currentScene!=="earth"&&state.currentScene!=="moon"&&!PLANET_WORLDS[state.currentScene])||!entities?.rustbucket)return;
       const planet=state.currentScene,orbit=SYSTEM_PLANET_ORBITS[activeSystem]?.[planet];if(!orbit)return;
       planetTransitionBusy=true;
-      warpOverlay.querySelector("#warp-caption").textContent="CLEARING ATMOSPHERE";
+      warpOverlay.querySelector("#warp-caption").textContent="";
       warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";
       warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
       await new Promise(resolve=>window.setTimeout(resolve,1250));
-      state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,15,0));
+      state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,getPlanetClearance(planet),0));
       state.currentScene="space";
       const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
       await loadRegion(returnRegion);
@@ -1347,7 +1353,7 @@ class RustbucketGame {
       updateStage();
       titleScreen.setVisible(state.stage === "title");
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
-      joystick.setVisible(isMobile && state.stage === "gameplay");
+      joystick.setVisible(state.stage === "gameplay");
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
