@@ -10,18 +10,16 @@ import { AugstakaInterior } from "../omniverse/interiors/augstaka-interior.js";
 import { AnodyneInterior } from "../omniverse/interiors/anodyne-interior.js";
 import { GalvanPrimeInterior } from "../omniverse/interiors/galvan-interior.js";
 import { IncursiaInterior } from "../omniverse/interiors/incursia-interior.js";
-import { createRustbucket } from "../omniverse/rustbucket.js";
-import { createHumanRig } from "../omniverse/human-rig.js";
-import { createBen } from "../omniverse/ben.js";
-import { createGwen } from "../omniverse/gwen.js";
-import { createKevin } from "../omniverse/kevin.js";
-import { createRook } from "../omniverse/rook.js";
+import { Rustbucket } from "../omniverse/rustbucket.js";
+import { HumanRig } from "../omniverse/human-rig.js";
+import { Ben } from "../omniverse/ben.js";
+import { Gwen } from "../omniverse/gwen.js";
+import { Kevin } from "../omniverse/kevin.js";
+import { Rook } from "../omniverse/rook.js";
 import { createSimulationCloud } from "../hud/simulation-cloud.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
 import { ChromastoneTransformation } from "../omniverse/transformations/chromastone.js";
 
-import { dimensions } from "./dimensions.js";
-export { dimensions };
 
 async function createPhysics() {
   await RAPIER.init();
@@ -389,7 +387,12 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 
 class RustbucketGame {
   constructor() {
-
+    this.cameraConfig = {
+      title: { position: [-22.75, 6, 90], target: [-22.75, 0, 0], fov: 55, near: 0.1, far: 1000, distance: 90, minDistance: 45, maxDistance: 140, yaw: 0, pitch: 0.13 },
+      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 250, distance: 18.5, minDistance: 8, maxDistance: 45, yaw: 0, pitch: 0.18 },
+      dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
+    };
+    const dimensions = { camera: this.cameraConfig };
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -934,7 +937,7 @@ class RustbucketGame {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = new SolarSystem(group);
           if (state.stage === "gameplay") {
-            const { ship } = createRustbucket(group); configureShip(ship);
+            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
             const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
@@ -1034,7 +1037,7 @@ class RustbucketGame {
             rig.playAnimation("pickup");
           }
           
-          const benCharacter = createBen({ createHumanRig });
+          const benCharacter = new Ben({ HumanRig });
           const chromastoneVisual=new ChromastoneTransformation().model;
           benCharacter.group.add(chromastoneVisual);
           chromastoneVisual.visible=simulation.getChromastoneActive();
@@ -1056,9 +1059,9 @@ class RustbucketGame {
             beam.rotation.x=Math.PI/2;beam.position.set(0,1.65,-3.8);chromastoneVisual.add(beam);
             window.setTimeout(()=>{chromastoneVisual.remove(beam);beam.geometry.dispose();beam.material.dispose();},180);
           };
-          const gwenCharacter = createGwen({ createHumanRig });
-          const kevinCharacter = createKevin({ createHumanRig });
-          const rookCharacter = createRook({ createHumanRig });
+          const gwenCharacter = new Gwen({ HumanRig });
+          const kevinCharacter = new Kevin({ HumanRig });
+          const rookCharacter = new Rook({ HumanRig });
           const characterEntries = [
             ["ben", benCharacter],
             ["gwen", gwenCharacter],
@@ -1067,9 +1070,8 @@ class RustbucketGame {
           ];
           const characterEntities = {};
           for (const [name, character] of characterEntries) {
-            const config = dimensions[name];
-            character.group.position.set(...config.position);
-            character.group.scale.set(...config.scale);
+            character.group.position.set(...character.startPosition);
+            character.group.scale.set(...character.startScale);
             character.group.userData.actionActive = false;
             character.group.userData.actionRemaining = 0;
             character.group.userData.moving = false;
