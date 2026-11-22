@@ -105,7 +105,8 @@ function makeOrbit(parent, radius, color = 0x9bb8c7) {
   return line;
 }
 
-export function createAlienSystems(parent, only = null) {
+export class AlienSystems {
+  constructor(parent, only = null) {
   const root = new THREE.Group();
   root.name = "Ben10AlienSystems";
   parent.add(root);
@@ -191,5 +192,6 @@ export function createAlienSystems(parent, only = null) {
     object.userData.noPhysics = true;
     object.userData.systemModel = true;
   });
-  return { root, systems };
+  Object.assign(this, { root, systems });
+  }
 }
