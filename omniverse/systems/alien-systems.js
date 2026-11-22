@@ -7,7 +7,7 @@ const TAU = Math.PI * 2;
 const SHIP_LENGTH = 26;
 const STAR_RADIUS = SHIP_LENGTH * 500;
 const PLANET_RADIUS = SHIP_LENGTH * 50;
-const scaledSeparation = (distance, oldStarRadius, oldPlanetRadius) => STAR_RADIUS + PLANET_RADIUS + Math.max(0, distance - oldStarRadius - oldPlanetRadius) * 100;
+const scaledSeparation = (distance, oldStarRadius, oldPlanetRadius) => STAR_RADIUS + PLANET_RADIUS + Math.max(0, distance - oldStarRadius - oldPlanetRadius) * 10000;
 
 function makePlanetTexture(palette, style = "bands") {
   const canvas = document.createElement("canvas");
