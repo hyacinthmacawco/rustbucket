@@ -115,10 +115,10 @@ async function createPhysics() {
       // Drive horizontal velocity directly from the left joystick. This avoids
       // tiny impulses being lost to contact friction or the planet's damping.
       const velocity=body.linvel();
-      const horizontalSpeed=environment==="space"?1000000:13;
+      const horizontalSpeed=environment==="space"?30000:13;
       const targetX=THREE.MathUtils.clamp(forward,-1,1)*horizontalSpeed;
       const targetZ=THREE.MathUtils.clamp(right,-1,1)*horizontalSpeed;
-      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?1000000:12);
+      const targetVerticalSpeed=THREE.MathUtils.clamp(lift,-1,1)*(environment==="space"?30000:12);
       body.setLinvel({
         x:THREE.MathUtils.damp(velocity.x,targetX,5,dt),
         y:THREE.MathUtils.damp(velocity.y,targetVerticalSpeed,5,dt),
@@ -411,8 +411,8 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
 class RustbucketGame {
   constructor() {
     this.cameraConfig = {
-      title: { position: [0, 0, 25000000], target: [-11232150, 0, 0], fov: 55, near: 0.1, far: 100000000, distance: 27409000, minDistance: 1000000, maxDistance: 100000000, yaw: 0, pitch: 0 },
-      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 100000000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
+      title: { position: [0, 0, 480000], target: [-137150, 0, 0], fov: 55, near: 0.1, far: 2000000, distance: 499000, minDistance: 10000, maxDistance: 1000000, yaw: 0, pitch: 0 },
+      gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 2000000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
       dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
     };
     
@@ -589,10 +589,10 @@ class RustbucketGame {
     function spawnPatrols(parent, systemKey) {
       const systems = {
         solar: {species:'Human',planet:'earth',center:new THREE.Vector3(0,0,0)},
-        augstaka: {species:'Highbreed',planet:'augstaka',center:new THREE.Vector3(97300,0,0)},
-        anodyne: {species:'Anodite',planet:'anodyne',center:new THREE.Vector3(92300,0,0)},
-        galvan: {species:'Galvan',planet:'galvan',center:new THREE.Vector3(91300,0,0)},
-        incursia: {species:'Incursean',planet:'incursia',center:new THREE.Vector3(93300,0,0)}
+        augstaka: {species:'Highbreed',planet:'augstaka',center:new THREE.Vector3(274300,0,0)},
+        anodyne: {species:'Anodite',planet:'anodyne',center:new THREE.Vector3(274300,0,0)},
+        galvan: {species:'Galvan',planet:'galvan',center:new THREE.Vector3(274300,0,0)},
+        incursia: {species:'Incursean',planet:'incursia',center:new THREE.Vector3(274300,0,0)}
       };
       const config = systems[systemKey];
       if (!config) return;
