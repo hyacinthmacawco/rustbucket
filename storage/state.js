@@ -363,6 +363,26 @@ function createPhaseTwo() {
 }
 
 
+class PhysicsEngine {
+  static async create() {
+    return createPhysics();
+  }
+}
+
+class PhaseTwoSystem {
+  constructor() {
+    this.system = createPhaseTwo();
+    return new Proxy(this, {
+      get: (target, property) => property in target ? target[property] : target.system[property],
+      set: (target, property, value) => {
+        if (property in target) target[property] = value;
+        else target.system[property] = value;
+        return true;
+      }
+    });
+  }
+}
+
 export const state = { stage: "title", currentScene: "space", arrivingInShip: false };
 
 
@@ -522,7 +542,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
-    const phaseTwo = createPhaseTwo();
+    const phaseTwo = new PhaseTwoSystem();
     const eventNotice=document.createElement("div");eventNotice.id="phase2-event-notice";document.body.appendChild(eventNotice);
     let eventNoticeTimer=0;
     phaseTwo.onEvent=event=>{
@@ -911,7 +931,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           if (state.stage === "gameplay") {
             const { ship } = createRustbucket(group); configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
-            const nextPhysics = await createPhysics();
+            const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
             nextPhysics.dispose();
             disposeObjectTree(group);
