@@ -1,6 +1,9 @@
 import * as THREE from "three";
 
-export function createKevin({ createHumanRig }) {
+export class Kevin {
+  constructor({ createHumanRig }) {
+    this.startPosition = [0,-0.5,-9];
+    this.startScale = [0.52,0.52,0.52];
   if (typeof createHumanRig !== "function") throw new TypeError("createKevin requires createHumanRig.");
   const rig = createHumanRig();
   const { group, joints } = rig;
@@ -83,5 +86,6 @@ export function createKevin({ createHumanRig }) {
     box(joints[side + "Knee"], "KevinLowerJeans", [0.18, 0.44, 0.20], [0, -0.21, 0], mat.pants);
     box(joints[side + "Ankle"], "KevinBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.shirt);
   }
-  return { group, rig, joints };
+  Object.assign(this, { group, rig, joints });
+  }
 }
