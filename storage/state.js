@@ -574,17 +574,13 @@ class RustbucketGame {
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
       simulation,
-      onData: () => simulationCloud.open()
+      onData: host => simulationCloud.open("relationships", host)
     });
     const simulationCloud=createSimulationCloud(simulation);
-    const simulationButton=document.createElement("button");
-    simulationButton.id="simulation-cloud-button";simulationButton.type="button";simulationButton.textContent="DATA";
-    simulationButton.setAttribute("aria-label","Open Private Cloud data hub");
-    simulationButton.addEventListener("click",()=>simulationCloud.open());
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
     hep.innerHTML='<span class="hep-meter"><i id="hep-health-fill"></i><b>H</b></span><span class="hep-meter"><i id="hep-energy-fill"></i><b>E</b></span>';
     hep.addEventListener("click",()=>setPaused(!state.paused));
-    document.body.append(simulationButton,hep);
+    document.body.append(hep);
     const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
     const carriedHud=document.createElement("div");carriedHud.id="carried-items-hud";
     carriedHud.innerHTML='<span>IN HAND</span><select id="carried-item-select"><option value="">NO ITEMS</option></select><button id="use-carried-item">USE</button>';
@@ -1265,7 +1261,11 @@ class RustbucketGame {
       await new Promise(resolve=>window.setTimeout(resolve,1250));
       state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,15,0));
       state.currentScene="space";await loadRegion("space");
-      if(entities?.rustbucket)entities.rustbucket.position.copy(state.spaceReturnPosition);
+      if(entities?.rustbucket){
+        entities.rustbucket.position.copy(state.spaceReturnPosition);
+        entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
+        entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
+      }
       setCameraPreset(cameraConfig.gameplay);extranet.setLocation("space");
       warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
       planetTransitionBusy=false;planetEntryCooldown=2;
@@ -1281,7 +1281,6 @@ class RustbucketGame {
       preludeScreen.style.display = state.stage === "prelude" ? "flex" : "none";
       joystick.setVisible(isMobile && state.stage === "gameplay");
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
-      simulationButton.style.display=state.stage==="gameplay"?"grid":"none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
       updateAbilityDial(keyboardController?.selected||"ben");
@@ -1296,7 +1295,10 @@ class RustbucketGame {
         keyboardController.update(delta);
       }
       if (!state.paused && state.stage==="gameplay"&&state.currentScene==="space") enterNearbyPlanet();
-      if (!state.paused && state.stage==="gameplay" && PLANET_WORLDS[state.currentScene] && entities?.rustbucket && !planetTransitionBusy && entities.rustbucket.position.y > 30) leavePlanetInterior();
+      if (!state.paused && state.stage==="gameplay" && PLANET_WORLDS[state.currentScene] && entities?.rustbucket && !planetTransitionBusy) {
+        const shipHeight = entities.rustbucket.userData.vehicleBody?.translation().y ?? entities.rustbucket.position.y;
+        if (shipHeight > 12) leavePlanetInterior();
+      }
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
