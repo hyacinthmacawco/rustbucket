@@ -974,7 +974,7 @@ class RustbucketGame {
           const InteriorClass = { augstaka: AugstakaInterior, anodyne: AnodyneInterior, galvan: GalvanPrimeInterior, incursia: IncursiaInterior }[name];
           const interior = new InteriorClass(group);
           const { marketPosition } = interior.environment;
-          const {ship}=new Rustbucket(group);configureShip(ship);ship.position.set(0,2,13);
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship); ship.position.set(0,2,13);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
