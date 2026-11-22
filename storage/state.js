@@ -190,11 +190,11 @@ const defaults = {
 
 function loadData() {
   try {
-    const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.simulation"));
+    const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
     if (saved) return { ...structuredClone(defaults), ...saved,
       relationships:{...structuredClone(defaults.relationships),...(saved.relationships||{})},
       team:{...structuredClone(defaults.team),...(saved.team||{})} };
-  } catch (error) { console.warn("Phase 2 save could not be read", error); }
+  } catch (error) { console.warn("Simulation save could not be read", error); }
   return structuredClone(defaults);
 }
 
@@ -216,7 +216,7 @@ function createSimulationSystem() {
 
   function save() {
     try { localStorage.setItem("rustbucket.simulation", JSON.stringify(data)); }
-    catch (error) { console.warn("Phase 2 save could not be stored", error); }
+    catch (error) { console.warn("Simulation save could not be stored", error); }
   }
   function getRelationship(from,to) {
     if (from === to) return 0;
