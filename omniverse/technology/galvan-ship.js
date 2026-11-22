@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { toon, box, sphere, cylinder, part, finishModel } from "./model-utils.js";
+import { toon, box, sphere, cylinder, part, finishModel } from "../model-utils.js";
 
 export function createGalvanShip(parent = null, options = {}) {
   const g=new THREE.Group();
