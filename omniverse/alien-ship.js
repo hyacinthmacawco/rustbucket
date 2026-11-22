@@ -15,9 +15,9 @@ export class AlienShip {
     this.destroyed = false;
     this.attackCooldown = 1.2 + index * 0.35;
     this.orbitAngle = index * Math.PI * 2 / 3;
-    this.orbitRadius = 1900 + index * 520;
+    this.orbitRadius = 2600 + index * 600;
     this.orbitSpeed = 0.12 + index * 0.035;
-    this.chaseSpeed = 1400000;
+    this.chaseSpeed = 42000;
     this.attackRange = 260;
     this.group = new THREE.Group();
     this.group.name = species + " Patrol Fighter";
@@ -80,9 +80,10 @@ export class AlienShip {
         position.addScaledVector(direction, this.chaseSpeed * delta);
       } else if (this.attackCooldown <= 0) {
         this.attackCooldown = 1.8;
+        this.fireBeam(target);
         onAttack(this);
       }
-      if (distance > 1) this.group.lookAt(target.position);
+      if (distance > 1) { this.group.lookAt(target.position); this.group.rotateY(Math.PI); }
     } else {
       this.orbitAngle += delta * this.orbitSpeed;
       const destination = new THREE.Vector3(
@@ -93,6 +94,22 @@ export class AlienShip {
       position.lerp(destination, Math.min(1, delta * 0.8));
       this.group.lookAt(this.center);
     }
+  }
+
+  fireBeam(target) {
+    const parent = this.group.parent;
+    if (!parent) return;
+    if (this.attackFlash) {
+      this.attackFlash.parent?.remove(this.attackFlash);
+      this.attackFlash.geometry.dispose();
+      this.attackFlash.material.dispose();
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints([this.group.position.clone(),target.position.clone()]);
+    const material = new THREE.LineBasicMaterial({color:0xff563d,transparent:true,opacity:.95});
+    this.attackFlash = new THREE.Line(geometry,material);
+    this.attackFlash.userData.noPhysics = true;
+    parent.add(this.attackFlash);
+    this.attackFlashLife = .14;
   }
 
   dispose() {
