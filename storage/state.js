@@ -198,7 +198,7 @@ function loadData() {
   return structuredClone(defaults);
 }
 
-function createSimulation() {
+function createSimulationSystem() {
   const data = loadData();
   const healthEnergy = {
     Ben:{health:100,energy:100,energyLabel:"OMNITRIX"},
@@ -373,7 +373,7 @@ class PhysicsEngine {
 
 class SimulationSystem {
   constructor() {
-    this.system = createSimulation();
+    this.system = createSimulationSystem();
     return new Proxy(this, {
       get: (target, property) => property in target ? target[property] : target.system[property],
       set: (target, property, value) => {
