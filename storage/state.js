@@ -15,6 +15,25 @@ import { createKevin } from "../omniverse/kevin.js";
 import { createRook } from "../omniverse/rook.js";
 import { createPhysics } from "../physics/engine.js";
 
+export const dimensions = {
+  ben: { position: [-3, -0.5, 5], scale: [0.5, 0.5, 0.5] },
+  gwen: { position: [-7, -0.5, -7], scale: [0.5, 0.5, 0.5] },
+  kevin: { position: [0, -0.5, -9], scale: [0.52, 0.52, 0.52] },
+  rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
+  rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
+  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
+  bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
+  earth: { position: [4.5, 0, 0], radius: 2.05 },
+  moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
+  sun: { position: [-50, 0, 0], radius: 30 },
+  camera: {
+    title: { position: [-22.75, 6, 90], target: [-22.75, 0, 0], fov: 55, near: 0.1, far: 1000, distance: 90, minDistance: 45, maxDistance: 140, yaw: 0, pitch: 0.13 },
+    gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 250, distance: 18.5, minDistance: 8, maxDistance: 45, yaw: 0, pitch: 0.18 },
+    dragSensitivity: 0.006, pitchSensitivity: 0.004, minPitch: -0.15, maxPitch: 1.0
+  }
+};
+export const state = { stage: "title", currentScene: "space" };
+
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -449,7 +468,7 @@ import { createPhysics } from "../physics/engine.js";
           });
           loadedRegion=name;loadingRegion=null;return;
         } else if (name === "earth") {
-          // Only Bellwood's nearby environment and gameplay models are loaded.
+          // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           createEarthInterior(scene, group);
           const { unit } = createKevinStorageUnit(group);
@@ -632,15 +651,7 @@ import { createPhysics } from "../physics/engine.js";
       if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
       if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
-      if (state.stage === "gameplay") extranet.setLocation(state.currentScene); else {
-          const fogFar = THREE.MathUtils.lerp(260, 28, blend);
-          if (!(scene.fog instanceof THREE.Fog)) scene.fog = new THREE.Fog(environmentColor, 75, fogFar);
-          scene.fog.color.copy(environmentColor);
-          scene.fog.near = THREE.MathUtils.lerp(75, 0, blend);
-          scene.fog.far = fogFar;
-        }
-        extranet.setLocation(altitude > 115 ? "space" : "earth");
-      }
+      if (state.stage === "gameplay") extranet.setLocation(state.currentScene);
 
       if (state.stage === "title" && titleObjects) {
         titleObjects.earth.rotation.y += delta * 0.07;
