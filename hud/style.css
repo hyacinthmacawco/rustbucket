@@ -695,9 +695,7 @@ html, body { height: 100dvh; }
 .mission-complete-title{font-size:clamp(24px,5vw,42px);font-weight:900;letter-spacing:.16em;text-shadow:0 2px 18px #000}.mission-complete-sub{margin:14px 0 18px;font-size:10px;letter-spacing:.24em;color:#aaffc0}
 .mission-respect{display:grid;gap:8px;font-size:15px;text-shadow:0 2px 8px #000}#mission-continue{margin-top:28px;padding:12px 42px;border:1px solid #ffffffad;border-radius:2px;background:#ffffff12;color:white;letter-spacing:.22em}
 #extranet-button{display:none;position:fixed;z-index:120;top:max(14px,env(safe-area-inset-top));right:max(70px,calc(env(safe-area-inset-right) + 70px));width:46px;height:46px;place-items:center;border:1px solid rgba(135,255,170,.9);border-radius:14px;color:#e1ffea;background:rgba(12,75,38,.72);font-size:22px;backdrop-filter:blur(10px)}
-#vehicle-lift-control{display:none;position:fixed;z-index:110;right:max(22px,env(safe-area-inset-right));bottom:max(112px,calc(env(safe-area-inset-bottom) + 112px));height:190px;align-items:center;gap:8px;color:#d9ffe4;font-size:10px;letter-spacing:.12em;text-shadow:0 1px 4px #000}
-#vehicle-lift-control input{writing-mode:vertical-lr;direction:rtl;appearance:slider-vertical;width:32px;height:150px;accent-color:#80ffa6;touch-action:none}
-@media(max-width:520px){#extranet-page{padding:15px}#vehicle-lift-control{height:160px}#vehicle-lift-control input{height:125px}}
+@media(max-width:520px){#extranet-page{padding:15px}}
 
 /* Omnidata navigation chart */
 #omnidata-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(220px,.85fr);gap:12px;align-items:stretch}
@@ -770,7 +768,7 @@ button:not(#title-buttons button){background-color:var(--ui-green-fill)}
 input,select,textarea{accent-color:var(--ui-green);border-color:var(--ui-green-border);color:#e1ffea;background-color:rgba(8,48,25,.48)}
 input:focus,select:focus,textarea:focus{outline:1px solid rgba(145,255,175,.75);outline-offset:1px}
 #prelude-screen{background:rgba(2,18,9,.96);color:#e1ffea}
-#skip-dialogue,#resume-button,#pause-button,#extranet-button,#vehicle-lift-control,#action-controls button{border-color:var(--ui-green-border);color:#e1ffea}
+#skip-dialogue,#resume-button,#pause-button,#extranet-button,#action-controls button{border-color:var(--ui-green-border);color:#e1ffea}
 #load-game-panel,.game-error{background:rgba(5,28,15,.88);border-color:var(--ui-green-border)}
 #mission-complete{background:rgba(5,36,18,.84);border-color:var(--ui-green-border)}
 #mission-continue{background:rgba(20,115,58,.52);border-color:var(--ui-green-border);color:#e1ffea}
