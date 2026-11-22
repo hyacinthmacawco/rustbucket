@@ -91,7 +91,20 @@ export function createPhaseTwo() {
   function startWar(attacker,defender) {
     if (attacker===defender || !species.includes(attacker) || !species.includes(defender)) return null;
     if (!isHostile(attacker,defender)) setRelationship(attacker,defender,25);
-    return recordEvent("war",attacker+" has declared war on "+defender+" over resources.",{attacker,defender});
+    const loot=Math.min(data.treasury[defender]||0,Math.max(100,Math.round((data.treasury[defender]||0)*0.025)));
+    data.treasury[defender]=Math.max(0,(data.treasury[defender]||0)-loot);
+    data.treasury[attacker]=(data.treasury[attacker]||0)+loot;
+    const stock=(data.resources[defender]||[]).find(item=>item.quantity>0);
+    let seized=null;
+    if(stock){
+      const quantity=Math.min(stock.quantity,Math.max(1,Math.floor(stock.quantity*0.01)));
+      stock.quantity-=quantity;
+      const target=(data.resources[attacker]||[]).find(item=>item.id===stock.id);
+      if(target)target.quantity+=quantity;
+      else (data.resources[attacker]||(data.resources[attacker]=[])).push({...stock,quantity});
+      seized={resource:stock.name,quantity};
+    }
+    return recordEvent("war",attacker+" has declared war on "+defender+" to seize Taydenite and resources.",{attacker,defender,loot,seized});
   }
   function update(dt, selected="Ben", location="earth", isNearHome=false) {
     elapsed+=dt; eventCooldown-=dt;
