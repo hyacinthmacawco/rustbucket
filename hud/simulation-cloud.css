@@ -27,3 +27,8 @@
 #simulation-cloud.embedded{position:relative;inset:auto;z-index:auto;display:block!important;min-height:100%;padding:0;background:transparent;backdrop-filter:none}
 #simulation-cloud.embedded #simulation-cloud-window{width:100%;max-height:none;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;padding:8px 0}
 #simulation-cloud.embedded main{max-height:none}
+
+/* Private Cloud pages use flat, unblurred translucent surfaces. */
+#simulation-cloud,#simulation-cloud-window{background:rgba(0,0,0,.3)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+#simulation-cloud header{border:0!important}
+#simulation-cloud .sim-row,#simulation-cloud .sim-item{border:0!important}
