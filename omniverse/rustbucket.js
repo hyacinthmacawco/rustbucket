@@ -56,7 +56,7 @@ export class Rustbucket {
   };
   ship.userData.updateVehicle=delta=>{
     for(let i=lasers.length-1;i>=0;i--){
-      const shot=lasers[i];shot.mesh.position.z+=46000000*delta;shot.life-=delta;
+      const shot=lasers[i];shot.previousWorldPosition = shot.previousWorldPosition || new THREE.Vector3();shot.mesh.getWorldPosition(shot.previousWorldPosition);shot.mesh.position.z+=60000*delta;shot.life-=delta;
       if(shot.life<=0){ship.remove(shot.mesh);shot.mesh.geometry.dispose();lasers.splice(i,1);}
     }
   };
