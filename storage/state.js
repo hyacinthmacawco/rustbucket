@@ -383,6 +383,9 @@ class PhaseTwoSystem {
 
 export const state = { stage: "title", currentScene: "space", arrivingInShip: false };
 
+class RustbucketGame {
+  constructor() {
+
 
     const canvas = document.getElementById("omniverse");
     const scene = new THREE.Scene();
@@ -1303,3 +1306,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       stopMusic();
       renderer.dispose();
     }, { once: true });
+  }
+}
+
+new RustbucketGame();
