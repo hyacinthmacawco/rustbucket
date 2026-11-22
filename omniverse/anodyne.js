@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { toon, box, sphere, cylinder, capsule, part, finishModel } from "./model-utils.js";
 
-export function createAnodyne(parent = null, options = {}) {
+export class Anodyne {
+  constructor(parent = null, options = {}) {
   const g = new THREE.Group();
   const purple=toon(0x873bd0), lilac=toon(0xc17bf0), deep=toon(0x271044), black=toon(0x090812);
   const white=toon(0xf7f1ff), pink=toon(0xff78c9), glow=toon(0xb64cff,{emissive:0x542080});
@@ -42,5 +43,7 @@ export function createAnodyne(parent = null, options = {}) {
     sphere(g,glow,.045,[side*.48,1.9,.1],[1,2.5,1]);
     sphere(g,lilac,.035,[side*.15,.98,.13],[1,3,1]);
   }
-  return finishModel(g,"Anodyne",parent,options.scale ?? 1);
+  this.group = finishModel(g,"Anodyne",parent,options.scale ?? 1);
+  this.model = this.group;
+  }
 }
