@@ -10,12 +10,20 @@ export function createJoystick() {
   element.innerHTML = '<div id="joystick-base"><div id="team-ring-labels"><span class="team-label team-ben"></span><span class="team-label team-gwen"></span><span class="team-label team-kevin"></span><span class="team-label team-rook"></span></div><div id="joystick-knob"></div></div>';
   document.body.appendChild(element);
 
+  const liftElement = document.createElement("div");
+  liftElement.id = "lift-joystick";
+  liftElement.setAttribute("aria-label", "Rustbucket altitude control");
+  liftElement.innerHTML = '<div id="lift-joystick-base"><div id="lift-joystick-knob"></div><span id="lift-up-label">UP</span><span id="lift-down-label">DOWN</span></div>';
+  document.body.appendChild(liftElement);
+
+  const liftBase = liftElement.firstElementChild;
+  const liftKnob = liftBase.querySelector("#lift-joystick-knob");
   const base = element.firstElementChild;
   const knob = base.querySelector("#joystick-knob");
   const labelElements = [...base.querySelectorAll(".team-label")];
   const input = {
     active: false, pointerId: null, x: 0, y: 0, mode: "move",
-    selection: null, jumpRequested: false,
+    selection: null, liftY: 0, jumpRequested: false,
     pickRequested: false, attackHeld: false
   };
 
@@ -42,6 +50,45 @@ export function createJoystick() {
   attack.addEventListener("pointerup", releaseAttack);
   attack.addEventListener("pointercancel", releaseAttack);
   attack.addEventListener("lostpointercapture", () => { input.attackHeld = false; });
+
+  let liftPointerId = null;
+  function updateLift(event) {
+    const rect = liftBase.getBoundingClientRect();
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const max = rect.width * 0.32;
+    const distance = Math.hypot(dx, dy);
+    const factor = distance > max ? max / distance : 1;
+    const x = dx * factor, y = dy * factor;
+    input.liftY = -y / max;
+    liftKnob.style.transform = `translate(${x}px,${y}px)`;
+  }
+  function resetLift() {
+    liftPointerId = null;
+    input.liftY = 0;
+    liftKnob.style.transform = "translate(0px,0px)";
+  }
+  function liftDown(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    liftPointerId = event.pointerId;
+    liftBase.setPointerCapture(event.pointerId);
+    updateLift(event);
+  }
+  function liftMove(event) {
+    if (event.pointerId !== liftPointerId) return;
+    event.preventDefault();
+    updateLift(event);
+  }
+  function liftUp(event) {
+    if (event.pointerId !== liftPointerId) return;
+    event.preventDefault();
+    resetLift();
+  }
+  liftBase.addEventListener("pointerdown", liftDown);
+  liftBase.addEventListener("pointermove", liftMove);
+  liftBase.addEventListener("pointerup", liftUp);
+  liftBase.addEventListener("pointercancel", liftUp);
 
   let lastCenterTap = 0;
   function applyMode(mode) {
@@ -113,9 +160,13 @@ export function createJoystick() {
     setVisible(visible) {
       element.style.display = visible ? "block" : "none";
       buttons.style.display = visible ? "flex" : "none";
-      if (!visible) reset();
+      if (!visible) { reset(); resetLift(); liftElement.style.display = "none"; }
     },
     setMode(mode) { applyMode(mode); },
+    setVehicleMode(active) {
+      liftElement.style.display = active && element.style.display !== "none" ? "block" : "none";
+      if (!active) resetLift();
+    },
     setTeamOptions(selected, members = TEAM_MEMBERS) {
       const available = members.filter(name => name !== selected);
       labelElements.forEach((label, index) => {
@@ -129,7 +180,11 @@ export function createJoystick() {
       base.removeEventListener("pointerup", up);
       base.removeEventListener("pointercancel", up);
       jump.remove(); pick.remove(); attack.remove();
-      element.remove(); buttons.remove();
+      liftBase.removeEventListener("pointerdown", liftDown);
+      liftBase.removeEventListener("pointermove", liftMove);
+      liftBase.removeEventListener("pointerup", liftUp);
+      liftBase.removeEventListener("pointercancel", liftUp);
+      element.remove(); liftElement.remove(); buttons.remove();
     }
   };
 }
@@ -199,6 +254,7 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     const right = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + (isMobile ? joy.x : 0);
     const magnitude = Math.hypot(forward, right);
     const direction = camera.getWorldDirection(new THREE.Vector3());
+    // Flatten the view direction so looking up/down never weakens horizontal thrust.
     const length = Math.hypot(direction.x, direction.z) || 1;
     const fx = direction.x / length, fz = direction.z / length;
     const rx = -fz, rz = fx;
@@ -213,8 +269,8 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
       joy.jumpRequested = false;
     }
     if (selected === "rustbucket" && object.userData.moveVehicle) {
-      // Camera pitch controls lift; a small dead zone prevents accidental drift.
-      const lift=Math.abs(direction.y)<0.06?0:THREE.MathUtils.clamp(direction.y*1.5,-1,1);
+      // The separate right-hand joystick controls altitude: up to climb, down to descend.
+      const lift = Math.abs(joy.liftY) < 0.08 ? 0 : THREE.MathUtils.clamp(joy.liftY, -1, 1);
       const fuelDemand=magnitude>0.08||Math.abs(lift)>0.05;
       const hasFuel=!fuelDemand||object.userData.onFuelUse?.((magnitude+Math.abs(lift))*dt)!==false;
       if(hasFuel)object.userData.moveVehicle(mx, mz, lift, dt, right, Math.atan2(fx, fz));
