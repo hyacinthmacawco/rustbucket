@@ -30,7 +30,7 @@ export function createJoystick() {
 
   const buttons = document.createElement("div");
   buttons.id = "action-controls";
-  buttons.innerHTML = '<button id="jump-button" type="button" aria-label="Jump">↑</button><button id="pick-button" type="button" aria-label="Pick up">✋</button><button id="attack-button" type="button" aria-label="Attack">✊</button>';
+  buttons.innerHTML = '<button id="jump-button" type="button" aria-label="Jump">JUMP</button><button id="pick-button" type="button" aria-label="Pick up">PICK</button><button id="attack-button" type="button" aria-label="Attack">ATTACK</button>';
   document.body.appendChild(buttons);
 
   const jump = buttons.querySelector("#jump-button");
