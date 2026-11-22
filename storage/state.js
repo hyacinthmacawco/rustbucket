@@ -194,6 +194,15 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
     document.addEventListener("keydown", pauseKey);
     const phaseTwo = createPhaseTwo();
+    const eventNotice=document.createElement("div");eventNotice.id="phase2-event-notice";document.body.appendChild(eventNotice);
+    let eventNoticeTimer=0;
+    phaseTwo.onEvent=event=>{
+      eventNotice.textContent=event.description;
+      eventNotice.style.display="block";
+      eventNotice.classList.toggle("hostile",event.type==="attack"||event.type==="war");
+      window.clearTimeout(eventNoticeTimer);
+      eventNoticeTimer=window.setTimeout(()=>{eventNotice.style.display="none";},4800);
+    };
     function configureShip(ship){
       ship.userData.onFuelUse=amount=>phaseTwo.consumeFuel(amount*0.45);
       const fire=ship.userData.performAttack;
@@ -574,12 +583,14 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           chromastoneVisual.visible=phaseTwo.getChromastoneActive();
           omnitrixSlider.value=phaseTwo.getChromastoneActive()?"1":"0";
           if(phaseTwo.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
+          joystick.buttons.querySelector("#pick-button").textContent=phaseTwo.getChromastoneActive()?"↯":"✋";
           omnitrixControl.querySelector("b").textContent=phaseTwo.getChromastoneActive()?"CHROMASTONE":"BEN";
           omnitrixSlider.oninput=()=>{
             const active=Number(omnitrixSlider.value)===1;
             phaseTwo.setChromastoneActive(active);
             chromastoneVisual.visible=active;
             benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=!active;});
+            joystick.buttons.querySelector("#pick-button").textContent=active?"↯":"✋";
             omnitrixControl.querySelector("b").textContent=active?"CHROMASTONE":"BEN";
           };
           benCharacter.group.userData.performChromastoneAttack=()=>{
