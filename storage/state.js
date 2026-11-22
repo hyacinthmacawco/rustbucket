@@ -404,9 +404,6 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
     let regionGroup = null;
     let titleObjects = null;
 
-    const bellwoodSkyColor = new THREE.Color(0x78b9f5);
-    const spaceSkyColor = new THREE.Color(0x02040a);
-    const environmentColor = new THREE.Color();
 
     function disposeRegion() {
       if (keyboardController) {
@@ -450,7 +447,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
             physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
             keyboardController = createKeyboard({
-              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),getLift:()=>Number(liftInput.value),
+              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
               onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
             });
@@ -463,7 +460,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
           physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=createKeyboard({
-            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,getLift:()=>Number(liftInput.value),
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
             onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
