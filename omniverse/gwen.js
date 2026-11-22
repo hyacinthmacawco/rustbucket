@@ -1,6 +1,9 @@
 import * as THREE from "three";
 
-export function createGwen({ createHumanRig }) {
+export class Gwen {
+  constructor({ createHumanRig }) {
+    this.startPosition = [-7,-0.5,-7];
+    this.startScale = [0.5,0.5,0.5];
   if (typeof createHumanRig !== "function") throw new TypeError("createGwen requires createHumanRig.");
   const rig = createHumanRig();
   const { group, joints } = rig;
@@ -136,5 +139,6 @@ export function createGwen({ createHumanRig }) {
     box(joints[side + "Ankle"], "GwenBlueBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.boot);
     box(joints[side + "Ankle"], "GwenBlueBootSole", [0.215, 0.045, 0.315], [0, -0.145, 0.075], mat.sole);
   }
-  return { group, rig, joints };
+  Object.assign(this, { group, rig, joints });
+  }
 }
