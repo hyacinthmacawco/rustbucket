@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { createTitleScreen } from "../hud/title.js";
 import { createJoystick, createKeyboard } from "../hud/joystick.js";
 import { createExtranet } from "../hud/extranet.js";
-import { createSolarSystem } from "../omniverse/systems/solar-system.js";
-import { createEarthInterior, createKevinStorageUnit, createSuitcases } from "../omniverse/interiors/earth-interior.js";
-import { createMoonInterior } from "../omniverse/interiors/moon-interior.js";
+import { SolarSystem } from "../omniverse/systems/solar-system.js";
+import { EarthInterior, createKevinStorageUnit, createSuitcases } from "../omniverse/interiors/earth-interior.js";
+import { MoonInterior } from "../omniverse/interiors/moon-interior.js";
 import { PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
 import { AugstakaInterior } from "../omniverse/interiors/augstaka-interior.js";
 import { AnodyneInterior } from "../omniverse/interiors/anodyne-interior.js";
@@ -932,7 +932,7 @@ class RustbucketGame {
       try {
         if (name === "space") {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
-          titleObjects = createSolarSystem(group);
+          titleObjects = new SolarSystem(group);
           if (state.stage === "gameplay") {
             const { ship } = createRustbucket(group); configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
@@ -953,7 +953,7 @@ class RustbucketGame {
           loadedRegion=name; loadingRegion=null; return;
         } else if (name === "moon") {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
-          createMoonInterior(group);
+          new MoonInterior(group);
           const {ship}=createRustbucket(group);configureShip(ship);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
@@ -984,7 +984,7 @@ class RustbucketGame {
         } else if (name === "earth") {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
-          createEarthInterior(scene, group);
+          new EarthInterior(scene, group);
           const { unit } = createKevinStorageUnit(group);
           const { ship } = createRustbucket(group);
 
