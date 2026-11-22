@@ -16,7 +16,8 @@ function signTexture(title, subtitle, color) {
   const t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return t;
 }
 
-export function createPlanetInterior(parent, key) {
+export class PlanetInterior {
+  constructor(parent, key) {
   const world=WORLDS[key];if(!world)throw new Error("Unknown planet: "+key);
   const root=new THREE.Group();root.name=world.name+"Interior";parent.add(root);
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(420,420),new THREE.MeshStandardMaterial({color:world.ground,roughness:1}));
