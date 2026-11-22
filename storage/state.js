@@ -1,57 +1,19 @@
 import * as THREE from "three";
-export const dimensions = {
-  ben: { position: [-3, -0.5, 5], scale: [0.5, 0.5, 0.5] },
-  gwen: { position: [-7, -0.5, -7], scale: [0.5, 0.5, 0.5] },
-  kevin: { position: [0, -0.5, -9], scale: [0.52, 0.52, 0.52] },
-  rook: { position: [7, -0.5, -7], scale: [0.52, 0.52, 0.52] },
-  rustbucket: { position: [0, 2, 0], scale: [2, 2, 2] },
-  kevinStorageUnit: { position: [0, -0.5, 0], scale: [1.5, 1.5, 1.5] },
-  bellwood: { position: [0, 0, 0], scale: [1, 1, 1] },
-  earth: { position: [4.5, 0, 0], radius: 2.05 },
-  moon: { position: [6.8, 0.2, -1.5], radius: 0.35 },
-  sun: { position: [-50, 0, 0], radius: 30 },
-
-  camera: {
-    title: {
-      position: [-22.75, 6, 90],
-      target: [-22.75, 0, 0],
-      fov: 55,
-      near: 0.1,
-      far: 1000,
-      distance: 90,
-      minDistance: 45,
-      maxDistance: 140,
-      yaw: 0,
-      pitch: 0.13
-    },
-    gameplay: {
-      position: [0, 5.3, 18.5],
-      target: [0, 1.8, 0],
-      fov: 43,
-      near: 0.1,
-      far: 250,
-      distance: 18.5,
-      minDistance: 8,
-      maxDistance: 45,
-      yaw: 0,
-      pitch: 0.18
-    },
-    dragSensitivity: 0.006,
-    pitchSensitivity: 0.004,
-    minPitch: -0.15,
-    maxPitch: 1.0
-  }
-};
-
-
-export const state = {
-  stage: "title"
-};
-
 import { createTitleScreen } from "../hud/title.js";
-import { createJoystick } from "../hud/joystick.js";
+import { createJoystick, createKeyboard } from "../hud/joystick.js";
 import { createExtranet } from "../hud/extranet.js";
 import { createSuitcases } from "../omniverse/suitcases.js";
+import { createSolarSystem } from "../omniverse/solar-system.js";
+import { createEarthInterior } from "../omniverse/earth.js";
+import { createMoonInterior } from "../omniverse/moon-interior.js";
+import { createKevinStorageUnit } from "../omniverse/kevin-storage-unit.js";
+import { createRustbucket } from "../omniverse/rustbucket.js";
+import { createHumanRig } from "../omniverse/human-rig.js";
+import { createBen } from "../omniverse/ben.js";
+import { createGwen } from "../omniverse/gwen.js";
+import { createKevin } from "../omniverse/kevin.js";
+import { createRook } from "../omniverse/rook.js";
+import { createPhysics } from "../physics/engine.js";
 
 
     const canvas = document.getElementById("omniverse");
@@ -214,6 +176,37 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     liftControl.innerHTML = '<span>LIFT</span><input id="vehicle-lift-slider" type="range" min="-1" max="1" step="0.02" value="0" orient="vertical"><span>HOVER</span>';
     document.body.append(extranetButton, liftControl);
     const liftInput = liftControl.querySelector("#vehicle-lift-slider");
+    const rampButton = document.createElement("button");
+    rampButton.id = "ramp-toggle-button";
+    rampButton.type = "button";
+    rampButton.textContent = "OPEN RAMP";
+    document.body.appendChild(rampButton);
+    rampButton.addEventListener("click", () => entities?.rustbucket?.userData.toggleRamp?.());
+    const mapOverlay = document.createElement("div");
+    mapOverlay.id = "system-map-overlay";
+    mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">SOLAR SYSTEM</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button></div><div id="system-map-actions"><button data-destination="space">REMAIN IN ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
+    document.body.appendChild(mapOverlay);
+    const warpOverlay = document.createElement("div");
+    warpOverlay.id = "warp-overlay";
+    warpOverlay.innerHTML = '<div id="warp-flash"></div><div id="warp-caption">SPACE WARP</div>';
+    document.body.appendChild(warpOverlay);
+    function openSystemMap() {
+      if (state.stage === "gameplay" && keyboardController?.selected === "rustbucket") mapOverlay.style.display = "flex";
+    }
+    async function warpTo(destination) {
+      mapOverlay.style.display = "none";
+      if (!["earth","moon","space"].includes(destination)) return;
+      warpOverlay.style.display = "flex";
+      warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
+      await new Promise(resolve => window.setTimeout(resolve, 1250));
+      state.currentScene = destination;
+      await loadRegion(destination);
+      setCameraPreset(dimensions.camera.gameplay);
+      warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
+      extranet.setLocation(destination);
+    }
+    mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => warpTo(button.dataset.destination)));
+    mapOverlay.querySelector("#system-map-close").addEventListener("click", () => { mapOverlay.style.display = "none"; });
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     
     
@@ -390,23 +383,10 @@ import { createSuitcases } from "../omniverse/suitcases.js";
     let loadingRegion = null;
     let regionGroup = null;
     let titleObjects = null;
-    let spaceEnvironment = null;
+
     const bellwoodSkyColor = new THREE.Color(0x78b9f5);
     const spaceSkyColor = new THREE.Color(0x02040a);
     const environmentColor = new THREE.Color();
-
-    function regionNearCamera() {
-      const cameraPosition = camera.position;
-      if (state.stage === "title") {
-        const earth = new THREE.Vector3(...dimensions.earth.position);
-        const sun = new THREE.Vector3(...dimensions.sun.position);
-        const nearEarth = cameraPosition.distanceTo(earth) < 180;
-        const nearSun = cameraPosition.distanceTo(sun) < 180;
-        return nearEarth || nearSun ? "space" : null;
-      }
-      if (state.stage === "gameplay" || state.stage === "prelude") return "bellwood";
-      return null;
-    }
 
     function disposeRegion() {
       if (keyboardController) {
@@ -414,6 +394,8 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         keyboardController = null;
       }
       ben = null;
+      if (physics) { physics.dispose(); physics = null; }
+      entities = null;
       if (!regionGroup) return;
       scene.remove(regionGroup);
       regionGroup.traverse(object => {
@@ -430,72 +412,51 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       });
       regionGroup = null;
       titleObjects = null;
-      spaceEnvironment = null;
+
     }
 
     async function loadRegion(name) {
       if (loadingRegion === name || loadedRegion === name) return;
-      loadingRegion = name;
-      disposeRegion();
-
-      if (!name) {
-        loadedRegion = null;
-        loadingRegion = null;
-        return;
-      }
-
+      loadingRegion = name; disposeRegion();
+      if (!name) { loadedRegion = null; loadingRegion = null; return; }
       const group = new THREE.Group();
-      group.name = name === "space" ? "SpaceRegion" : "BellwoodRegion";
-
+      group.name = name === "space" ? "SolarSystemScene" : name === "moon" ? "MoonScene" : "EarthScene";
       try {
         if (name === "space") {
-          // Lazy imports: celestial models are not loaded on the initial module pass.
-          const [sunModule, earthModule, moonModule, starModule] = await Promise.all([
-            import("../omniverse/sun.js"),
-            import("../omniverse/earth.js"),
-            import("../omniverse/moon.js"),
-            import("../omniverse/starfield.js")
-          ]);
-          scene.background = new THREE.Color(0x02040a);
-          scene.fog = null;
-          group.add(new THREE.AmbientLight(0x52617f, 0.45));
-          const sun = sunModule.createSun(group);
-          const earth = earthModule.createEarth(group);
-          const moon = moonModule.createMoon(group);
-          const starfield = starModule.createStarfield(group);
-          titleObjects = { ...sun, ...earth, ...moon, ...starfield };
-        } else if (name === "bellwood") {
+          scene.background = new THREE.Color(0x02040a); scene.fog = null;
+          titleObjects = createSolarSystem(group);
+          if (state.stage === "gameplay") {
+            const { ship } = createRustbucket(group);
+            physics = await createPhysics(); physics.setEnvironment("space"); physics.addVehicle(ship);
+            entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
+            keyboardController = createKeyboard({
+              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+              onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
+              onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+            });
+          } else { regionGroup=group; scene.add(regionGroup); }
+          loadedRegion=name; loadingRegion=null; return;
+        } else if (name === "moon") {
+          scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
+          createMoonInterior(group);
+          const {ship}=createRustbucket(group);
+          physics=await createPhysics();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
+          entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
+          keyboardController=createKeyboard({
+            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+            onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
+            onSelect:selected=>{liftControl.style.display=selected==="rustbucket"?"flex":"none";rampButton.style.display=selected==="rustbucket"?"block":"none";}
+          });
+          loadedRegion=name;loadingRegion=null;return;
+        } else if (name === "earth") {
           // Only Bellwood's nearby environment and gameplay models are loaded.
-          const [bellwoodModule, unitModule, shipModule, rigModule, benModule, gwenModule, kevinModule, rookModule, controllerModule, physicsModule, sunModule, earthModule, moonModule, starModule] = await Promise.all([
-            import("../omniverse/bellwood.js"),
-            import("../omniverse/kevin-storage-unit.js"),
-            import("../omniverse/rustbucket.js"),
-            import("../omniverse/human-rig.js"),
-            import("../omniverse/ben.js"),
-            import("../omniverse/gwen.js"),
-            import("../omniverse/kevin.js"),
-            import("../omniverse/rook.js"),
-            import("../hud/joystick.js"),
-            import("../physics/engine.js"),
-            import("../omniverse/sun.js"),
-            import("../omniverse/earth.js"),
-            import("../omniverse/moon.js"),
-            import("../omniverse/starfield.js")
-          ]);
-          bellwoodModule.createBellwood(scene, group);
-          const { unit } = unitModule.createKevinStorageUnit(group);
-          const { ship } = shipModule.createRustbucket(group);
-          spaceEnvironment = new THREE.Group();
-          spaceEnvironment.name = "SolarSystemTransition";
-          spaceEnvironment.position.y = 180;
-          group.add(spaceEnvironment);
-          const sunVisuals = sunModule.createSun(spaceEnvironment);
-          const earthVisuals = earthModule.createEarth(spaceEnvironment);
-          const moonVisuals = moonModule.createMoon(spaceEnvironment);
-          const starVisuals = starModule.createStarfield(spaceEnvironment);
-          spaceEnvironment.traverse(object => { object.userData.noPhysics = true; });
-          spaceEnvironment.visible = false;
-          physics = await physicsModule.createPhysics();
+
+          createEarthInterior(scene, group);
+          const { unit } = createKevinStorageUnit(group);
+          const { ship } = createRustbucket(group);
+
+          physics = await createPhysics();
+          physics.setEnvironment("planet");
           physics.addStaticScene(group);
           const { suitcases } = createSuitcases(group);
           physics.addVehicle(ship);
@@ -533,7 +494,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
             characterGroup.userData.actionRemaining = 0.95;
             rig.playAnimation("pickup");
           }
-          const { createHumanRig } = rigModule;
+          
           const benCharacter = benModule.createBen({ createHumanRig });
           const gwenCharacter = gwenModule.createGwen({ createHumanRig });
           const kevinCharacter = kevinModule.createKevin({ createHumanRig });
@@ -584,8 +545,10 @@ import { createSuitcases } from "../omniverse/suitcases.js";
           entities = { ...characterEntities, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
-          keyboardController = controllerModule.createKeyboard({
-            entities, camera, joystick, updateCamera, isMobile,
+          keyboardController = createKeyboard({
+            entities, camera, joystick, updateCamera, isMobile, initialSelected: "ben",
+            onJump: openSystemMap,
+            onToggleRamp: () => { ship.userData.toggleRamp?.(); rampButton.textContent = ship.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; },
             getLift: () => Number(liftInput.value),
             onSelect: selected => {
               liftControl.style.display = selected === "rustbucket" ? "flex" : "none";
@@ -594,27 +557,24 @@ import { createSuitcases } from "../omniverse/suitcases.js";
           });
           loadedRegion = name;
           loadingRegion = null;
-          if (name === "bellwood" && startRequested && state.stage === "prelude") state.stage = "gameplay";
+          if (name === "earth" && startRequested && state.stage === "prelude") state.stage = "gameplay";
           return;
         }
-
-        regionGroup = group;
-        scene.add(regionGroup);
-        loadedRegion = name;
-        if (name === "bellwood" && startRequested && state.stage === "prelude") state.stage = "gameplay";
-      } catch (error) {
-        console.error("Could not load nearby region:", name, error);
-        loadedRegion = null;
-      } finally {
-        loadingRegion = null;
-      }
+        }
+        regionGroup=group;scene.add(regionGroup);loadedRegion=name;
+      } catch(error) {
+        console.error("Could not load scene:",name,error);loadedRegion=null;
+      } finally { loadingRegion=null; }
     }
+    loadRegion("space");
 
     function updateStage() {
       if (activeStage === state.stage) return;
       activeStage = state.stage;
 
       if (activeStage === "title") {
+        state.currentScene = "space";
+        if (loadedRegion !== "space" && !loadingRegion) loadRegion("space");
         preludeScreen.style.display = "none";
         titleScreen.setVisible(true);
         joystick.setVisible(false);
@@ -625,12 +585,13 @@ import { createSuitcases } from "../omniverse/suitcases.js";
         titleScreen.setVisible(false);
         joystick.setVisible(false);
         setCameraPreset(dimensions.camera.gameplay);
-        if (!loadedRegion && !loadingRegion) loadRegion("bellwood");
+        if (loadedRegion !== "earth" && loadingRegion !== "earth") loadRegion("earth");
         
         preludeScreen.style.display = "flex";
         stopMusic();
         dialogueSfx = playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
+        if (loadedRegion !== state.currentScene && !loadingRegion) loadRegion(state.currentScene);
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(isMobile);
@@ -659,14 +620,8 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       joystick.setVisible(isMobile && state.stage === "gameplay");
       pauseButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
-      if (state.stage !== "gameplay") liftControl.style.display = "none";
+      if (state.stage !== "gameplay") { liftControl.style.display = "none"; rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) setPaused(false);
-
-      // Decide what to instantiate from the camera's current world position.
-      const wantedRegion = regionNearCamera();
-      if (!loadingRegion && wantedRegion !== loadedRegion) {
-        loadRegion(wantedRegion);
-      }
 
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
@@ -677,15 +632,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       if (!state.paused && physics && state.stage === "gameplay") physics.step(delta);
       if (!state.paused && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
 
-      if (state.stage === "gameplay" && spaceEnvironment && entities?.rustbucket) {
-        const altitude = camera.position.y;
-        const blend = THREE.MathUtils.smoothstep(altitude, 35, 155);
-        spaceEnvironment.visible = blend > 0.5;
-        environmentColor.lerpColors(bellwoodSkyColor, spaceSkyColor, blend);
-        scene.background = environmentColor;
-        if (blend >= 0.999) {
-          scene.fog = null;
-        } else {
+      if (state.stage === "gameplay") extranet.setLocation(state.currentScene); else {
           const fogFar = THREE.MathUtils.lerp(260, 28, blend);
           if (!(scene.fog instanceof THREE.Fog)) scene.fog = new THREE.Fog(environmentColor, 75, fogFar);
           scene.fog.color.copy(environmentColor);
@@ -735,7 +682,7 @@ import { createSuitcases } from "../omniverse/suitcases.js";
       pauseButton.remove();
       pauseOverlay.remove();
       extranetButton.remove();
-      liftControl.remove();
+      liftControl.remove(); rampButton.remove(); mapOverlay.remove(); warpOverlay.remove();
       extranet.close();
       disposeRegion();
       titleScreen.destroy();
