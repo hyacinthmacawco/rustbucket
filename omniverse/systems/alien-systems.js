@@ -70,7 +70,7 @@ function makeStar(parent, color) {
     new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .1, side: THREE.BackSide, depthWrite: false })
   );
   parent.add(glow);
-  const light = new THREE.PointLight(color, 180000000, STAR_RADIUS * 40, 1.8);
+  const light = new THREE.PointLight(color, 1800000000, STAR_RADIUS * 40, 1.8);
   parent.add(light);
   return star;
 }
