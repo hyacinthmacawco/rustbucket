@@ -318,6 +318,7 @@ export const state = { stage: "title", currentScene: "space", arrivingInShip: fa
       mapOverlay.style.display = "none";
       if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
       const atmosphericTransition=Boolean(PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
+      warpOverlay.querySelector("#warp-caption").textContent=PLANET_WORLDS[destination]?"ATMOSPHERIC ENTRY":atmosphericTransition?"CLEARING ATMOSPHERE":"SPACE WARP";
       warpOverlay.classList.toggle("atmospheric",atmosphericTransition);
       warpOverlay.style.display = "flex";
       warpOverlay.classList.remove("warp-active"); void warpOverlay.offsetWidth; warpOverlay.classList.add("warp-active");
