@@ -31,7 +31,7 @@ export class SolarSystem {
   );
   sunOuterGlow.position.copy(sun.position);
   parent.add(sunOuterGlow);
-  const sunlight = new THREE.PointLight(0xffb65c, 180000000, 800000, 1.5);
+  const sunlight = new THREE.PointLight(0xffb65c, 1800000000, 800000, 1.5);
   sunlight.position.copy(sun.position);
   parent.add(sunlight);
 
