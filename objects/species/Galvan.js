@@ -17,7 +17,6 @@ export class Galvan {
     this.group = new THREE.Group();
     this.group.name = "Galvan";
     this.homeworld = "galvan";
-    this.currentWorld = null;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
     this.health = 100;
     this.energy = 100;
@@ -26,7 +25,6 @@ export class Galvan {
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
-    this.boardedShip = null;
 
     this.materials = {
       skin: this.createMaterial(0x8d9b8c),
@@ -200,46 +198,5 @@ export class Galvan {
     return this.energy;
   }
 
-  boardRustbucket(ship, seatIndex = 0) {
-    if (!ship || this.boardedShip || this.homeworld === this.currentWorld) return false;
-    this.group.userData.boarded = true;
-    this.attachToRustbucket(ship, seatIndex);
-    return true;
-  }
-
-  attachToRustbucket(ship, seatIndex = 0) {
-    if (!ship) return false;
-    this.boardedShip = ship;
-    this.group.userData.boarded = true;
-    ship.add(this.group);
-    const seats = [
-      [-0.58, -1.12, -1.85],
-      [0.58, -1.12, -1.85],
-      [-0.58, -1.12, -3.15],
-      [0.58, -1.12, -3.15]
-    ];
-    this.group.position.set(...seats[seatIndex % seats.length]);
-    this.group.rotation.set(0, Math.PI, 0);
-    return true;
-  }
-
-  deliverAtHomeworld(worldKey, destination, ship) {
-    if (!this.boardedShip || this.homeworld !== worldKey || !destination || !ship) return false;
-
-    const payment = this.taydenite;
-    this.taydenite = 0;
-    ship.userData.statusOwner.receiveTaydenite(payment);
-    this.boardedShip = null;
-    this.currentWorld = worldKey;
-    this.group.userData.boarded = false;
-    destination.add(this.group);
-    this.group.position.set(4, 0, 5);
-    this.group.rotation.set(0, Math.PI, 0);
-    this.group.userData.wanderOrigin = this.group.position.clone();
-    this.group.userData.wanderTarget = this.group.position.clone();
-    this.group.userData.wanderTimer = 1;
-    this.group.userData.wanderRange = { x: 19, z: 19 };
-    return payment;
-  }
 
 }

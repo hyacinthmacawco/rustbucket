@@ -26,7 +26,6 @@ export class Highbreed {
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
-    this.boardedShip = null;
 
     this.materials = {
       white: this.createMaterial(0xe8f2f1),
