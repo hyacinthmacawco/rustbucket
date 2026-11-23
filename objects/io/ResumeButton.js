@@ -1,0 +1,20 @@
+export class ResumeButton {
+  constructor({ onResume = () => {} } = {}) {
+    this.onResume = onResume;
+    this.styles = { width: "100%", marginTop: "20px", padding: "13px", border: "1px solid rgba(126,255,168,.6)", borderRadius: "4px", background: "rgba(16, 82, 39, .9)", color: "#f1fff4", font: "inherit", letterSpacing: ".14em" };
+  }
+
+  create() {
+    this.element = document.createElement("button");
+    this.element.type = "button";
+    this.element.textContent = "RESUME";
+    Object.assign(this.element.style, this.styles);
+    this.element.addEventListener("click", this.onResume);
+    return this.element;
+  }
+
+  destroy() {
+    this.element?.removeEventListener("click", this.onResume);
+    this.element?.remove();
+  }
+}

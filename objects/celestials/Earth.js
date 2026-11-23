@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { SolarSystem } from "./SolarSystem.js";
 
 export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
@@ -94,5 +95,37 @@ export class Earth {
     addBox([4.2, 7.8, 0.55], [-14.2, 4.1, 14.2], wall);
     addBox([4.2, 7.8, 0.55], [14.2, 4.1, 14.2], wall);
     for (let z = -14; z <= 10; z += 6) addBox([33, 0.22, 0.22], [0, 11.3, z], metal);
+  }
+
+  enter(react) {
+    react.clearWorld();
+    react.activeWorld.add(this.interior());
+    react.scene.background = new THREE.Color(this.world.sky);
+    react.scene.fog = new THREE.Fog(this.world.sky, 180, 700);
+    react.camera.position.set(0, 8, 23);
+    react.camera.lookAt(0, 1.5, 0);
+    react.cameraTarget = new THREE.Vector3(0, 1.5, 0);
+    react.state.stage = "gameplay";
+    react.state.currentScene = this.world.key;
+    react.titleScreen.setVisible(false);
+    react.titleScreen.newGame.setPreludeVisible(false);
+    react.extranetButton.style.display = "block";
+    react.extranet.setLocation(this.world.key);
+    react.currentPlanet = this;
+    if (this.world.key === "earth") react.earth = this;
+    return this;
+  }
+
+  exit(react) {
+    react.clearWorld();
+    react.systemWorld = new SolarSystem(react.activeWorld);
+    react.addSystemPlanets(this.system);
+    react.scene.background = new THREE.Color(0x02040a);
+    react.scene.fog = null;
+    react.camera.position.set(0, 0, 600000);
+    react.camera.lookAt(0, 0, 0);
+    react.state.currentScene = this.system === "solar" ? "space" : "system-" + this.system;
+    react.extranet.setLocation(this.system === "solar" ? "space" : this.system);
+    return react.systemWorld;
   }
 }

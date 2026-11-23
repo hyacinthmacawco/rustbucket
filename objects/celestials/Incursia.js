@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { IncursiaSystem } from "./IncursiaSystem.js";
 
 export class Incursia {
   static WORLD = {
@@ -93,5 +94,37 @@ export class Incursia {
     beacon.position.set(0, 7, 0);
     hub.add(beacon);
     return interior;
+  }
+
+  enter(react) {
+    react.clearWorld();
+    react.activeWorld.add(this.interior());
+    react.scene.background = new THREE.Color(this.world.sky);
+    react.scene.fog = new THREE.Fog(this.world.sky, 180, 700);
+    react.camera.position.set(0, 8, 23);
+    react.camera.lookAt(0, 1.5, 0);
+    react.cameraTarget = new THREE.Vector3(0, 1.5, 0);
+    react.state.stage = "gameplay";
+    react.state.currentScene = this.world.key;
+    react.titleScreen.setVisible(false);
+    react.titleScreen.newGame.setPreludeVisible(false);
+    react.extranetButton.style.display = "block";
+    react.extranet.setLocation(this.world.key);
+    react.currentPlanet = this;
+    if (this.world.key === "earth") react.earth = this;
+    return this;
+  }
+
+  exit(react) {
+    react.clearWorld();
+    react.systemWorld = new IncursiaSystem(react.activeWorld);
+    react.addSystemPlanets(this.system);
+    react.scene.background = new THREE.Color(0x02040a);
+    react.scene.fog = null;
+    react.camera.position.set(0, 0, 600000);
+    react.camera.lookAt(0, 0, 0);
+    react.state.currentScene = this.system === "solar" ? "space" : "system-" + this.system;
+    react.extranet.setLocation(this.system === "solar" ? "space" : this.system);
+    return react.systemWorld;
   }
 }

@@ -259,6 +259,7 @@ export class Joystick {
     this.isMobile = isMobile;
     this.onSelect = onSelect;
     this.onJump = onJump;
+    this.jump.setAction(this.onJump);
     this.onToggleRamp = onToggleRamp;
     this.selected = initialSelected;
     this.lastAttackAt = 0;
@@ -351,7 +352,7 @@ export class Joystick {
     const speed = this.selected === "rustbucket" ? 18 : 3.5;
 
     if (joy.jumpRequested) {
-      if (this.selected === "rustbucket") this.onJump();
+      if (this.selected === "rustbucket") this.jump.activate();
       else object.userData.requestJump?.();
       joy.jumpRequested = false;
     }

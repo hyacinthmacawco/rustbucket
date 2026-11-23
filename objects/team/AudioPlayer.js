@@ -78,6 +78,14 @@ export class AudioPlayer {
     }
   }
 
+  setMasterVolume(volume) {
+    const value = Math.max(0, Math.min(1, Number(volume)));
+    this.musicVolume = value;
+    this.sfxVolume = value;
+    if (this.musicTrack) this.musicTrack.volume = value;
+    for (const track of this.sfxTracks) track.volume = value;
+  }
+
   destroy() {
     this.stopMusic();
     this.stopSfx();

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Omniverse } from "../omniverse/Omniverse.js";
-import { Title } from "../title/Title.js";
+import { Title } from "../io/Title.js";
+import { Camera } from "../team/Camera.js";
 import { SolarSystem } from "../celestials/SolarSystem.js";
 import { AugstakaSystem } from "../celestials/AugstakaSystem.js";
 import { AnodyneSystem } from "../celestials/AnodyneSystem.js";
@@ -44,10 +45,15 @@ export class React {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
 
-    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000000);
+    this.cameraController = new Camera(THREE, { fov: 55, near: 0.1, far: 2000000 }, window.innerWidth / window.innerHeight);
+    this.camera = this.cameraController.camera;
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
     this.scene.add(this.camera);
+    this.cameraController.attach(this.canvas, {
+      getStage: () => this.state.stage,
+      getTarget: () => this.cameraTarget || new THREE.Vector3()
+    });
 
     this.activeWorld = new THREE.Group();
     this.activeWorld.name = "ActiveWorld";
@@ -70,43 +76,16 @@ export class React {
     };
     this.addSystemPlanets("solar");
 
-    this.createPrelude();
-    this.titleScreen = new Title({ onNewGame: () => this.setStage("prelude") });
+    this.titleScreen = new Title({
+      onNewGame: () => this.setStage("prelude"),
+      onSkipPrelude: () => this.setStage("gameplay")
+    });
     this.extranet = new Extranet();
     this.extranetButton = this.extranet.createButton();
     this.extranetButton.style.display = "none";
 
-    this.onPointerDown = event => {
-      if (event.button !== 0) return;
-      this.pointer = { x: event.clientX, y: event.clientY };
-      this.canvas.setPointerCapture?.(event.pointerId);
-    };
-    this.onPointerMove = event => {
-      if (!this.pointer || this.state.stage === "title") return;
-      const dx = event.clientX - this.pointer.x;
-      const dy = event.clientY - this.pointer.y;
-      this.pointer.x = event.clientX;
-      this.pointer.y = event.clientY;
-      this.camera.position.x -= dx * 2;
-      this.camera.position.y += dy * 2;
-      this.camera.lookAt(this.cameraTarget || new THREE.Vector3());
-    };
-    this.onPointerUp = () => { this.pointer = null; };
-    this.onWheel = event => {
-      if (this.state.stage === "title") return;
-      const direction = this.camera.position.clone().normalize();
-      this.camera.position.addScaledVector(direction, event.deltaY * 0.45);
-    };
-
-    this.canvas.addEventListener("pointerdown", this.onPointerDown);
-    this.canvas.addEventListener("pointermove", this.onPointerMove);
-    this.canvas.addEventListener("pointerup", this.onPointerUp);
-    this.canvas.addEventListener("pointercancel", this.onPointerUp);
-    this.canvas.addEventListener("wheel", this.onWheel, { passive: true });
-
     this.onResize = () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
+      this.cameraController.resize(window.innerWidth / window.innerHeight);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
@@ -118,48 +97,10 @@ export class React {
     window.addEventListener("beforeunload", () => this.destroy(), { once: true });
   }
 
-  createPrelude() {
-    this.prelude = document.createElement("section");
-    this.prelude.id = "prelude-screen";
-    Object.assign(this.prelude.style, {
-      position: "fixed",
-      inset: "0",
-      display: "none",
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "column",
-      gap: "28px",
-      background: "#000",
-      color: "#fff",
-      zIndex: "50",
-      fontFamily: "monospace",
-      letterSpacing: ".18em"
-    });
-
-    const heading = document.createElement("div");
-    heading.textContent = "A NEW DAWN";
-    heading.style.fontSize = "clamp(20px, 5vw, 42px)";
-
-    const skip = document.createElement("button");
-    skip.type = "button";
-    skip.textContent = "SKIP";
-    Object.assign(skip.style, {
-      padding: "10px 28px",
-      border: "1px solid #79e99a",
-      background: "transparent",
-      color: "#dffff0",
-      font: "inherit",
-      cursor: "pointer"
-    });
-    skip.addEventListener("click", () => this.setStage("gameplay"));
-    this.prelude.append(heading, skip);
-    document.body.append(this.prelude);
-  }
-
   setStage(stage) {
     this.state.stage = stage;
     this.titleScreen.setVisible(stage === "title");
-    this.prelude.style.display = stage === "prelude" ? "flex" : "none";
+    this.titleScreen.newGame.setPreludeVisible(stage === "prelude");
     this.extranetButton.style.display = stage === "gameplay" ? "block" : "none";
 
     if (stage === "gameplay") this.loadEarth();
@@ -176,12 +117,8 @@ export class React {
   }
 
   loadEarth() {
-    this.clearWorld();
-    this.scene.background = new THREE.Color(Earth.WORLD.sky);
-    this.scene.fog = new THREE.Fog(Earth.WORLD.sky, 180, 700);
-
     this.earth = new Earth();
-    this.activeWorld.add(this.earth.interior());
+    this.earth.enter(this);
     this.vehicle = new Rustbucket(this.activeWorld);
     this.vehicle.ship.position.set(0, 2, 34);
 
@@ -203,12 +140,7 @@ export class React {
       this.activeWorld.add(member.group);
     });
 
-    this.camera.position.set(0, 8, 23);
-    this.camera.lookAt(0, 1.5, 0);
-    this.cameraTarget = new THREE.Vector3(0, 1.5, 0);
-    this.state.currentScene = "earth";
-    this.currentPlanet = this.earth;
-    this.extranet.setLocation("earth");
+
   }
 
   addSystemPlanets(systemKey) {
@@ -234,48 +166,6 @@ export class React {
       this.activeWorld.add(exterior);
       this.systemPlanets.push({ planet, exterior });
     }
-  }
-
-  enterPlanet(key) {
-    const PlanetClass = this.planetClasses[key];
-    if (!PlanetClass) return false;
-
-    this.clearWorld();
-    this.currentPlanet = new PlanetClass();
-    this.activeWorld.add(this.currentPlanet.interior());
-    const world = this.currentPlanet.world;
-    this.scene.background = new THREE.Color(world.sky);
-    this.scene.fog = new THREE.Fog(world.sky, 180, 700);
-    this.camera.position.set(0, 8, 23);
-    this.camera.lookAt(0, 1.5, 0);
-    this.cameraTarget = new THREE.Vector3(0, 1.5, 0);
-    this.state.stage = "gameplay";
-    this.state.currentScene = key;
-    this.titleScreen.setVisible(false);
-    this.prelude.style.display = "none";
-    this.extranetButton.style.display = "block";
-    this.extranet.setLocation(key);
-    return this.currentPlanet;
-  }
-
-  exitPlanet() {
-    if (!this.currentPlanet) return false;
-
-    const systemKey = this.currentPlanet.system;
-    const SystemClass = this.systemClasses[systemKey];
-    if (!SystemClass) return false;
-
-    this.clearWorld();
-    this.systemWorld = new SystemClass(this.activeWorld);
-    this.addSystemPlanets(systemKey);
-    this.currentPlanet = null;
-    this.scene.background = new THREE.Color(0x02040a);
-    this.scene.fog = null;
-    this.camera.position.set(0, 0, 600000);
-    this.camera.lookAt(0, 0, 0);
-    this.state.currentScene = systemKey === "solar" ? "space" : "system-" + systemKey;
-    this.extranet.setLocation(systemKey === "solar" ? "space" : systemKey);
-    return this.systemWorld;
   }
 
   clearWorld() {
@@ -315,14 +205,9 @@ export class React {
   destroy() {
     cancelAnimationFrame(this.animationFrame);
     window.removeEventListener("resize", this.onResize);
-    this.canvas.removeEventListener("pointerdown", this.onPointerDown);
-    this.canvas.removeEventListener("pointermove", this.onPointerMove);
-    this.canvas.removeEventListener("pointerup", this.onPointerUp);
-    this.canvas.removeEventListener("pointercancel", this.onPointerUp);
-    this.canvas.removeEventListener("wheel", this.onWheel);
+    this.cameraController.destroy();
     this.extranet.destroy();
     this.titleScreen.destroy();
-    this.prelude.remove();
     this.renderer.dispose();
     this.omniverse.destroy();
   }

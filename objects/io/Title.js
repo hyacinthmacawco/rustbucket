@@ -2,8 +2,9 @@ import { NewGame } from "./NewGame.js";
 import { LoadGame } from "./LoadGame.js";
 
 export class Title {
-  constructor({ onNewGame = () => {} } = {}) {
+  constructor({ onNewGame = () => {}, onSkipPrelude = () => {} } = {}) {
     this.onNewGame = onNewGame;
+    this.onSkipPrelude = onSkipPrelude;
     this.styles = {
       screen: { position: "fixed", inset: "0", display: "grid", placeItems: "center", zIndex: "20", pointerEvents: "none" },
       menu: { width: "min(88vw, 560px)", display: "grid", justifyItems: "center", gap: "22px", pointerEvents: "auto", textAlign: "center" },
@@ -34,7 +35,7 @@ export class Title {
     this.buttons.id = "title-buttons";
     Object.assign(this.buttons.style, this.styles.buttons);
 
-    this.newGame = new NewGame({ onSelect: () => this.onNewGame() });
+    this.newGame = new NewGame({ onSelect: () => this.onNewGame(), onSkip: () => this.onSkipPrelude() });
     this.loadGame = new LoadGame();
     this.buttons.append(this.newGame.create(), this.loadGame.create());
 

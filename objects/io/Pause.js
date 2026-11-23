@@ -1,59 +1,49 @@
+import { PauseTab } from "./PauseTab.js";
+import { ResumeButton } from "./ResumeButton.js";
+import { VolumeSlider } from "./VolumeSlider.js";
+import { CameraSensitivitySlider } from "./CameraSensitivitySlider.js";
+
 export class Pause {
-  constructor({ onResume = () => {} } = {}) {
+  constructor({ onResume = () => {}, audioPlayer = null, onCameraSensitivity = () => {} } = {}) {
     this.onResume = onResume;
+    this.audioPlayer = audioPlayer;
+    this.onCameraSensitivity = onCameraSensitivity;
     this.visible = false;
     this.styles = {
       overlay: { position: "fixed", inset: "0", zIndex: "90", display: "none", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0, 5, 2, .76)" },
       panel: { width: "min(92vw, 620px)", maxHeight: "88vh", overflow: "auto", padding: "24px", border: "1px solid rgba(126,255,168,.5)", borderRadius: "10px", background: "rgba(3, 19, 10, .97)", color: "#eaffef", boxShadow: "0 0 42px rgba(61,255,131,.15)" },
       title: { margin: "0 0 20px", color: "#a6ffbd", fontFamily: "Nulshock, sans-serif", letterSpacing: ".14em", fontSize: "1.4rem" },
       tabs: { display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" },
-      tab: { padding: "10px 14px", border: "1px solid rgba(126,255,168,.35)", borderRadius: "4px", background: "rgba(5, 35, 18, .8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" },
-      activeTab: { borderColor: "#8cffaa", background: "rgba(23, 90, 46, .8)" },
       content: { minHeight: "120px", lineHeight: "1.6", color: "#d8ffe2" },
-      resume: { width: "100%", marginTop: "20px", padding: "13px", border: "1px solid rgba(126,255,168,.6)", borderRadius: "4px", background: "rgba(16, 82, 39, .9)", color: "#f1fff4", font: "inherit", letterSpacing: ".14em" },
-      heading: { color: "#a6ffbd", letterSpacing: ".1em" },
-      label: { display: "flex", justifyContent: "space-between", gap: "16px", padding: "10px 0", borderBottom: "1px solid rgba(126,255,168,.16)" },
-      input: { accentColor: "#72f89b" }
+      heading: { color: "#a6ffbd", letterSpacing: ".1em" }
     };
+    this.tabs = new Map();
   }
 
   create() {
     this.element = document.createElement("div");
     this.element.id = "pause-overlay";
     Object.assign(this.element.style, this.styles.overlay);
-
     this.panel = document.createElement("section");
     this.panel.id = "pause-panel";
     Object.assign(this.panel.style, this.styles.panel);
-
     this.title = document.createElement("h2");
     this.title.textContent = "PAUSED";
     Object.assign(this.title.style, this.styles.title);
-
-    this.tabs = document.createElement("nav");
-    Object.assign(this.tabs.style, this.styles.tabs);
+    this.tabBar = document.createElement("nav");
+    Object.assign(this.tabBar.style, this.styles.tabs);
     this.content = document.createElement("div");
     this.content.id = "pause-content";
     Object.assign(this.content.style, this.styles.content);
 
-    this.tabButtons = new Map();
-    for (const [key, label] of [["settings", "SETTINGS"], ["help", "HELP"], ["credits", "CREDITS"]]) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = label;
-      Object.assign(button.style, this.styles.tab);
-      button.addEventListener("click", () => this.showTab(key));
-      this.tabs.append(button);
-      this.tabButtons.set(key, button);
+    for (const [name, label] of [["settings", "SETTINGS"], ["help", "HELP"], ["credits", "CREDITS"]]) {
+      const tab = new PauseTab({ name, label, onSelect: key => this.showTab(key), active: name === "settings" });
+      this.tabs.set(name, tab);
+      this.tabBar.append(tab.create());
     }
 
-    this.resumeButton = document.createElement("button");
-    this.resumeButton.type = "button";
-    this.resumeButton.textContent = "RESUME";
-    Object.assign(this.resumeButton.style, this.styles.resume);
-    this.resumeButton.addEventListener("click", this.onResume);
-
-    this.panel.append(this.title, this.tabs, this.content, this.resumeButton);
+    this.resume = new ResumeButton({ onResume: this.onResume });
+    this.panel.append(this.title, this.tabBar, this.content, this.resume.create());
     this.element.append(this.panel);
     document.body.append(this.element);
     this.showTab("settings");
@@ -61,30 +51,18 @@ export class Pause {
   }
 
   showTab(name) {
-    for (const [key, button] of this.tabButtons) {
-      Object.assign(button.style, this.styles.tab, key === name ? this.styles.activeTab : {});
-    }
-
+    for (const [key, tab] of this.tabs) tab.setActive(key === name);
+    this.volume?.destroy();
+    this.sensitivity?.destroy();
     this.content.replaceChildren();
+
     if (name === "settings") {
       const heading = document.createElement("h3");
       heading.textContent = "SETTINGS";
       Object.assign(heading.style, this.styles.heading);
-      this.content.append(heading);
-
-      for (const [labelText, min, max, value] of [["CAMERA SENSITIVITY", 1, 15, 6], ["MASTER VOLUME", 0, 100, 70]]) {
-        const label = document.createElement("label");
-        label.textContent = labelText;
-        Object.assign(label.style, this.styles.label);
-        const input = document.createElement("input");
-        input.type = "range";
-        input.min = String(min);
-        input.max = String(max);
-        input.value = String(value);
-        Object.assign(input.style, this.styles.input);
-        label.append(input);
-        this.content.append(label);
-      }
+      this.volume = new VolumeSlider({ audioPlayer: this.audioPlayer });
+      this.sensitivity = new CameraSensitivitySlider({ onChange: this.onCameraSensitivity });
+      this.content.append(heading, this.sensitivity.create(), this.volume.create());
     } else if (name === "help") {
       const heading = document.createElement("h3");
       heading.textContent = "CONTROLS";
@@ -112,7 +90,10 @@ export class Pause {
   }
 
   destroy() {
-    this.resumeButton?.removeEventListener("click", this.onResume);
+    this.volume?.destroy();
+    this.sensitivity?.destroy();
+    for (const tab of this.tabs.values()) tab.destroy();
+    this.resume?.destroy();
     this.element?.remove();
   }
 }
