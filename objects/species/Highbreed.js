@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { Model } from "../Model.js";
 
 export class Highbreed {
-  static relationships = {"Ben":40,"Gwen":30,"Kevin":20,"Rook":10,"Incursean":-64,"Anodite":-10,"Galvan":16,"Human":-56};
+  static relationships = {"Ben":40,"Gwen":30,"Kevin":20,"Rook":10,"Incursean":-64,"Anodite":3,"Galvan":16,"Human":-56};
 
   constructor(parent = null, options = {}) {
   const g = new THREE.Group();

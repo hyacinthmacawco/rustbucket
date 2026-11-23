@@ -401,7 +401,7 @@ export class React {
     this.warpToSystem = async (requestedKey) => {
       const systemKey = ({solar:"solar",highbreed:"augstaka",incursean:"incursia",anodite:"anodyne",galvan:"galvan"})[requestedKey];
       if (!systemKey) return;
-      extranet.close();
+      extranet.destroy();
       mapOverlay.style.display = "none";
       warpOverlay.querySelector("#warp-caption").textContent = "INTERSTELLAR JUMP";
       warpOverlay.classList.remove("atmospheric");
@@ -1074,7 +1074,7 @@ export class React {
       pause.destroy();
       extranetButton.remove();
       rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
-      extranet.close();
+      extranet.destroy();
       passengerTransport.destroy();
       this.disposeRegion();
       titleScreen.destroy();

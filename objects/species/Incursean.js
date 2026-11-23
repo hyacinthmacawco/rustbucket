@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export class Incursean {
-  static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: -20, Galvan: 10, Human: -36 };
+  static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: 3, Galvan: 10, Human: -36 };
 
   constructor(parent = null, options = {}) {
     this.name = options.name || "Incursean";

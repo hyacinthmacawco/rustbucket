@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { Model } from "../Model.js";
 
 export class Anodite {
-  static relationships = {"Ben":50,"Gwen":70,"Kevin":0,"Rook":40,"Highbreed":-10,"Incursean":-20,"Galvan":3,"Human":40};
+  static relationships = {"Ben":50,"Gwen":70,"Kevin":0,"Rook":40,"Highbreed":3,"Incursean":3,"Galvan":3,"Human":40};
 
   constructor(parent = null, options = {}) {
   const g = new THREE.Group();

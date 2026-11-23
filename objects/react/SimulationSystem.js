@@ -97,10 +97,7 @@ loadData() {
       }
       delete merged.relationships;
       merged.eventLog = (merged.eventLog || []).filter(event => !/passing trader convoy/i.test(event.description || ""));
-      for (const speciesName of ["Highbreed", "Incursean", "Galvan"]) {
-        merged.entities.Anodite.relationships[speciesName] = 3;
-        merged.entities[speciesName].relationships.Anodite = 3;
-      }
+
       for (const name of SimulationSystem.SPECIES) merged.populations[name] = SimulationSystem.clamp(Number(merged.populations[name]) || 0, 0, 999);
       return merged;
     }
@@ -227,7 +224,7 @@ tradeWithSpecies(character,speciesName,resourceId,quantity=1) {
     this.addItem({id:stock.id,name:stock.name,category:"Trade goods",value:stock.price},quantity);
     this.data.transactions.unshift({type:"purchase",from:speciesName,item:stock.name,quantity,cost,at:new Date().toISOString()});
     this.data.transactions=this.data.transactions.slice(0,100);this.save();
-    this.recordEvent("trade",character+" purchased "+quantity+" "+stock.name+" from "+speciesName+".",{character,this.species:speciesName,cost});
+    this.recordEvent("trade",character+" purchased "+quantity+" "+stock.name+" from "+speciesName+".",{ character, species: speciesName, cost });
     return {ok:true,cost};
   }
 
