@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { UIStyles } from "../ui/UIStyles.js";
+import { AudioPlayer } from "../ui/AudioPlayer.js";
 import { PhysicsEngine } from "./PhysicsEngine.js";
 import { SimulationSystem } from "./SimulationSystem.js";
 new UIStyles();
@@ -174,9 +175,9 @@ export class React {
     function setPaused(value) {
       state.paused = Boolean(value);
       pauseOverlay.style.display = state.paused ? "flex" : "none";
-      if (musicTrack) {
-        if (state.paused) musicTrack.pause();
-        else if (audioUnlocked) musicTrack.play().catch(() => {});
+      if (audioPlayer.musicTrack) {
+        if (state.paused) audioPlayer.musicTrack.pause();
+        else if (audioPlayer.unlocked) audioPlayer.musicTrack.play().catch(() => {});
       }
     }
 
@@ -470,64 +471,12 @@ export class React {
     
     
 
-    // Music loops independently; SFX are one-shot and never replace music.
-    let musicTrack = null;
-    const sfxTracks = new Set();
-    let audioUnlocked = false;
-
-    function stopMusic() {
-      if (!musicTrack) return;
-      musicTrack.pause();
-      musicTrack.currentTime = 0;
-      musicTrack.src = "";
-      musicTrack = null;
-    }
-
-    function playMusic(src) {
-      stopMusic();
-      const track = new Audio(new URL(src, document.baseURI).href);
-      track.loop = true;
-      track.volume = 0.55;
-      track.preload = "auto";
-      track.addEventListener("error", () => console.error("Could not load music:", track.src), { once: true });
-      musicTrack = track;
-      if (audioUnlocked) track.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
-    }
-
-    function playSfx(src, onEnded = null) {
-      const track = new Audio(new URL(src, document.baseURI).href);
-      track.loop = false;
-      track.volume = 0.7;
-      track.preload = "auto";
-      sfxTracks.add(track);
-      const cleanup = () => {
-        sfxTracks.delete(track);
-        if (onEnded) onEnded();
-      };
-      track.addEventListener("ended", cleanup, { once: true });
-      track.addEventListener("error", () => {
-        sfxTracks.delete(track);
-        console.error("Could not load SFX:", track.src);
-      }, { once: true });
-      if (audioUnlocked) track.play().catch(error => console.warn("SFX playback is waiting for interaction:", error));
-      return track;
-    }
-
-    function stopSfx(track = null) {
-      const tracks = track ? [track] : [...sfxTracks];
-      for (const item of tracks) {
-        item.pause();
-        item.currentTime = 0;
-        item.src = "";
-        sfxTracks.delete(item);
-      }
-    }
-
-    function unlockAudio() {
-      if (!audioUnlocked) audioUnlocked = true;
-      if (state.stage === "title" && !musicTrack) playMusic("./files/songs/senji-v2-ov.mp3");
-      else if (musicTrack?.paused) musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
-    }
+    const audioPlayer = new AudioPlayer();
+    const playMusic = src => audioPlayer.playMusic(src);
+    const stopMusic = () => audioPlayer.stopMusic();
+    const playSfx = (src, onEnded = null) => audioPlayer.playSfx(src, onEnded);
+    const stopSfx = track => audioPlayer.stopSfx(track);
+    function unlockAudio() { audioPlayer.unlock(state.stage); }
     function requestFullscreenOnGesture() {
       if (document.fullscreenElement || document.webkitFullscreenElement) return;
       const target = document.documentElement;
