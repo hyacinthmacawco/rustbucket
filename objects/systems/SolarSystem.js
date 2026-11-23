@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createStarfieldTexture } from "./Starfield.js";
+import { Starfield } from "./Starfield.js";
 // The sky is one inward-facing textured dome, not thousands of star meshes.
 export class SolarSystem {
   constructor(parent) {

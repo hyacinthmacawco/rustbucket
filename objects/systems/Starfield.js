@@ -16,7 +16,7 @@ export class Starfield {
 
   this.seed = 73129;
   for (let i = 0; i < 4200; i++) {
-    const x = this.this.random() * canvas.width;
+    const x = this.random() * canvas.width;
     const y = this.random() * canvas.height;
     const radius = this.random() > 0.985 ? 2.2 : this.random() > 0.72 ? 1.25 : 0.65;
     const blue = this.random() > 0.86;

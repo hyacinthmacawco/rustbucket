@@ -8,7 +8,7 @@ static TAU = Math.PI * 2;
 static SHIP_LENGTH = 26;
 static STAR_RADIUS = 26 * 500;
 static PLANET_RADIUS = 26 * 50;
-scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.PLANET_RADIUS + this.SHIP_LENGTH * 10000; }
+scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
 
 makePlanetTexture(palette, style = "bands") {
   const canvas = document.createElement("canvas");
@@ -78,7 +78,7 @@ makeStar(parent, color) {
 
 makeWorld(parent, name, baseRadius, palette, style, options = {}) {
   const material = new THREE.MeshStandardMaterial({
-    map: this.makePlanetTexture(palette, style),
+    map: this.this.makePlanetTexture(palette, style),
     roughness: .9,
     metalness: style === "city" ? .12 : .02
   });
