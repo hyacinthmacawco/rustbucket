@@ -1,52 +1,39 @@
 import * as THREE from "three";
-import { Omniverse } from "../omniverse/Omniverse.js";
-import { Title } from "../io/Title.js";
-import { Camera } from "../team/Camera.js";
-import { SolarSystem } from "../celestials/SolarSystem.js";
-import { AugstakaSystem } from "../celestials/AugstakaSystem.js";
-import { AnodyneSystem } from "../celestials/AnodyneSystem.js";
-import { GalvanSystem } from "../celestials/GalvanSystem.js";
-import { IncursiaSystem } from "../celestials/IncursiaSystem.js";
-import { Moon } from "../celestials/Moon.js";
-import { Augstaka } from "../celestials/Augstaka.js";
-import { Anodyne } from "../celestials/Anodyne.js";
-import { GalvanPrime } from "../celestials/GalvanPrime.js";
-import { Incursia } from "../celestials/Incursia.js";
-import { Earth } from "../celestials/Earth.js";
-import { Rustbucket } from "../team/Rustbucket.js";
-import { Ben } from "../team/Ben.js";
-import { Gwen } from "../team/Gwen.js";
-import { Kevin } from "../team/Kevin.js";
-import { Rook } from "../team/Rook.js";
-import { Human } from "../species/Human.js";
-import { Extranet } from "../extranet/Extranet.js";
+import { Omniverse } from "./omniverse/Omniverse.js";
+import { Title } from "./io/Title.js";
+import { Camera } from "./team/Camera.js";
+import { SolarSystem } from "./celestials/SolarSystem.js";
+import { AugstakaSystem } from "./celestials/AugstakaSystem.js";
+import { AnodyneSystem } from "./celestials/AnodyneSystem.js";
+import { GalvanSystem } from "./celestials/GalvanSystem.js";
+import { IncursiaSystem } from "./celestials/IncursiaSystem.js";
+import { Moon } from "./celestials/Moon.js";
+import { Augstaka } from "./celestials/Augstaka.js";
+import { Anodyne } from "./celestials/Anodyne.js";
+import { GalvanPrime } from "./celestials/GalvanPrime.js";
+import { Incursia } from "./celestials/Incursia.js";
+import { Earth } from "./celestials/Earth.js";
+import { Rustbucket } from "./team/Rustbucket.js";
+import { Ben } from "./team/Ben.js";
+import { Gwen } from "./team/Gwen.js";
+import { Kevin } from "./team/Kevin.js";
+import { Rook } from "./team/Rook.js";
+import { Human } from "./species/Human.js";
+import { Extranet } from "./extranet/Extranet.js";
 
-export class React {
+export class Game {
   static state = { stage: "title", currentScene: "space" };
 
   constructor() {
-    this.state = React.state;
+    this.state = Game.state;
     this.omniverse = new Omniverse();
     this.canvas = this.omniverse.canvas;
-    this.scene = new THREE.Scene();
-    this.scene.name = "Rustbucket";
-    this.scene.background = new THREE.Color(0x02040a);
-
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: !(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)),
-      powerPreference: "high-performance",
-      stencil: false,
-      depth: true
-    });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.scene = this.omniverse.scene;
+    this.renderer = this.omniverse.renderer;
 
     this.cameraController = new Camera(THREE, { fov: 55, near: 0.1, far: 2000000 }, window.innerWidth / window.innerHeight);
     this.camera = this.cameraController.camera;
+    this.omniverse.setCamera(this.camera);
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
     this.scene.add(this.camera);
@@ -55,10 +42,8 @@ export class React {
       getTarget: () => this.cameraTarget || new THREE.Vector3()
     });
 
-    this.activeWorld = new THREE.Group();
-    this.activeWorld.name = "ActiveWorld";
-    this.scene.add(this.activeWorld);
     this.titleWorld = new SolarSystem(this.activeWorld);
+    this.activeWorld.animate = this.titleWorld.animate.bind(this.titleWorld);
     this.systemClasses = {
       solar: SolarSystem,
       augstaka: AugstakaSystem,
@@ -86,15 +71,15 @@ export class React {
 
     this.onResize = () => {
       this.cameraController.resize(window.innerWidth / window.innerHeight);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.omniverse.resize();
     };
     window.addEventListener("resize", this.onResize);
 
-    this.clock = new THREE.Clock();
-    this.animate = this.animate.bind(this);
-    this.animationFrame = requestAnimationFrame(this.animate);
-    window.addEventListener("beforeunload", () => this.destroy(), { once: true });
+    this.omniverse.start();
+  }
+
+  get activeWorld() {
+    return this.omniverse.celestial;
   }
 
   setStage(stage) {
@@ -110,6 +95,7 @@ export class React {
   loadTitleWorld() {
     this.clearWorld();
     this.titleWorld = new SolarSystem(this.activeWorld);
+    this.activeWorld.animate = this.titleWorld.animate.bind(this.titleWorld);
     this.addSystemPlanets("solar");
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
@@ -176,6 +162,7 @@ export class React {
       materials.filter(Boolean).forEach(material => material.dispose());
     });
     this.activeWorld.clear();
+    this.omniverse.celestial = new THREE.Group();
     this.scene.fog = null;
     this.earth = null;
     this.currentPlanet = null;
@@ -185,32 +172,13 @@ export class React {
     this.crew = [];
   }
 
-  animate() {
-    this.animationFrame = requestAnimationFrame(this.animate);
-    const delta = Math.min(this.clock.getDelta(), 0.05);
-    const elapsed = this.clock.elapsedTime;
-
-    if (this.state.stage === "title" && this.titleWorld) {
-      for (const entry of this.systemPlanets || []) {
-        entry.exterior.rotation.y += delta * 0.04;
-      }
-      this.titleWorld.sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
-      this.titleWorld.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
-      this.titleWorld.stars.dome.rotation.y += delta * 0.0008;
-    }
-
-    this.renderer.render(this.scene, this.camera);
-  }
-
   destroy() {
-    cancelAnimationFrame(this.animationFrame);
     window.removeEventListener("resize", this.onResize);
     this.cameraController.destroy();
     this.extranet.destroy();
     this.titleScreen.destroy();
-    this.renderer.dispose();
     this.omniverse.destroy();
   }
 }
 
-new React();
+new Game();

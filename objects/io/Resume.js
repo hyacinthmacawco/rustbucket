@@ -1,4 +1,4 @@
-export class ResumeButton {
+export class Resume {
   constructor({ onResume = () => {} } = {}) {
     this.onResume = onResume;
     this.styles = { width: "100%", marginTop: "20px", padding: "13px", border: "1px solid rgba(126,255,168,.6)", borderRadius: "4px", background: "rgba(16, 82, 39, .9)", color: "#f1fff4", font: "inherit", letterSpacing: ".14em" };

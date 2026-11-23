@@ -1,5 +1,5 @@
 import { PauseTab } from "./PauseTab.js";
-import { ResumeButton } from "./ResumeButton.js";
+import { Resume } from "./Resume.js";
 import { VolumeSlider } from "./VolumeSlider.js";
 import { CameraSensitivitySlider } from "./CameraSensitivitySlider.js";
 
@@ -42,7 +42,7 @@ export class Pause {
       this.tabBar.append(tab.create());
     }
 
-    this.resume = new ResumeButton({ onResume: this.onResume });
+    this.resume = new Resume({ onResume: this.onResume });
     this.panel.append(this.title, this.tabBar, this.content, this.resume.create());
     this.element.append(this.panel);
     document.body.append(this.element);

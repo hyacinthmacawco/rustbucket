@@ -37,4 +37,15 @@ export class SolarSystem {
     this.stars = new Starfield(this.root);
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
+  animate(delta, elapsed) {
+    for (const planet of this.root.children) {
+      if (planet.name === "EarthExterior" || planet.name === "MoonExterior") {
+        planet.rotation.y += delta * 0.04;
+      }
+    }
+
+    this.sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
+    this.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
+    this.stars.dome.rotation.y += delta * 0.0008;
+  }
 }
