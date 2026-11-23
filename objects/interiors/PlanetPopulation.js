@@ -114,7 +114,16 @@ export class PlanetPopulation {
       this.addPart(group, new THREE.SphereGeometry(0.12, 8, 6), accent, [side * 0.13, 1.96, 0.31]);
     }
     if (species === "Anodite") {
-      const aura = new THREE.Mesh(new THREE.SphereGeometry(1.28, 12, 10), new THREE.MeshBasicMaterial({ color: style.accent, transparent: true, opacity: 0.09, side: THREE.BackSide, depthWrite: false }));
+      const aura = new THREE.Mesh(
+        new THREE.SphereGeometry(1.28, 12, 10),
+        new THREE.MeshBasicMaterial({
+          color: style.accent,
+          transparent: true,
+          opacity: 0.09,
+          side: THREE.BackSide,
+          depthWrite: false
+        })
+      );
       aura.position.y = 1.05;
       group.add(aura);
     }
