@@ -12,7 +12,8 @@ export class Anodite {
     Human: 40
   };
 
-  constructor(parent = null, options = {}) {
+  constructor(parent = null, options = {
+    this.leader = false;}) {
     this.group = new THREE.Group();
     this.group.name = "Anodite";
     this.health = 100;

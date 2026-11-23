@@ -1,22 +1,15 @@
 import { Tasks } from "./Tasks.js";
 import { Relationships } from "./Relationships.js";
 import { Memories } from "./Memories.js";
+import { Omnipedia } from "./Omnipedia.js";
 
 export class Extranet {
-  constructor({
-    onContinue = () => {},
-    onComplete = () => {},
-    onJumpSystem = () => {}
-  } = {}) {
-    this.onContinue = onContinue;
-    this.onComplete = onComplete;
+  constructor({ onJumpSystem = () => {} } = {}) {
     this.onJumpSystem = onJumpSystem;
-
     this.current = "home";
     this.currentLocation = "earth";
-    this.completionPresented = false;
     this.pages = {
-      tasks: new Tasks({ onComplete: this.onComplete }),
+      tasks: new Tasks(),
       relationships: new Relationships(),
       memories: new Memories()
     };
@@ -53,6 +46,10 @@ export class Extranet {
         status: "ACTIVE / GALVAN PRIME"
       }
     };
+    this.omnipedia = new Omnipedia({
+      systems: this.systems,
+      onJumpSystem: this.onJumpSystem
+    });
 
     this.styles = {
       root: {
@@ -112,19 +109,6 @@ export class Extranet {
         color: "#eaffef",
         fontFamily: "Industry, sans-serif"
       },
-      pageTitle: {
-        margin: "0 0 20px",
-        color: "#9effb6",
-        fontFamily: "Nulshock, sans-serif",
-        letterSpacing: ".12em",
-        fontSize: "1.25rem"
-      },
-      card: {
-        padding: "18px",
-        border: "1px solid rgba(126,255,168,.28)",
-        borderRadius: "8px",
-        background: "rgba(5,30,16,.72)"
-      },
       bookmarkGrid: {
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
@@ -140,47 +124,8 @@ export class Extranet {
         font: "inherit",
         fontSize: "1.1rem",
         letterSpacing: ".1em",
-        textAlign: "left"
-      },
-      progress: {
-        width: "100%",
-        height: "8px",
-        margin: "14px 0",
-        overflow: "hidden",
-        borderRadius: "8px",
-        background: "rgba(126,255,168,.14)"
-      },
-      progressFill: {
-        height: "100%",
-        background: "#75f59a",
-        transition: "width .2s ease"
-      },
-      table: {
-        width: "100%",
-        borderCollapse: "collapse",
-        minWidth: "760px",
-        fontSize: ".78rem"
-      },
-      cell: {
-        padding: "8px",
-        border: "1px solid rgba(126,255,168,.14)",
-        textAlign: "center",
-        color: "#dfffe8"
-      },
-      relationshipTrack: {
-        position: "relative",
-        display: "block",
-        height: "5px",
-        minWidth: "44px",
-        marginTop: "4px",
-        borderRadius: "5px",
-        background: "rgba(255,255,255,.1)"
-      },
-      relationshipFill: {
-        position: "absolute",
-        top: "0",
-        height: "100%",
-        borderRadius: "5px"
+        textAlign: "left",
+        cursor: "pointer"
       },
       launchButton: {
         position: "fixed",
@@ -194,31 +139,15 @@ export class Extranet {
         color: "#eaffef",
         font: "inherit",
         letterSpacing: ".08em"
-      },
-      completion: {
-        position: "fixed",
-        left: "50%",
-        top: "50%",
-        transform: "translate(-50%, -50%)",
-        zIndex: "120",
-        padding: "18px 28px",
-        border: "1px solid rgba(126,255,168,.55)",
-        borderRadius: "8px",
-        background: "rgba(3,20,10,.92)",
-        color: "#caffd5",
-        fontFamily: "Nulshock, sans-serif",
-        letterSpacing: ".12em"
       }
     };
 
     this.root = document.createElement("section");
     this.root.id = "extranet-overlay";
+    Object.assign(this.root.style, this.styles.root);
     this.window = document.createElement("div");
-    this.window.id = "extranet-window";
     Object.assign(this.window.style, this.styles.window);
-
     this.toolbar = document.createElement("nav");
-    this.toolbar.id = "extranet-toolbar";
     Object.assign(this.toolbar.style, this.styles.toolbar);
 
     this.backButton = this.createToolbarButton("BACK", "Back");
@@ -232,11 +161,9 @@ export class Extranet {
 
     this.toolbar.append(this.backButton, this.address, this.homeButton, this.closeButton);
     this.page = document.createElement("main");
-    this.page.id = "extranet-page";
     Object.assign(this.page.style, this.styles.page);
     this.window.append(this.toolbar, this.page);
     this.root.append(this.window);
-    Object.assign(this.root.style, this.styles.root);
     document.body.append(this.root);
 
     this.backButton.addEventListener("click", this.goBack);
@@ -259,7 +186,6 @@ export class Extranet {
     this.launchButton = document.createElement("button");
     this.launchButton.type = "button";
     this.launchButton.id = "extranet-button";
-    this.launchButton.setAttribute("aria-label", "Open Extranet");
     this.launchButton.textContent = "EXTRANET";
     Object.assign(this.launchButton.style, this.styles.launchButton);
     this.launchButton.addEventListener("click", this.open);
@@ -276,7 +202,6 @@ export class Extranet {
   handleAddressKey = event => {
     if (event.key !== "Enter") return;
     const url = this.address.value.trim().toLowerCase();
-
     if (url.includes("bgkr.omnicloud.com")) {
       if (url.endsWith("/tasks")) this.tasks();
       else if (url.endsWith("/relationships")) this.showRelationships();
@@ -293,22 +218,16 @@ export class Extranet {
     this.current = "home";
     this.address.value = "extranet://home";
     this.page.replaceChildren();
-
     const grid = document.createElement("div");
     Object.assign(grid.style, this.styles.bookmarkGrid);
-
-    for (const [label, target] of [["Private Cloud", "private"], ["Omnidata", "omnidata"]]) {
+    for (const [label, target] of [["Private Cloud", "private"], ["Omnipedia", "omnidata"]]) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
       Object.assign(button.style, this.styles.bookmark);
-      button.addEventListener("click", () => {
-        if (target === "private") this.privateCloud();
-        else this.omnidata();
-      });
+      button.addEventListener("click", () => target === "private" ? this.privateCloud() : this.omnidata());
       grid.append(button);
     }
-
     this.page.append(grid);
   };
 
@@ -316,15 +235,9 @@ export class Extranet {
     this.current = "private";
     this.address.value = "ottps://bgkr.omnicloud.com";
     this.page.replaceChildren();
-
     const grid = document.createElement("div");
     Object.assign(grid.style, this.styles.bookmarkGrid);
-
-    for (const [label, target] of [
-      ["Tasks", "tasks"],
-      ["Relationships", "relationships"],
-      ["Memories", "memories"]
-    ]) {
+    for (const [label, target] of [["Tasks", "tasks"], ["Relationships", "relationships"], ["Memories", "memories"]]) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
@@ -332,11 +245,10 @@ export class Extranet {
       button.addEventListener("click", () => {
         if (target === "tasks") this.tasks();
         else if (target === "relationships") this.showRelationships();
-        else if (target === "memories") this.memories();
+        else this.memories();
       });
       grid.append(button);
     }
-
     this.page.append(grid);
   };
 
@@ -344,10 +256,7 @@ export class Extranet {
     this.current = "tasks";
     this.address.value = "ottps://bgkr.omnicloud.com/tasks";
     this.pages.tasks.render(this.page);
-    if (this.completed) this.showCompletion();
   }
-
-
 
   showRelationships() {
     this.current = "relationships";
@@ -361,108 +270,18 @@ export class Extranet {
     this.pages.memories.render(this.page);
   }
 
-
-
-;
-
   omnidata(allowSystemJump = false) {
     this.current = "omnidata";
     this.address.value = "ottps://en.omnidata.org";
-    this.page.replaceChildren();
-
-    const title = document.createElement("h2");
-    title.textContent = "OMNIDATA";
-    Object.assign(title.style, this.styles.pageTitle);
-
-    const grid = document.createElement("div");
-    Object.assign(grid.style, this.styles.bookmarkGrid);
-
-    const detail = document.createElement("article");
-    Object.assign(detail.style, this.styles.card);
-    this.detail = detail;
-    this.allowSystemJump = allowSystemJump;
-
-    for (const [key, item] of Object.entries(this.systems)) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = item.name;
-      Object.assign(button.style, this.styles.bookmark);
-      button.addEventListener("click", () => this.selectSystem(key));
-      grid.append(button);
-    }
-
-    this.locationMarker = document.createElement("p");
-    this.locationMarker.textContent = "CURRENT LOCATION";
-    this.page.append(title, grid, this.locationMarker, detail);
-    this.selectSystem("solar");
-    this.setLocation(this.currentLocation);
-  }
-
-  selectSystem(key) {
-    const item = this.systems[key];
-    if (!item || !this.detail) return;
-
-    this.detail.replaceChildren();
-    const heading = document.createElement("h3");
-    heading.textContent = item.name;
-    Object.assign(heading.style, this.styles.pageTitle);
-    const description = document.createElement("p");
-    description.textContent = item.body;
-    const worlds = document.createElement("p");
-    worlds.textContent = item.worlds;
-    const status = document.createElement("p");
-    status.textContent = item.status;
-    this.detail.append(heading, description, worlds, status);
-
-    if (this.allowSystemJump) {
-      const jump = document.createElement("button");
-      jump.type = "button";
-      jump.textContent = "JUMP TO SYSTEM";
-      Object.assign(jump.style, this.styles.button);
-      jump.addEventListener("click", () => this.onJumpSystem(key));
-      this.detail.append(jump);
-    }
+    this.omnipedia.render(this.page, {
+      allowSystemJump,
+      currentLocation: this.currentLocation
+    });
   }
 
   setLocation(location) {
-    const labels = {
-      space: "SOLAR SYSTEM",
-      earth: "EARTH • BELLWOOD",
-      moon: "THE MOON",
-      augstaka: "AUGSTAKA",
-      anodyne: "ANODYNE",
-      galvan: "GALVAN PRIME",
-      incursia: "INCURSIA"
-    };
-
-    this.currentLocation = labels[location] ? location : "earth";
-    if (this.locationMarker) {
-      this.locationMarker.textContent = "CURRENT LOCATION · " + labels[this.currentLocation];
-    }
-  }
-
-  addRelationship(picker, owner) {
-    this.pages.relationships.addRelationship(
-      String(picker).replace(/^./, character => character.toUpperCase()),
-      String(owner).replace(/^./, character => character.toUpperCase())
-    );
-  }
-
-  updateTask(count = this.pages.tasks.storedCount + 1) {
-    this.pages.tasks.update(count);
-    if (this.completed) this.showCompletion();
-  }
-
-  showCompletion() {
-    if (this.completionPresented || document.getElementById("mission-complete")) return;
-    this.completionPresented = true;
-
-    this.completionNotice = document.createElement("div");
-    this.completionNotice.id = "mission-complete";
-    this.completionNotice.textContent = "TASK COMPLETED";
-    Object.assign(this.completionNotice.style, this.styles.completion);
-    document.body.append(this.completionNotice);
-    window.setTimeout(() => this.completionNotice?.remove(), 5200);
+    this.currentLocation = location;
+    this.omnipedia.setLocation(location);
   }
 
   open = () => {
@@ -477,24 +296,18 @@ export class Extranet {
 
   close = () => {
     this.root.style.display = "none";
-    this.onContinue();
   };
-
-  get completed() {
-    return this.pages.tasks.completed;
-  }
 
   destroy() {
     this.pages.tasks.destroy?.();
     this.pages.relationships.destroy?.();
-    this.pages.memories.destroy();
+    this.pages.memories.destroy?.();
     this.backButton.removeEventListener("click", this.goBack);
     this.homeButton.removeEventListener("click", this.home);
     this.closeButton.removeEventListener("click", this.close);
     this.address.removeEventListener("keydown", this.handleAddressKey);
     this.launchButton?.removeEventListener("click", this.open);
     this.launchButton?.remove();
-    this.completionNotice?.remove();
     this.root.remove();
   }
 }

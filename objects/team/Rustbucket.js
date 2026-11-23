@@ -1,163 +1,184 @@
 import * as THREE from "three";
+
 export class Rustbucket {
-  static health = 100;
-  static energy = 100;
-  static taydenite = 0;
-  static relationships = {};
-
   constructor(parent) {
-  const ship=new THREE.Group();ship.name="Rustbucket";
-  ship.position.set(0, 2, 0);
-  ship.scale.set(2, 2, 2);
-  parent.add(ship);
-  const hull=new THREE.MeshStandardMaterial({color:0xd8d0ad,roughness:.72,side:THREE.DoubleSide});
-  const inner=new THREE.MeshStandardMaterial({color:0x55534a,roughness:.9});
-  const orange=new THREE.MeshStandardMaterial({color:0xb95f37,roughness:.68});
-  const metal=new THREE.MeshStandardMaterial({color:0x424b50,metalness:.45,roughness:.5});
-  mesh(g,m,p,r=[0,0,0]){const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.castShadow=true;o.receiveShadow=true;o.userData.noPhysics=true;ship.add(o);return o;}
+    this.ship = new THREE.Group();
+    this.ship.name = "Rustbucket";
+    this.ship.position.set(0, 2, 0);
+    this.ship.scale.setScalar(2);
+    parent.add(this.ship);
 
-  // Enclosed cabin roof; the rear loading ramp remains the only large opening.
-  mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[-1.35,0,0]);
-  mesh(new THREE.BoxGeometry(.16,2.5,10.5),hull,[1.35,0,0]);
-  mesh(new THREE.BoxGeometry(2.7,.14,9.7),inner,[0,-1.18,0]);
-  mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[-1.22,1.22,0]);
-  mesh(new THREE.BoxGeometry(.22,.16,10.5),hull,[1.22,1.22,0]);
-  mesh(new THREE.BoxGeometry(2.7,2.5,.16),hull,[0,0,-5.18]);
-  mesh(new THREE.BoxGeometry(2.82,.18,10.7),hull,[0,1.38,0]);
-  // Nose only; no solid rear cap, so the troop/cargo bay stays accessible.
-  mesh(new THREE.ConeGeometry(1.52,2.6,12),hull,[0,0,6.45],[Math.PI/2,0,0]);
-  mesh(new THREE.BoxGeometry(2.78,.18,.24),orange,[0,0,5.12]);
-  for(let i=0;i<3;i++)mesh(new THREE.BoxGeometry(.42,.62,.08),metal,[-.48+i*.48,.7,3.5-i*.32],[-.12,0,0]);
-  for(const side of [-1,1]){
-    mesh(new THREE.BoxGeometry(6.2,.16,2.1),hull,[side*3.8,-.08,-1.15],[0,0,side*.035]);
-    mesh(new THREE.BoxGeometry(.72,.19,2),orange,[side*7.15,-.08,-1.15],[0,0,side*.035]);
+    this.materials = {
+      hull: new THREE.MeshStandardMaterial({
+        color: 0xd8d0ad,
+        roughness: 0.72,
+        side: THREE.DoubleSide
+      }),
+      interior: new THREE.MeshStandardMaterial({ color: 0x55534a, roughness: 0.9 }),
+      orange: new THREE.MeshStandardMaterial({ color: 0xb95f37, roughness: 0.68 }),
+      metal: new THREE.MeshStandardMaterial({ color: 0x424b50, metalness: 0.45, roughness: 0.5 }),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x253a42,
+        emissive: 0x10252d,
+        roughness: 0.25,
+        metalness: 0.35
+      })
+    };
+
+    this.createHull();
+    this.createLighting();
+    this.createRamp();
+    this.createShadow(parent);
   }
 
-  const exteriorLamp = new THREE.PointLight(0xbfe5ff, 85, 110, 1.5);
-  exteriorLamp.position.set(0,1.9,0);
-  ship.add(exteriorLamp);
-  const headlightLens = new THREE.MeshStandardMaterial({color:0xe8f5ff,emissive:0xc9e7ff,emissiveIntensity:3,roughness:.25});
-  for(const side of [-1,1]){
-    mesh(new THREE.SphereGeometry(.19,12,8),headlightLens,[side*.62,.12,7.72]);
-    const headlight = new THREE.SpotLight(0xd9edff, 720, 220, Math.PI/5.2, .62, 1.1);
-    headlight.position.set(side*.62,.12,7.72);
-    headlight.target.position.set(side*.62,-.15,90);
-    ship.add(headlight);
-    ship.add(headlight.target);
+  addMesh(geometry, material, position, rotation = [0, 0, 0], parent = this.ship) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...position);
+    mesh.rotation.set(...rotation);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.noPhysics = true;
+    parent.add(mesh);
+    return mesh;
   }
 
-  // Hinged rear loading ramp: closed vertically, lowered onto the ground when open.
-  const rampPivot=new THREE.Group();rampPivot.position.set(0,-1.25,-5.0);ship.add(rampPivot);
-  const ramp=new THREE.Mesh(new THREE.BoxGeometry(2.55,3.0,.16),metal);
-  ramp.position.set(0,1.25,0);ramp.castShadow=true;ramp.userData.noPhysics=true;rampPivot.add(ramp);
-  const rampStripe=new THREE.Mesh(new THREE.BoxGeometry(2.4,.12,.18),orange);
-  rampStripe.position.set(0,2.1,0);rampStripe.userData.noPhysics=true;rampPivot.add(rampStripe);
-  let rampOpen=false;
-  setRamp(open){
-    rampOpen=Boolean(open);
-    rampPivot.rotation.x=rampOpen?-Math.PI/2:0;
-    rampPivot.position.z=rampOpen?-5.0:-5.0;
-    ship.userData.rampOpen=rampOpen;
-  }
-  ship.userData.toggleRamp=()=>setRamp(!rampOpen);
-  ship.userData.setRamp=setRamp;
-  ship.userData.getRampOpen=()=>rampOpen;
+  createHull() {
+    const { hull, interior, orange, metal, glass } = this.materials;
 
-  const laserMaterial=new THREE.MeshBasicMaterial({color:0x7dffbd});
-  const lasers=[];let lastShot=-1;
-  ship.userData.performAttack=()=>{
-    const now=performance.now();if(now-lastShot<260)return;lastShot=now;
-    for(const x of [-.62,.62]){
-      const beam=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,6.5,10),laserMaterial);
-      beam.rotation.x=Math.PI/2;beam.position.set(x*1.15,.16,7.55);ship.add(beam);lasers.push({mesh:beam,life:.55,damage:5});
+    this.addMesh(new THREE.BoxGeometry(0.16, 2.5, 10.5), hull, [-1.35, 0, 0]);
+    this.addMesh(new THREE.BoxGeometry(0.16, 2.5, 10.5), hull, [1.35, 0, 0]);
+    this.addMesh(new THREE.BoxGeometry(2.7, 0.14, 9.7), interior, [0, -1.18, 0]);
+    this.addMesh(new THREE.BoxGeometry(0.22, 0.16, 10.5), hull, [-1.22, 1.22, 0]);
+    this.addMesh(new THREE.BoxGeometry(0.22, 0.16, 10.5), hull, [1.22, 1.22, 0]);
+    this.addMesh(new THREE.BoxGeometry(2.7, 2.5, 0.16), hull, [0, 0, -5.18]);
+    this.addMesh(new THREE.BoxGeometry(2.82, 0.18, 10.7), hull, [0, 1.38, 0]);
+    this.addMesh(new THREE.ConeGeometry(1.52, 2.6, 12), hull, [0, 0, 6.45], [Math.PI / 2, 0, 0]);
+    this.addMesh(new THREE.BoxGeometry(2.78, 0.18, 0.24), orange, [0, 0, 5.12]);
+
+    for (let index = 0; index < 3; index++) {
+      this.addMesh(
+        new THREE.BoxGeometry(0.42, 0.62, 0.08),
+        metal,
+        [-0.48 + index * 0.48, 0.7, 3.5 - index * 0.32],
+        [-0.12, 0, 0]
+      );
     }
-  };
-  ship.userData.updateVehicle=delta=>{
-    for(let i=lasers.length-1;i>=0;i--){
-      const shot=lasers[i];shot.previousWorldPosition = shot.previousWorldPosition || new THREE.Vector3();shot.mesh.getWorldPosition(shot.previousWorldPosition);shot.mesh.position.z+=60000*delta;shot.life-=delta;
-      if(shot.life<=0){ship.remove(shot.mesh);shot.mesh.geometry.dispose();lasers.splice(i,1);}
+
+    for (const side of [-1, 1]) {
+      this.addMesh(
+        new THREE.BoxGeometry(6.2, 0.16, 2.1),
+        hull,
+        [side * 3.8, -0.08, -1.15],
+        [0, 0, side * 0.035]
+      );
+      this.addMesh(
+        new THREE.BoxGeometry(0.72, 0.19, 2),
+        orange,
+        [side * 7.15, -0.08, -1.15],
+        [0, 0, side * 0.035]
+      );
     }
-  };
-  ship.userData.getLasers=()=>lasers;
-  ship.userData.removeLaser=shot=>{
-    const index=lasers.indexOf(shot);
-    if(index<0)return;
-    ship.remove(shot.mesh);shot.mesh.geometry.dispose();lasers.splice(index,1);
-  };
-  const shadow=new THREE.Mesh(new THREE.CircleGeometry(7.2,32),new THREE.MeshBasicMaterial({color:0x080a0e,transparent:true,opacity:.25,depthWrite:false}));
-  shadow.rotation.x=-Math.PI/2;shadow.position.set(0,.025,0);shadow.scale.set(1.25,.62,1);shadow.userData.noPhysics=true;parent.add(shadow);
-  this.health = this.constructor.health;
-  this.energy = this.constructor.energy;
-  this.energyLabel = "FUEL";
-  this.maxHealth = 100;
-  this.maxEnergy = 100;
-  this.healthRecoveryDelay = 0;
-  this.energyRecoveryDelay = 0;
-  this.taydenite = this.constructor.taydenite;
-  try {
-    this.taydenite = Number(localStorage.getItem("rustbucket.taydenite") || this.taydenite);
-  } catch (error) {
-    this.taydenite = this.constructor.taydenite;
-  }
-  this.constructor.taydenite = this.taydenite;
-  ship.userData.statusOwner = this;
-  ship.userData.taydenite = this.taydenite;
-  Object.assign(this, { ship, shadow });
+
+    this.addMesh(new THREE.BoxGeometry(1.8, 0.1, 0.8), glass, [0, 0.75, 2.7]);
   }
 
+  createLighting() {
+    const lamp = new THREE.PointLight(0xbfe5ff, 85, 110, 1.5);
+    lamp.position.set(0, 1.9, 0);
+    this.ship.add(lamp);
 
-  updateStatus(delta) {
-    this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
-    this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
-    if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
-    if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
-    this.constructor.health = this.health;
-    this.constructor.energy = this.energy;
-    this.ship.userData.health = this.health;
-    this.ship.userData.energy = this.energy;
-  }
+    const lens = new THREE.MeshStandardMaterial({
+      color: 0xe8f5ff,
+      emissive: 0xc9e7ff,
+      emissiveIntensity: 3,
+      roughness: 0.25
+    });
 
-  takeDamage(amount) {
-    this.health = Math.max(0, this.health - Math.max(0, amount));
-    this.healthRecoveryDelay = 4;
-    this.constructor.health = this.health;
-    this.ship.userData.health = this.health;
-    return this.health;
-  }
-
-  useEnergy(amount) {
-    if (this.energy < amount) return false;
-    this.energy = Math.max(0, this.energy - amount);
-    this.energyRecoveryDelay = 4;
-    this.constructor.energy = this.energy;
-    this.ship.userData.energy = this.energy;
-    return true;
-  }
-
-  restoreEnergy(amount) {
-    this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount));
-    this.constructor.energy = this.energy;
-    this.ship.userData.energy = this.energy;
-    return this.energy;
-  }
-
-  restoreHealth(amount) {
-    this.health = Math.min(this.maxHealth, this.health + Math.max(0, amount));
-    this.constructor.health = this.health;
-    this.ship.userData.health = this.health;
-    return this.health;
-  }
-
-  receiveTaydenite(amount) {
-    this.taydenite += Math.max(0, amount);
-    this.constructor.taydenite = this.taydenite;
-    this.ship.userData.taydenite = this.taydenite;
-    try {
-      localStorage.setItem("rustbucket.taydenite", String(this.taydenite));
-    } catch (error) {
-      console.warn("Taydenite balance could not be saved.", error);
+    for (const side of [-1, 1]) {
+      this.addMesh(new THREE.SphereGeometry(0.19, 12, 8), lens, [side * 0.62, 0.12, 7.72]);
+      const headlight = new THREE.SpotLight(0xd9edff, 720, 220, Math.PI / 5.2, 0.62, 1.1);
+      headlight.position.set(side * 0.62, 0.12, 7.72);
+      headlight.target.position.set(side * 0.62, -0.15, 90);
+      this.ship.add(headlight, headlight.target);
     }
-    return this.taydenite;
   }
 
+  createRamp() {
+    this.rampPivot = new THREE.Group();
+    this.rampPivot.position.set(0, -1.25, -5);
+    this.ship.add(this.rampPivot);
+
+    const ramp = this.addMesh(
+      new THREE.BoxGeometry(2.55, 3, 0.16),
+      this.materials.metal,
+      [0, 1.25, 0],
+      [0, 0, 0],
+      this.rampPivot
+    );
+    this.addMesh(
+      new THREE.BoxGeometry(2.4, 0.12, 0.18),
+      this.materials.orange,
+      [0, 2.1, 0],
+      [0, 0, 0],
+      this.rampPivot
+    );
+    this.ramp = ramp;
+    this.rampOpen = false;
+  }
+
+  setRamp(open) {
+    this.rampOpen = Boolean(open);
+    this.rampPivot.rotation.x = this.rampOpen ? -Math.PI / 2 : 0;
+  }
+
+  toggleRamp() {
+    this.setRamp(!this.rampOpen);
+    return this.rampOpen;
+  }
+
+  createShadow(parent) {
+    this.shadow = new THREE.Mesh(
+      new THREE.CircleGeometry(7.2, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0x080a0e,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      })
+    );
+    this.shadow.rotation.x = -Math.PI / 2;
+    this.shadow.position.set(0, 0.025, 0);
+    this.shadow.scale.set(1.25, 0.62, 1);
+    this.shadow.userData.noPhysics = true;
+    parent.add(this.shadow);
+  }
+
+  addVehicle(world, RAPIER) {
+    const position = this.ship.position;
+    const scale = this.ship.scale.x || 1;
+    const size = value => value * scale;
+
+    this.vehicleBody = world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(position.x, position.y, position.z)
+        .setLinearDamping(0)
+        .setAngularDamping(0)
+        .setCanSleep(false)
+    );
+    this.vehicleBody.setGravityScale(0, true);
+
+    const hullColliders = [
+      RAPIER.ColliderDesc.cuboid(size(0.12), size(0.82), size(5)).setTranslation(size(-1.38), 0, 0),
+      RAPIER.ColliderDesc.cuboid(size(0.12), size(0.82), size(5)).setTranslation(size(1.38), 0, 0),
+      RAPIER.ColliderDesc.cuboid(size(1.32), size(0.82), size(0.12)).setTranslation(0, 0, size(5)),
+      RAPIER.ColliderDesc.cuboid(size(1.36), size(0.09), size(5.15)).setTranslation(0, size(1.28), 0)
+    ];
+
+    for (const collider of hullColliders) {
+      world.createCollider(collider, this.vehicleBody);
+    }
+
+    this.ship.userData.vehicleBody = this.vehicleBody;
+    return this.vehicleBody;
+  }
 }
