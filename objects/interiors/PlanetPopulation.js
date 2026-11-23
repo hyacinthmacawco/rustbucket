@@ -158,15 +158,19 @@ export class PlanetPopulation {
         person.rotation.y += angle * Math.min(1, delta * 3.5);
         data.walkPhase += delta * 7.5;
         const swing = Math.sin(data.walkPhase) * 0.32;
-        data.walkArms[0].rotation.x = swing;
-        data.walkArms[1].rotation.x = -swing;
-        data.walkLegs[0].rotation.x = -swing;
-        data.walkLegs[1].rotation.x = swing;
+        if (data.walkArms.length >= 2 && data.walkLegs.length >= 2) {
+          data.walkArms[0].rotation.x = swing;
+          data.walkArms[1].rotation.x = -swing;
+          data.walkLegs[0].rotation.x = -swing;
+          data.walkLegs[1].rotation.x = swing;
+        }
       } else {
-        data.walkArms[0].rotation.x = THREE.MathUtils.damp(data.walkArms[0].rotation.x, 0, 5, delta);
-        data.walkArms[1].rotation.x = THREE.MathUtils.damp(data.walkArms[1].rotation.x, 0, 5, delta);
-        data.walkLegs[0].rotation.x = THREE.MathUtils.damp(data.walkLegs[0].rotation.x, 0, 5, delta);
-        data.walkLegs[1].rotation.x = THREE.MathUtils.damp(data.walkLegs[1].rotation.x, 0, 5, delta);
+        if (data.walkArms.length >= 2 && data.walkLegs.length >= 2) {
+          data.walkArms[0].rotation.x = THREE.MathUtils.damp(data.walkArms[0].rotation.x, 0, 5, delta);
+          data.walkArms[1].rotation.x = THREE.MathUtils.damp(data.walkArms[1].rotation.x, 0, 5, delta);
+          data.walkLegs[0].rotation.x = THREE.MathUtils.damp(data.walkLegs[0].rotation.x, 0, 5, delta);
+          data.walkLegs[1].rotation.x = THREE.MathUtils.damp(data.walkLegs[1].rotation.x, 0, 5, delta);
+        }
       }
     }
   }
