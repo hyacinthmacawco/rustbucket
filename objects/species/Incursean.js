@@ -5,6 +5,12 @@ export class Incursean {
 
   constructor(parent = null, options = {}) {
     this.name = options.name || "Incursean";
+    this.health = 100;
+    this.energy = 100;
+    this.maxHealth = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
     this.group = new THREE.Group();
     this.group.name = this.name;
     this.materials = {
@@ -32,6 +38,7 @@ export class Incursean {
     });
     if (parent) parent.add(this.group);
     this.mesh = this.group;
+    this.group.userData.statusOwner = this;
   }
 
   addPart(geometry, material, position, rotation = [0, 0, 0]) {
