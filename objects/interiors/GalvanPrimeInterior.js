@@ -17,7 +17,11 @@ export class GalvanPrimeInterior {
     treasury: 1250000,
     revenue: 18000,
     expenses: 12500,
-    resources: [{"id":"microchips","name":"Microchips","quantity":1500},{"id":"tech-components","name":"Tech components","quantity":950},{"id":"science-data","name":"Scientific data","quantity":300}],
+    resources: [
+      { id: "microchips", name: "Microchips", quantity: 1500 },
+      { id: "tech-components", name: "Tech components", quantity: 950 },
+      { id: "science-data", name: "Scientific data", quantity: 300 }
+    ],
     wars: [],
     events: []
   };
@@ -174,14 +178,29 @@ export class GalvanPrimeInterior {
       const angle = index * Math.PI * 2 / 20;
       const radius = 42 + (index % 3) * 18;
       const height = 8 + (index % 5) * 3;
-      const tower = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.4, height, 6), new THREE.MeshStandardMaterial({ color: index % 2 ? 0x3b9a7d : this.world.accent, metalness: 0.3, roughness: 0.55 }));
+      const tower = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.2, 3.4, height, 6),
+        new THREE.MeshStandardMaterial({
+          color: index % 2 ? 0x3b9a7d : this.world.accent,
+          metalness: 0.3,
+          roughness: 0.55
+        })
+      );
       tower.position.set(Math.cos(angle) * radius, height / 2, Math.sin(angle) * radius);
       this.root.add(tower);
       const light = new THREE.PointLight(this.world.accent, 12, 16);
       light.position.set(tower.position.x, tower.position.y + 3, tower.position.z);
       this.root.add(light);
     }
-    const centralCore = new THREE.Mesh(new THREE.CylinderGeometry(8, 12, 16, 8), new THREE.MeshStandardMaterial({ color: 0x153c36, emissive: this.world.accent, emissiveIntensity: 0.3, metalness: 0.45 }));
+    const centralCore = new THREE.Mesh(
+      new THREE.CylinderGeometry(8, 12, 16, 8),
+      new THREE.MeshStandardMaterial({
+        color: 0x153c36,
+        emissive: this.world.accent,
+        emissiveIntensity: 0.3,
+        metalness: 0.45
+      })
+    );
     centralCore.position.set(0, 8, 0);
     this.root.add(centralCore);
   }
