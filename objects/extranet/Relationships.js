@@ -11,6 +11,13 @@ import { Human } from "../species/Human.js";
 export class Relationships {
   constructor() {
     this.names = ["Ben", "Gwen", "Kevin", "Rook", "Highbreed", "Incursean", "Anodite", "Galvan", "Human"];
+    this.homeworlds = {
+      Highbreed: "augstaka",
+      Incursean: "incursia",
+      Anodite: "anodyne",
+      Galvan: "galvan",
+      Human: "earth"
+    };
     this.entityClasses = { Ben, Gwen, Kevin, Rook, Highbreed, Incursean, Anodite, Galvan, Human };
     this.styles = {
       wrapper: { overflowX: "auto" },
@@ -23,6 +30,16 @@ export class Relationships {
 
   getRelationship(from, to) {
     if (from === to) return 0;
+    const homeworld = this.homeworlds[from];
+    if (homeworld) {
+      try {
+        const saved = JSON.parse(localStorage.getItem("rustbucket.planet." + homeworld) || "null");
+        const value = saved?.relationships?.[to];
+        if (value !== undefined) return Number(value);
+      } catch (error) {
+        // Fall back to the relationship stored on the character class.
+      }
+    }
     return Number(this.entityClasses[from]?.relationships?.[to] ?? 0);
   }
 
@@ -30,6 +47,17 @@ export class Relationships {
     if (from === to || !this.entityClasses[from]) return;
     const relationships = this.entityClasses[from].relationships;
     relationships[to] = Math.max(-100, Math.min(100, this.getRelationship(from, to) + amount));
+    const homeworld = this.homeworlds[from];
+    if (homeworld) {
+      try {
+        const key = "rustbucket.planet." + homeworld;
+        const saved = JSON.parse(localStorage.getItem(key) || "null") || {};
+        saved.relationships = { ...(saved.relationships || {}), [to]: relationships[to] };
+        localStorage.setItem(key, JSON.stringify(saved));
+      } catch (error) {
+        // Keep the in-memory character relationship when storage is unavailable.
+      }
+    }
   }
 
   render(host) {
