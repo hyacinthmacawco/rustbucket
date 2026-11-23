@@ -15,6 +15,12 @@ export class Anodite {
   constructor(parent = null, options = {}) {
     this.group = new THREE.Group();
     this.group.name = "Anodite";
+    this.health = 100;
+    this.energy = 100;
+    this.maxHealth = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
 
     this.materials = {
       purple: this.createMaterial(0x873bd0),
@@ -42,6 +48,7 @@ export class Anodite {
     if (parent) parent.add(this.group);
     this.model = this.group;
     this.mesh = this.group;
+    this.group.userData.statusOwner = this;
   }
 
   createMaterial(color, options = {}) {
@@ -185,4 +192,30 @@ export class Anodite {
   createAura() {
     // The body already carries the luminous edge details created in createBody.
   }
+
+  updateStatus(delta) {
+    this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
+    this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
+    if (this.healthRecoveryDelay === 0 && this.health < 100) this.health = Math.min(100, this.health + delta * 0.32);
+    if (this.energyRecoveryDelay === 0 && this.energy < 100) this.energy = Math.min(100, this.energy + delta * 0.48);
+  }
+
+  takeDamage(amount) {
+    this.health = Math.max(0, this.health - Math.max(0, amount));
+    this.healthRecoveryDelay = 4;
+    return this.health;
+  }
+
+  useEnergy(amount) {
+    if (this.energy < amount) return false;
+    this.energy = Math.max(0, this.energy - amount);
+    this.energyRecoveryDelay = 4;
+    return true;
+  }
+
+  restoreEnergy(amount) {
+    this.energy = Math.min(100, this.energy + Math.max(0, amount));
+    return this.energy;
+  }
+
 }
