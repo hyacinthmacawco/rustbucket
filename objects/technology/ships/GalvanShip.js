@@ -15,10 +15,6 @@ export class GalvanShip extends AlienShip {
     this.addSphere(0.58, [0, 0.55, 0.2], [0.92, 0.32, 0.74], glass);
 
     for (const side of [-1, 1]) {
-      const pod = new THREE.Group();
-      pod.position.set(side * 2.05, 0.42, -0.05);
-      this.group.add(pod);
-
       this.addPart(new THREE.SphereGeometry(0.68, 20, 16), green, [side * 2.05, 0.42, -0.05], [0, 0, 0], [0.78, 0.52, 1.18]);
       this.addPart(new THREE.SphereGeometry(0.34, 20, 16), lime, [side * 2.05, 0.64, 0], [0, 0, 0], [1, 0.55, 1.05]);
       this.addPart(new THREE.BoxGeometry(0.2, 0.1, 0.85), dark, [side * 2.05, 0.02, -0.05]);
