@@ -14,16 +14,16 @@ export class Highbreed {
   Model.sphere(g, shadow, .3, [0,2.38,0], [.7,.42,.62]);
   Model.sphere(g, black, .34, [0,2.67,-.02], [.9,.75,.75]);
   // Crest tendrils: long, tapered black horns curling away from the skull.
-  const tendril = (a,b,r1,r2) => {
+  this.tendril = (a,b,r1,r2) => {
     const A=new THREE.Vector3(...a), B=new THREE.Vector3(...b), d=B.clone().sub(A);
     const m=Model.cylinder(g,black,r2,r1,d.length(),A.clone().add(B).multiplyScalar(.5).toArray());
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
   };
-  tendril([-.18,2.88,0],[-.62,3.32,-.02],.19,.09);
-  tendril([-.62,3.32,-.02],[-.9,3.55,-.02],.09,.015);
-  tendril([.16,2.9,0],[.58,3.25,-.04],.17,.075);
-  tendril([.58,3.25,-.04],[.78,3.48,-.04],.075,.012);
-  tendril([0,2.96,-.08],[.04,3.52,-.12],.14,.025);
+  this.tendril([-.18,2.88,0],[-.62,3.32,-.02],.19,.09);
+  this.tendril([-.62,3.32,-.02],[-.9,3.55,-.02],.09,.015);
+  this.tendril([.16,2.9,0],[.58,3.25,-.04],.17,.075);
+  this.tendril([.58,3.25,-.04],[.78,3.48,-.04],.075,.012);
+  this.tendril([0,2.96,-.08],[.04,3.52,-.12],.14,.025);
   // Red angular eyes and purple crystalline dorsal marking.
   for (const side of [-1,1]) {
     Model.part(g,new THREE.ConeGeometry(.13,.24,3),red,[side*.2,2.69,.29],[0,0,side*.55],[1,1,1]);

@@ -1,6 +1,7 @@
 export class Extranet {
   constructor({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {}, onJumpSystem = () => {} } = {}) {
   this.simulation = simulation;
+  this.onJumpSystem = onJumpSystem;
   const root = this.root = document.createElement("section");
   this.root.id = "extranet-overlay";
   this.root.innerHTML = `
@@ -114,85 +115,38 @@ export class Extranet {
         </div>
         <aside id="omnidata-detail"></aside>
       </div>`;
-    const detail = this.page.querySelector("#omnidata-detail");
-    const selectSystem = key => {
-      const item = systems[key]; if (!item) return;
-      this.page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
-      detail.innerHTML = "<h2>" + item.name + "</h2><p>" + item.body + "</p><div class=\"omni-worlds\">" + item.worlds + "</div><p class=\"omni-status\">" + item.status + "</p>" + (allowSystemJump ? '<button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>' : "");
-      if (allowSystemJump) detail.querySelector("#omnidata-jump").addEventListener("click",()=>onJumpSystem(key));
-    };
+    this.detail = this.page.querySelector("#omnidata-detail");
+    this.systems = systems;
+    this.allowSystemJump = allowSystemJump;
     this.page.querySelectorAll(".omni-node").forEach(node => {
-      node.addEventListener("click",()=>selectSystem(node.dataset.system));
-      node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectSystem(node.dataset.system);}});
+      node.addEventListener("click", () => this.selectSystem(node.dataset.system));
+      node.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          this.selectSystem(node.dataset.system);
+        }
+      });
     });
-    selectSystem("solar");
-    this.setLocation(this.currentLocation);
-  }
-  this.setLocation = (location) => {
-    const labels = {space:"SOLAR SYSTEM",earth:"EARTH • BELLWOOD",moon:"THE MOON",augstaka:"AUGSTAKA",anodyne:"ANODYNE",galvan:"GALVAN PRIME",incursia:"INCURSIA"};
-    const nextLocation = labels[location] ? location : "earth";
-    const changed = nextLocation !== this.currentLocation;
-    this.currentLocation = nextLocation;
-    const marker = this.page.querySelector("#omnidata-this.current-location");
-    const label = labels[this.currentLocation];
-    const markerChanged = Boolean(marker && marker.textContent !== label);
-    if (markerChanged) marker.textContent = label;
-    if (changed || markerChanged) {
-      const nodeKey = ({earth:"solar",moon:"solar",space:"solar",augstaka:"highbreed",anodyne:"anodite",galvan:"galvan",incursia:"incursean"})[this.currentLocation];
-      this.page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("this.current-location", node.dataset.system === nodeKey));
+
+  selectSystem(key) {
+    const item = this.systems[key];
+    if (!item) return;
+
+    this.page.querySelectorAll(".omni-node").forEach(node => {
+      node.classList.toggle("selected", node.dataset.system === key);
+    });
+
+    this.detail.innerHTML =
+      "<h2>" + item.name + "</h2>" +
+      "<p>" + item.body + "</p>" +
+      "<div class=\"omni-worlds\">" + item.worlds + "</div>" +
+      "<p class=\"omni-status\">" + item.status + "</p>" +
+      (this.allowSystemJump ? '<button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>' : "");
+
+    if (this.allowSystemJump) {
+      this.detail.querySelector("#omnidata-jump").addEventListener("click", () => {
+        this.onJumpSystem(key);
+      });
     }
   }
-  this.capturePhoto = () => {
-    const canvas = document.querySelector("#omniverse");
-    if (!canvas) return;
-    try { this.photos.unshift(canvas.toDataURL("image/jpeg",0.82)); this.memories(); }
-    catch (error) { console.warn("Could not capture memory", error); }
-  }
-  this.addRelationship = (picker, owner) => {
-    if (!simulation) return;
-    const from=String(picker).toLowerCase().replace(/^./,c=>c.toUpperCase());
-    const to=String(owner).toLowerCase().replace(/^./,c=>c.toUpperCase());
-    simulation.setRelationship(from,to,simulation.getRelationship(from,to)+0.1);
-  }
-  this.updateTask = (count = this.storedCount + 1) => {
-    this.storedCount = Math.max(this.storedCount, count);
-    if (this.current === "tasks") this.tasks();
-    if (this.storedCount >= 4 && !this.completed) {
-      this.completed = true;
-      onComplete();
-      this.showCompletion();
-    }
-  }
-  this.showCompletion = () => {
-    if (this.completionPresented || document.getElementById("mission-complete")) return;
-    this.completionPresented = true;
-    const notice = document.createElement("div");
-    notice.id = "mission-complete";
-    notice.textContent = "TASK COMPLETED";
-    document.body.appendChild(notice);
-    window.setTimeout(() => notice.remove(), 5200);
-  }
 
-  this.root.querySelector("#extranet-close").addEventListener("click", this.close);
-  this.root.querySelector("#extranet-back").addEventListener("click",()=>this.current==="home"?this.close():this.current==="private"||this.current==="omnidata"?this.home():this.privateCloud());
-  this.root.querySelector("#extranet-home").addEventListener("click", this.home);
-  this.address.addEventListener("keydown", event => {
-    if (event.key !== "Enter") return;
-    const url = this.address.value.trim().toLowerCase();
-    if (url.includes("bgkr.omnicloud.com")) {
-      if (url.endsWith("/tasks")) this.tasks();
-      else if (url.endsWith("/relationships")) this.showRelationships();
-      else if (url.endsWith("/memories")) this.memories();
-      else if (url.endsWith("/accounts")) { this.current="accounts"; onData(page,"accounting"); }
-      else if (url.endsWith("/inventory")) { this.current="inventory"; onData(page,"items"); }
-      else if (url.endsWith("/event-log")) { this.current="event-log"; onData(page,"events"); }
-      else this.privateCloud();
-    } else if (url.includes("en.omnidata.org")) this.omnidata();
-    else if (url === "extranet://home") this.home();
-  });
-  this.open = () => { this.root.style.display="flex"; this.home(); }
-  this.openOmnidata = () => { this.root.style.display="flex"; this.omnidata(true); }
-  this.close = () => { this.root.style.display="none"; }
-  this.home();
-
-}

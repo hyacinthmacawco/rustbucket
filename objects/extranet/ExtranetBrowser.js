@@ -40,7 +40,10 @@ export class ExtranetBrowser {
     section.append(title, tabs, ledger);
     host.append(section);
 
-    const render = tab => {
+    this.renderAccountsTab(tabs, ledger, "balance");
+  }
+
+  renderAccountsTab(tabs, ledger, tab) {
       tabs.replaceChildren();
       for (const [key, label] of [["balance", "BALANCE SHEET"], ["income", "INCOME STATEMENT"], ["cash", "CASH FLOW"]]) {
         const button = document.createElement("button");
@@ -48,7 +51,7 @@ export class ExtranetBrowser {
         button.textContent = label;
         Object.assign(button.style, this.styles.tab);
         button.classList.toggle("active", key === tab);
-        button.addEventListener("click", () => render(key));
+        button.addEventListener("click", () => this.renderAccountsTab(tabs, ledger, key));
         tabs.append(button);
       }
       ledger.replaceChildren();
@@ -77,9 +80,8 @@ export class ExtranetBrowser {
           ledger.append(this.row(transaction.item, transaction.cost.toLocaleString() + " T • " + transaction.from));
         }
       }
-    };
-    render("balance");
   }
+
 
   renderInventory(host) {
     host.replaceChildren();

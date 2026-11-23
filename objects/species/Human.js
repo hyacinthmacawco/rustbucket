@@ -19,7 +19,7 @@ export class Human {
   const joints = {};
   const bones = [];
 
-  const makeBone = (name, parent, position, exposeAsJoint = true) => {
+  this.makeBone = (name, parent, position, exposeAsJoint = true) => {
     const bone = new THREE.Bone();
     bone.name = name;
     bone.position.set(position[0], position[1], position[2]);
@@ -30,24 +30,24 @@ export class Human {
     return bone;
   };
 
-  const hip = makeBone("hip", null, [0, 0.98, 0]);
-  const spine = makeBone("spine", hip, [0, 0.30, 0]);
+  const hip = this.makeBone("hip", null, [0, 0.98, 0]);
+  const spine = this.makeBone("spine", hip, [0, 0.30, 0]);
 
   // The neck is the parent of the clavicle bridge, so neck movement also
   // carries the clavicles and both shoulder joints with it.
-  const neck = makeBone("neck", spine, [0, 0.51, 0]);
-  const shoulderBridge = makeBone("shoulderBridge", neck, [0, -0.08, 0], false);
-  const head = makeBone("head", neck, [0, 0.19, 0]);
+  const neck = this.makeBone("neck", spine, [0, 0.51, 0]);
+  const shoulderBridge = this.makeBone("shoulderBridge", neck, [0, -0.08, 0], false);
+  const head = this.makeBone("head", neck, [0, 0.19, 0]);
 
   // Arms: upper arm 0.30, forearm 0.27, hand 0.12.
   for (const side of ["left", "right"]) {
     const sign = side === "left" ? -1 : 1;
     // Shorter clavicles bring the shoulder joints closer to the neck,
     // giving the shoulder girdle more natural human proportions.
-    const shoulder = makeBone(side + "Shoulder", shoulderBridge, [sign * 0.17, 0, 0]);
-    const elbow = makeBone(side + "Elbow", shoulder, [sign * 0.30, -0.015, 0]);
-    const wrist = makeBone(side + "Wrist", elbow, [sign * 0.27, -0.005, 0]);
-    makeBone(side + "HandEnd", wrist, [sign * 0.12, 0, 0], false);
+    const shoulder = this.makeBone(side + "Shoulder", shoulderBridge, [sign * 0.17, 0, 0]);
+    const elbow = this.makeBone(side + "Elbow", shoulder, [sign * 0.30, -0.015, 0]);
+    const wrist = this.makeBone(side + "Wrist", elbow, [sign * 0.27, -0.005, 0]);
+    this.makeBone(side + "HandEnd", wrist, [sign * 0.12, 0, 0], false);
 
     // Arm bones are authored along local +/-X. A 90-degree shoulder Z
     // rotation points each upper arm straight down. This also aligns the
@@ -60,9 +60,9 @@ export class Human {
   // Legs: thigh 0.43, lower leg 0.43, ankle extension 0.12.
   for (const side of ["left", "right"]) {
     const sign = side === "left" ? -1 : 1;
-    const thigh = makeBone(side + "Thigh", hip, [sign * 0.105, -0.06, 0]);
-    const knee = makeBone(side + "Knee", thigh, [0, -0.43, 0]);
-    makeBone(side + "Ankle", knee, [0, -0.43, 0]);
+    const thigh = this.makeBone(side + "Thigh", hip, [sign * 0.105, -0.06, 0]);
+    const knee = this.makeBone(side + "Knee", thigh, [0, -0.43, 0]);
+    this.makeBone(side + "Ankle", knee, [0, -0.43, 0]);
   }
 
   const skeleton = new THREE.Skeleton(bones);
@@ -286,7 +286,7 @@ export class Human {
       const parentWorldInverse = new THREE.Quaternion();
       const localDelta = new THREE.Quaternion();
 
-      const applyWorldXSwing = (bone, restRotation, angle) => {
+      this.applyWorldXSwing = (bone, restRotation, angle) => {
         bone.parent.updateWorldMatrix(true, false);
         bone.parent.getWorldQuaternion(parentWorldInverse).invert();
         worldSwing.setFromAxisAngle(worldX, angle);
@@ -308,7 +308,7 @@ export class Human {
         const elbowRest = initialRotations.get(elbow);
 
         // Shoulder controls the whole arm's forward/backward pendulum.
-        applyWorldXSwing(shoulder, shoulderRest, armSwing * 0.48 * amplitude);
+        this.applyWorldXSwing(shoulder, shoulderRest, armSwing * 0.48 * amplitude);
 
         // The elbow hinges in the same forward-swing phase. Its flex changes
         // gradually through the cycle, so the forearm follows the upper arm
@@ -316,7 +316,7 @@ export class Human {
         const elbowFlex = (0.12 + (0.5 + 0.5 * armSwing) * 0.34) * amplitude;
         // Negative X rotation bends the forearm toward the character's
         // front (+Z); positive rotation was folding it behind the body.
-        applyWorldXSwing(elbow, elbowRest, -elbowFlex);
+        this.applyWorldXSwing(elbow, elbowRest, -elbowFlex);
       }
 
       // Subtle torso counter-rotation; keep the body at a constant height.

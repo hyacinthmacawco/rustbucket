@@ -25,7 +25,7 @@ export class Gwen {
     frame: new THREE.MeshStandardMaterial({ color: 0x173c67, roughness: 0.55, metalness: 0.12 }),
     lens: new THREE.MeshStandardMaterial({ color: 0x4e9db9, roughness: 0.35, metalness: 0.15 })
   };
-  const makeTexture = (draw) => {
+  this.makeTexture = (draw) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 640;
     const ctx = canvas.getContext("2d");
@@ -35,7 +35,7 @@ export class Gwen {
     texture.anisotropy = 4;
     return texture;
   };
-  const topTexture = makeTexture((ctx, w, h) => {
+  const topTexture = this.makeTexture((ctx, w, h) => {
     ctx.fillStyle = "#8ec9e8"; ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = "#4d83a8";
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(130, 0); ctx.lineTo(180, 72);
@@ -51,7 +51,7 @@ export class Gwen {
   });
   const topFront = new THREE.MeshStandardMaterial({ color: 0xffffff, map: topTexture, roughness: 0.92 });
   const skinFaceMat = mat.skin;
-  const hairTexture = makeTexture((ctx, w, h) => {
+  const hairTexture = this.makeTexture((ctx, w, h) => {
     ctx.fillStyle = "#e5b3a4"; ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = "#d95b20";
     // Front fringe only: a clean hairline that stays above the glasses.
@@ -62,7 +62,7 @@ export class Gwen {
     ctx.lineTo(w * 0.20, h * 0.30); ctx.lineTo(0, h * 0.23);
     ctx.closePath(); ctx.fill();
   });
-  const hairSideTexture = makeTexture((ctx, w, h) => {
+  const hairSideTexture = this.makeTexture((ctx, w, h) => {
     ctx.fillStyle = "#d95b20"; ctx.fillRect(0, 0, w, h);
     // Solid bob-length side hair with a slightly tapered lower edge.
     ctx.clearRect(0, 0, w, h);
@@ -74,7 +74,7 @@ export class Gwen {
   });
   const hairFrontMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: hairTexture, transparent: false, roughness: 0.95 });
   const hairSideMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: hairSideTexture, roughness: 0.95 });
-  const plaidTexture = makeTexture((ctx, w, h) => {
+  const plaidTexture = this.makeTexture((ctx, w, h) => {
     ctx.fillStyle = "#244c83"; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = "#8fb7d5"; ctx.lineWidth = 5;
     for (let x = 0; x <= w; x += 72) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
@@ -84,7 +84,7 @@ export class Gwen {
   });
   const plaidMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: plaidTexture, roughness: 0.92 });
   // The sock is a printed region on the lower-leg surface, not a separate mesh.
-  const sockTexture = makeTexture((ctx, w, h) => {
+  const sockTexture = this.makeTexture((ctx, w, h) => {
     ctx.fillStyle = "#e5b3a4"; ctx.fillRect(0, 0, w, h * 0.38);
     ctx.fillStyle = "#dce7e9"; ctx.fillRect(0, h * 0.38, w, h * 0.62);
     ctx.fillStyle = "#c8d8dc"; ctx.fillRect(0, h * 0.38, w, 10);
@@ -92,35 +92,35 @@ export class Gwen {
   const sockLegMat = new THREE.MeshStandardMaterial({
     color: 0xffffff, map: sockTexture, roughness: 0.9
   });
-  const box = (p, n, s, pos, m) => {
+  this.box = (p, n, s, pos, m) => {
     const o = new THREE.Mesh(new THREE.BoxGeometry(...s), m);
     o.name = n; o.position.set(...pos); o.castShadow = true; o.receiveShadow = true; p.add(o); return o;
   };
-  const cylinder = (p, n, r1, r2, h, pos, m, segments = 8) => {
+  this.cylinder = (p, n, r1, r2, h, pos, m, segments = 8) => {
     const o = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, segments), m);
     o.name = n; o.position.set(...pos); o.castShadow = true; p.add(o); return o;
   };
 
   // Shirt graphic is painted into the front-face texture.
-  const torso = box(joints.spine, "GwenBlueTop", [0.47, 0.88, 0.29], [0, 0.045, 0],
+  const torso = this.box(joints.spine, "GwenBlueTop", [0.47, 0.88, 0.29], [0, 0.045, 0],
     [mat.shirt, mat.shirt, mat.shirt, mat.shirt, topFront, mat.shirt]);
   rig.fitToTorso(torso);
-  box(joints.spine, "GwenCollar", [0.22, 0.055, 0.30], [0, 0.475, 0], mat.shirtDark);
+  this.box(joints.spine, "GwenCollar", [0.22, 0.055, 0.30], [0, 0.475, 0], mat.shirtDark);
   // Plaid skirt pattern is applied directly to the upper-leg surfaces; no
   // separate skirt or hip cuboid is added to the silhouette.
 
   // Hair is painted directly onto the head's front, side, top and rear faces.
-  const headMesh = box(joints.head, "GwenHead", [0.37, 0.42, 0.32], [0, 0.055, 0],
+  const headMesh = this.box(joints.head, "GwenHead", [0.37, 0.42, 0.32], [0, 0.055, 0],
     [hairSideMat, hairSideMat, mat.hair, mat.skin, hairFrontMat, mat.hair]);
   rig.fitHeadToTorso(torso, headMesh);
 
   // Keep only the spectacle frames and lenses; lower them clear of the fringe.
   for (const sign of [-1, 1]) {
-    box(joints.head, "GwenSpectacleLens", [0.145, 0.095, 0.018], [sign * 0.088, -0.005, 0.178], mat.lens);
-    box(joints.head, "GwenSpectacleTop", [0.16, 0.014, 0.025], [sign * 0.088, 0.05, 0.18], mat.frame);
-    box(joints.head, "GwenSpectacleBottom", [0.16, 0.014, 0.025], [sign * 0.088, -0.06, 0.18], mat.frame);
-    box(joints.head, "GwenSpectacleOuter", [0.014, 0.11, 0.025], [sign * 0.166, -0.005, 0.18], mat.frame);
-    box(joints.head, "GwenSpectacleInner", [0.014, 0.11, 0.025], [sign * 0.01, -0.005, 0.18], mat.frame);
+    this.box(joints.head, "GwenSpectacleLens", [0.145, 0.095, 0.018], [sign * 0.088, -0.005, 0.178], mat.lens);
+    this.box(joints.head, "GwenSpectacleTop", [0.16, 0.014, 0.025], [sign * 0.088, 0.05, 0.18], mat.frame);
+    this.box(joints.head, "GwenSpectacleBottom", [0.16, 0.014, 0.025], [sign * 0.088, -0.06, 0.18], mat.frame);
+    this.box(joints.head, "GwenSpectacleOuter", [0.014, 0.11, 0.025], [sign * 0.166, -0.005, 0.18], mat.frame);
+    this.box(joints.head, "GwenSpectacleInner", [0.014, 0.11, 0.025], [sign * 0.01, -0.005, 0.18], mat.frame);
   }
 
   for (const side of ["left", "right"]) {
@@ -128,18 +128,18 @@ export class Gwen {
     const shoulder = joints[side + "Shoulder"];
     const elbow = joints[side + "Elbow"];
     const wrist = joints[side + "Wrist"];
-    box(shoulder, "GwenShortSleeve", [Math.abs(elbow.position.x) + 0.035, 0.19, 0.27],
+    this.box(shoulder, "GwenShortSleeve", [Math.abs(elbow.position.x) + 0.035, 0.19, 0.27],
       [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], mat.shirt);
-    box(elbow, "GwenForearm", [Math.abs(wrist.position.x) + 0.035, 0.14, 0.16],
+    this.box(elbow, "GwenForearm", [Math.abs(wrist.position.x) + 0.035, 0.14, 0.16],
       [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], mat.skin);
-    box(joints[side + "Wrist"], "GwenHand", [0.15, 0.14, 0.16], [sign * 0.075, 0, 0], mat.skin);
+    this.box(joints[side + "Wrist"], "GwenHand", [0.15, 0.14, 0.16], [sign * 0.075, 0, 0], mat.skin);
     // Match Kevin's leg proportions and pivot-relative placement exactly,
     // while retaining Gwen's plaid and sock surface materials.
-    box(joints[side + "Thigh"], "GwenPlaidUpperLeg", [0.21, 0.62, 0.22], [0, -0.30, 0], plaidMat);
-    box(joints[side + "Knee"], "GwenSockedLowerLeg", [0.18, 0.44, 0.20], [0, -0.21, 0], sockLegMat);
+    this.box(joints[side + "Thigh"], "GwenPlaidUpperLeg", [0.21, 0.62, 0.22], [0, -0.30, 0], plaidMat);
+    this.box(joints[side + "Knee"], "GwenSockedLowerLeg", [0.18, 0.44, 0.20], [0, -0.21, 0], sockLegMat);
     // Gwen's boots are blue. Use Kevin's boot dimensions and ankle placement.
-    box(joints[side + "Ankle"], "GwenBlueBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.boot);
-    box(joints[side + "Ankle"], "GwenBlueBootSole", [0.215, 0.045, 0.315], [0, -0.145, 0.075], mat.sole);
+    this.box(joints[side + "Ankle"], "GwenBlueBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.boot);
+    this.box(joints[side + "Ankle"], "GwenBlueBootSole", [0.215, 0.045, 0.315], [0, -0.145, 0.075], mat.sole);
   }
   Object.assign(this, { group, rig, joints });
   }

@@ -78,7 +78,7 @@ makeStar(parent, color) {
 
 makeWorld(parent, name, baseRadius, palette, style, options = {}) {
   const material = new THREE.MeshStandardMaterial({
-    map: this.this.makePlanetTexture(palette, style),
+    map: this.makePlanetTexture(palette, style),
     roughness: .9,
     metalness: style === "city" ? .12 : .02
   });

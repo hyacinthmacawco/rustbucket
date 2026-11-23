@@ -32,7 +32,7 @@ export class AlienShip {
     const hull = new THREE.MeshStandardMaterial({ color, metalness: 0.42, roughness: 0.48 });
     const dark = new THREE.MeshStandardMaterial({ color: 0x18232b, metalness: 0.6, roughness: 0.4 });
     const glow = new THREE.MeshBasicMaterial({ color: species === "Incursean" ? 0xff482c : 0x72ffd0 });
-    const add = (geometry, material, position, rotation = null) => {
+    this.add = (geometry, material, position, rotation = null) => {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...position);
       if (rotation) mesh.rotation.set(...rotation);
@@ -41,14 +41,14 @@ export class AlienShip {
       this.group.add(mesh);
       return mesh;
     };
-    add(new THREE.BoxGeometry(5.4, 1.5, 11), hull, [0, 0, 0]);
-    add(new THREE.ConeGeometry(1.6, 5.8, 6), dark, [0, 0, 7.8], [Math.PI / 2, 0, 0]);
+    this.add(new THREE.BoxGeometry(5.4, 1.5, 11), hull, [0, 0, 0]);
+    this.add(new THREE.ConeGeometry(1.6, 5.8, 6), dark, [0, 0, 7.8], [Math.PI / 2, 0, 0]);
     for (const side of [-1, 1]) {
-      add(new THREE.BoxGeometry(7.2, 0.35, 3.5), hull, [side * 5.1, 0, -1.3], [0, 0, side * 0.08]);
-      add(new THREE.BoxGeometry(0.5, 0.45, 2.2), dark, [side * 1.5, -0.2, -5.8]);
-      add(new THREE.SphereGeometry(0.48, 10, 8), glow, [side * 1.55, 0, -5.4]);
+      this.add(new THREE.BoxGeometry(7.2, 0.35, 3.5), hull, [side * 5.1, 0, -1.3], [0, 0, side * 0.08]);
+      this.add(new THREE.BoxGeometry(0.5, 0.45, 2.2), dark, [side * 1.5, -0.2, -5.8]);
+      this.add(new THREE.SphereGeometry(0.48, 10, 8), glow, [side * 1.55, 0, -5.4]);
     }
-    add(new THREE.BoxGeometry(2.5, 0.45, 2.6), dark, [0, 0.95, -1.2]);
+    this.add(new THREE.BoxGeometry(2.5, 0.45, 2.6), dark, [0, 0.95, -1.2]);
     this.group.position.set(
       center.x + Math.cos(this.orbitAngle) * this.orbitRadius,
       center.y + 500 + index * 180,

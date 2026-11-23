@@ -23,7 +23,7 @@ export class Kevin {
     belt: new THREE.MeshStandardMaterial({ color: 0x303b42, roughness: 0.82 })
   };
   const faceMaterial = mat.skin;
-  const makeHairTexture = (front = false) => {
+  this.makeHairTexture = (front = false) => {
     const canvas = document.createElement("canvas");
     canvas.width = 384; canvas.height = 384;
     const ctx = canvas.getContext("2d");
@@ -40,8 +40,8 @@ export class Kevin {
     texture.anisotropy = 4;
     return texture;
   };
-  const frontHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: makeHairTexture(true), transparent: false, roughness: 0.95 });
-  const sideHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: makeHairTexture(false), roughness: 0.95 });
+  const frontHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: this.makeHairTexture(true), transparent: false, roughness: 0.95 });
+  const sideHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: this.makeHairTexture(false), roughness: 0.95 });
   const shirtCanvas = document.createElement("canvas");
   shirtCanvas.width = 512; shirtCanvas.height = 640;
   const shirtCtx = shirtCanvas.getContext("2d");
@@ -56,17 +56,17 @@ export class Kevin {
   shirtTexture.colorSpace = THREE.SRGBColorSpace;
   shirtTexture.anisotropy = 4;
   const shirtFront = new THREE.MeshStandardMaterial({ color: 0xffffff, map: shirtTexture, roughness: 0.92 });
-  const box = (p, n, s, pos, m) => {
+  this.box = (p, n, s, pos, m) => {
     const o = new THREE.Mesh(new THREE.BoxGeometry(...s), m);
     o.name = n; o.position.set(...pos); o.castShadow = true; o.receiveShadow = true; p.add(o); return o;
   };
 
-  const torso = box(joints.spine, "KevinBlackShirt", [0.49, 0.96, 0.30], [0, 0.035, 0],
+  const torso = this.box(joints.spine, "KevinBlackShirt", [0.49, 0.96, 0.30], [0, 0.035, 0],
     [mat.shirt, mat.shirt, mat.shirt, mat.shirt, shirtFront, mat.shirt]);
   rig.fitToTorso(torso);
-  box(joints.spine, "KevinNeckBand", [0.30, 0.11, 0.30], [0, 0.49, 0], mat.sleeveDark);
+  this.box(joints.spine, "KevinNeckBand", [0.30, 0.11, 0.30], [0, 0.49, 0], mat.sleeveDark);
   // Hair is a set of painted head-surface maps; no separate hair meshes.
-  const headMesh = box(joints.head, "KevinHead", [0.37, 0.43, 0.32], [0, 0.055, 0],
+  const headMesh = this.box(joints.head, "KevinHead", [0.37, 0.43, 0.32], [0, 0.055, 0],
     [sideHairMat, sideHairMat, mat.hair, faceMaterial, frontHairMat, sideHairMat]);
   rig.fitHeadToTorso(torso, headMesh);
 
@@ -75,18 +75,18 @@ export class Kevin {
     const shoulder = joints[side + "Shoulder"];
     const elbow = joints[side + "Elbow"];
     const wrist = joints[side + "Wrist"];
-    box(shoulder, "KevinGrayShoulderArmor", [Math.abs(elbow.position.x) + 0.06, 0.24, 0.30],
+    this.box(shoulder, "KevinGrayShoulderArmor", [Math.abs(elbow.position.x) + 0.06, 0.24, 0.30],
       [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], mat.sleeve);
-    box(shoulder, "KevinShoulderBand", [Math.abs(elbow.position.x) + 0.045, 0.065, 0.31],
+    this.box(shoulder, "KevinShoulderBand", [Math.abs(elbow.position.x) + 0.045, 0.065, 0.31],
       [elbow.position.x * 0.5, 0.075, 0], mat.sleeveDark);
-    box(elbow, "KevinGrayForearm", [Math.abs(wrist.position.x) + 0.045, 0.17, 0.19],
+    this.box(elbow, "KevinGrayForearm", [Math.abs(wrist.position.x) + 0.045, 0.17, 0.19],
       [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], mat.sleeve);
-    box(elbow, "KevinForearmBand", [Math.abs(wrist.position.x) + 0.04, 0.055, 0.20],
+    this.box(elbow, "KevinForearmBand", [Math.abs(wrist.position.x) + 0.04, 0.055, 0.20],
       [wrist.position.x * 0.5, -0.055, 0], mat.sleeveDark);
-    box(joints[side + "Wrist"], "KevinHand", [0.15, 0.14, 0.16], [sign * 0.075, 0, 0], mat.skin);
-    box(joints[side + "Thigh"], "KevinJeans", [0.21, 0.62, 0.22], [0, -0.30, 0], mat.pants);
-    box(joints[side + "Knee"], "KevinLowerJeans", [0.18, 0.44, 0.20], [0, -0.21, 0], mat.pants);
-    box(joints[side + "Ankle"], "KevinBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.shirt);
+    this.box(joints[side + "Wrist"], "KevinHand", [0.15, 0.14, 0.16], [sign * 0.075, 0, 0], mat.skin);
+    this.box(joints[side + "Thigh"], "KevinJeans", [0.21, 0.62, 0.22], [0, -0.30, 0], mat.pants);
+    this.box(joints[side + "Knee"], "KevinLowerJeans", [0.18, 0.44, 0.20], [0, -0.21, 0], mat.pants);
+    this.box(joints[side + "Ankle"], "KevinBoot", [0.21, 0.16, 0.31], [0, -0.08, 0.07], mat.shirt);
   }
   Object.assign(this, { group, rig, joints });
   }

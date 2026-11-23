@@ -25,7 +25,7 @@ export class Ben {
     if (object.isMesh) object.visible = false;
   });
 
-  const makeTexture = (width, height, draw) => {
+  this.makeTexture = (width, height, draw) => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -37,7 +37,7 @@ export class Ben {
     return texture;
   };
 
-  const shirtTexture = makeTexture(512, 640, (ctx, w, h) => {
+  const shirtTexture = this.makeTexture(512, 640, (ctx, w, h) => {
     ctx.fillStyle = "#101512";
     ctx.fillRect(0, 0, w, h);
 
@@ -62,7 +62,7 @@ export class Ben {
     ctx.strokeText("10", w / 2, h * 0.53);
   });
 
-  const sleeveTexture = makeTexture(256, 256, (ctx, w, h) => {
+  const sleeveTexture = this.makeTexture(256, 256, (ctx, w, h) => {
     ctx.fillStyle = "#101512";
     ctx.fillRect(0, 0, w, h);
     // Narrow green shoulder piping; most of the sleeve remains black.
@@ -71,7 +71,7 @@ export class Ben {
     ctx.fillRect(0, 0, 24, 256);
   });
 
-  const hairFront = makeTexture(384, 384, (ctx, w, h) => {
+  const hairFront = this.makeTexture(384, 384, (ctx, w, h) => {
     ctx.fillStyle = "#c98d78";
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = "#38231e";
@@ -84,7 +84,7 @@ export class Ben {
     ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
   });
 
-  const hairBack = makeTexture(384, 384, (ctx, w, h) => {
+  const hairBack = this.makeTexture(384, 384, (ctx, w, h) => {
     ctx.fillStyle = "#c98d78";
     ctx.fillRect(0, 0, w, h);
     // Back hair covers nearly the entire rear of the head.
@@ -92,19 +92,19 @@ export class Ben {
     ctx.fillRect(0, 0, w, h);
   });
 
-  const hairSide = makeTexture(256, 384, (ctx, w, h) => {
+  const hairSide = this.makeTexture(256, 384, (ctx, w, h) => {
     ctx.fillStyle = "#c98d78";
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = "#38231e";
     ctx.fillRect(0, 0, w, h);
   });
 
-  const hairTop = makeTexture(256, 256, (ctx, w, h) => {
+  const hairTop = this.makeTexture(256, 256, (ctx, w, h) => {
     ctx.fillStyle = "#38231e";
     ctx.fillRect(0, 0, w, h);
   });
 
-  const omnitrixTexture = makeTexture(512, 256, (ctx, w, h) => {
+  const omnitrixTexture = this.makeTexture(512, 256, (ctx, w, h) => {
     // The reference uses a muted olive/grey-green wrist band, not black.
     ctx.fillStyle = "#68715d"; ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = "#aeb8ae"; ctx.fillRect(150, 18, 212, 220);
@@ -146,7 +146,7 @@ export class Ben {
     omnitrixFront: omnitrixFrontMaterial
   };
 
-  const box = (parent, name, size, position, material) => {
+  this.box = (parent, name, size, position, material) => {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(size[0], size[1], size[2]),
       material
@@ -161,7 +161,7 @@ export class Ben {
 
   // Shirt extends down over the pelvis. The waistband is parented to the
   // spine, not the independently rotating hip, so the two cannot pull apart.
-  const torso = box(joints.spine, "BenShirt", [0.45, 0.96, 0.28],
+  const torso = this.box(joints.spine, "BenShirt", [0.45, 0.96, 0.28],
     [0, 0.025, 0], [
       mat.black, mat.black, mat.black, mat.black, mat.shirt, mat.black
     ]);
@@ -170,7 +170,7 @@ export class Ben {
 
   // No neck mesh: the head remains attached directly to the neck bone.
   // Hair is painted onto the cuboid head's faces.
-  const headMesh = box(joints.head, "BenHead", [0.37, 0.42, 0.32],
+  const headMesh = this.box(joints.head, "BenHead", [0.37, 0.42, 0.32],
     [0, 0.055, 0], [
       mat.hairSide, mat.hairSide, mat.hairTop, mat.skin,
       mat.hairFront, mat.hairBack
@@ -185,18 +185,18 @@ export class Ben {
     const wrist = joints[side + "Wrist"];
 
     // Upper sleeve overlaps the clavicle end and the forearm slightly.
-    box(shoulder, side + "BlackSleeve", [Math.abs(elbow.position.x) + 0.035, 0.22, 0.265],
+    this.box(shoulder, side + "BlackSleeve", [Math.abs(elbow.position.x) + 0.035, 0.22, 0.265],
       [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], [
         mat.black, mat.black, mat.sleeve, mat.black, mat.black, mat.black
       ]);
 
     // Forearm and hand are centered on the actual elbow-to-wrist span.
-    box(elbow, side + "SkinForearm", [Math.abs(wrist.position.x) + 0.035, 0.155, 0.175],
+    this.box(elbow, side + "SkinForearm", [Math.abs(wrist.position.x) + 0.035, 0.155, 0.175],
       [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], mat.skin);
     const handMaterials = side === "left"
       ? [mat.strap, mat.strap, mat.strap, mat.strap, mat.omnitrixFront, mat.strap]
       : mat.skin;
-    box(wrist, side + "SkinHand", [0.155, 0.145, 0.17],
+    this.box(wrist, side + "SkinHand", [0.155, 0.145, 0.17],
       [sign * 0.075, side === "left" ? 0.025 : 0, 0], handMaterials);
   }
 
@@ -209,16 +209,16 @@ export class Ben {
     // Extend the upper trouser panel above the thigh pivot so it physically
     // overlaps the waistband/pelvis. Keep its lower edge at the original
     // position so the knee seam and lower-leg proportions do not change.
-    box(thigh, side + "UpperTrouser", [0.205, 0.62, 0.215],
+    this.box(thigh, side + "UpperTrouser", [0.205, 0.62, 0.215],
       [0, -0.30, 0], mat.pants);
-    box(knee, side + "LowerTrouser", [0.17, 0.44, 0.20],
+    this.box(knee, side + "LowerTrouser", [0.17, 0.44, 0.20],
       [0, -0.215, 0], mat.pantsDark);
 
-    box(ankle, side + "WhiteTrainer", [0.205, 0.15, 0.31],
+    this.box(ankle, side + "WhiteTrainer", [0.205, 0.15, 0.31],
       [0, -0.065, 0.085], mat.white);
-    box(ankle, side + "TrainerSole", [0.21, 0.045, 0.315],
+    this.box(ankle, side + "TrainerSole", [0.21, 0.045, 0.315],
       [0, -0.145, 0.085], mat.sole);
-    box(ankle, side + "TrainerGreenToe", [0.13, 0.025, 0.035],
+    this.box(ankle, side + "TrainerGreenToe", [0.13, 0.025, 0.035],
       [0, -0.035, 0.235], mat.green);
   }
 
