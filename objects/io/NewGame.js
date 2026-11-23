@@ -49,7 +49,7 @@ export class NewGame {
   }
 
   initialize(omniverse = this.omniverse) {
-    if (!omniverse || this.initialized) return false;
+    if (!omniverse || (this.initialized && omniverse.state.currentScene === "earth")) return false;
     this.omniverse = omniverse;
     this.initialized = true;
 

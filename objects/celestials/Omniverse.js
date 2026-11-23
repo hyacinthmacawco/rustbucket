@@ -2,10 +2,6 @@ import * as THREE from "three";
 import { Title } from "../io/Title.js";
 import { Camera } from "../team/Camera.js";
 import { SolarSystem } from "./SolarSystem.js";
-import { AugstakaSystem } from "./AugstakaSystem.js";
-import { AnodyneSystem } from "./AnodyneSystem.js";
-import { GalvanSystem } from "./GalvanSystem.js";
-import { IncursiaSystem } from "./IncursiaSystem.js";
 import { Moon } from "./Moon.js";
 import { Augstaka } from "./Augstaka.js";
 import { Anodyne } from "./Anodyne.js";
@@ -81,13 +77,6 @@ export class Omniverse {
       getTarget: () => this.cameraTarget || new THREE.Vector3()
     });
 
-    this.systemClasses = {
-      solar: SolarSystem,
-      augstaka: AugstakaSystem,
-      anodyne: AnodyneSystem,
-      galvan: GalvanSystem,
-      incursia: IncursiaSystem
-    };
     this.planetClasses = {
       earth: Earth,
       moon: Moon,
