@@ -17,7 +17,11 @@ export class AnodyneInterior {
     treasury: 740000,
     revenue: 6500,
     expenses: 6100,
-    resources: [{"id":"mana-crystal","name":"Mana crystals","quantity":350},{"id":"raw-mana","name":"Raw mana","quantity":600},{"id":"healing-herbs","name":"Healing herbs","quantity":900}],
+    resources: [
+      { id: "mana-crystal", name: "Mana crystals", quantity: 350 },
+      { id: "raw-mana", name: "Raw mana", quantity: 600 },
+      { id: "healing-herbs", name: "Healing herbs", quantity: 900 }
+    ],
     wars: [],
     events: []
   };
@@ -173,13 +177,27 @@ export class AnodyneInterior {
     for (let index = 0; index < 34; index++) {
       const angle = index * Math.PI * 2 / 34;
       const radius = 38 + (index % 5) * 15;
-      const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(2 + (index % 4) * 0.7), new THREE.MeshStandardMaterial({ color: index % 2 ? 0xb94c68 : 0xf08c55, emissive: 0x351021, emissiveIntensity: 0.18 }));
+      const crystal = new THREE.Mesh(
+        new THREE.OctahedronGeometry(2 + (index % 4) * 0.7),
+        new THREE.MeshStandardMaterial({
+          color: index % 2 ? 0xb94c68 : 0xf08c55,
+          emissive: 0x351021,
+          emissiveIntensity: 0.18
+        })
+      );
       crystal.position.set(Math.cos(angle) * radius, 5 + (index % 6) * 5, Math.sin(angle) * radius);
       crystal.scale.y = 1.8;
       this.root.add(crystal);
     }
     for (let index = 0; index < 4; index++) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(28 + index * 13, 0.22, 8, 96), new THREE.MeshBasicMaterial({ color: this.world.accent, transparent: true, opacity: 0.28 }));
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(28 + index * 13, 0.22, 8, 96),
+        new THREE.MeshBasicMaterial({
+          color: this.world.accent,
+          transparent: true,
+          opacity: 0.28
+        })
+      );
       ring.rotation.x = Math.PI / 2;
       ring.position.y = 0.1 + index * 0.04;
       this.root.add(ring);
