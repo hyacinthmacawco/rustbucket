@@ -4,26 +4,28 @@ import { Galvan } from "../species/Galvan.js";
 
 export class PlanetPopulation {
   static HOME_PLANETS = {
-  Human: "earth",
-  Highbreed: "augstaka",
-  Anodite: "anodyne",
-  Galvan: "galvan",
-  Incursean: "incursia"
-};
+    Human: "earth",
+    Highbreed: "augstaka",
+    Anodite: "anodyne",
+    Galvan: "galvan",
+    Incursean: "incursia"
+  };
+
   static SPECIES_STYLE = {
-  Human: { skin: 0xc58d68, suit: 0x526c86, accent: 0xd7d9de },
-  Highbreed: { skin: 0xa8c89a, suit: 0x355e45, accent: 0xd7e7bc },
-  Anodite: { skin: 0xd99bc9, suit: 0x502b58, accent: 0xffa8df },
-  Galvan: { skin: 0x8fae68, suit: 0x334b37, accent: 0x74d9b6 },
-  Incursean: { skin: 0xc88b61, suit: 0x5b302b, accent: 0xe7a04f }
-};
+    Human: { skin: 0xc58d68, suit: 0x526c86, accent: 0xd7d9de },
+    Highbreed: { skin: 0xa8c89a, suit: 0x355e45, accent: 0xd7e7bc },
+    Anodite: { skin: 0xd99bc9, suit: 0x502b58, accent: 0xffa8df },
+    Galvan: { skin: 0x8fae68, suit: 0x334b37, accent: 0x74d9b6 },
+    Incursean: { skin: 0xc88b61, suit: 0x5b302b, accent: 0xe7a04f }
+  };
+
   static NAMES = {
-  Human: ["Mira","Jonas","Elena","Tomas","Rhea","Cal"],
-  Highbreed: ["Veyra","Ossan","Leth","Soryn","Vael","Ilyra"],
-  Anodite: ["Seren","Aural","Nim","Veya","Luma","Orris"],
-  Galvan: ["Azmuth","Krell","Pip","Zenn","Tork","Milo"],
-  Incursean: ["Attea","Krag","Vorn","Syla","Drex","Rakk"]
-};
+    Human: ["Mira", "Jonas", "Elena", "Tomas", "Rhea", "Cal"],
+    Highbreed: ["Veyra", "Ossan", "Leth", "Soryn", "Vael", "Ilyra"],
+    Anodite: ["Seren", "Aural", "Nim", "Veya", "Luma", "Orris"],
+    Galvan: ["Azmuth", "Krell", "Pip", "Zenn", "Tork", "Milo"],
+    Incursean: ["Attea", "Krag", "Vorn", "Syla", "Drex", "Rakk"]
+  };
 
   material(color) {
     return new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
