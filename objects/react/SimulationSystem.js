@@ -1,32 +1,39 @@
-const clamp = (n, min=0, max=100) => Math.max(min, Math.min(max, n));
-const ENTITY_NAMES = ["Ben","Gwen","Kevin","Rook","Highbreed","Incursean","Anodite","Galvan","Human"];
-const key = value => String(value).toLowerCase();
-const species = ["Highbreed","Incursean","Anodite","Galvan","Human"];
-const crew = ["Ben","Gwen","Kevin","Rook"];
+import { Ben } from "../team/Ben.js";
+import { Gwen } from "../team/Gwen.js";
+import { Kevin } from "../team/Kevin.js";
+import { Rook } from "../team/Rook.js";
+import { Highbreed } from "../species/Highbreed.js";
+import { Incursean } from "../species/Incursean.js";
+import { Anodite } from "../species/Anodite.js";
+import { Galvan } from "../species/Galvan.js";
+import { Human } from "../species/Human.js";
 
-const initialRelationships = {
-  Ben: { Highbreed:85, Incursean:20, Anodite:60, Galvan:90, Human:98, Gwen:92, Kevin:95, Rook:90 },
-  Gwen:{ Highbreed:60, Incursean:12, Anodite:80, Galvan:80, Human:84, Ben:90, Kevin:95, Rook:80 },
-  Kevin:{ Highbreed:70, Incursean:5, Anodite:43, Galvan:85, Human:70, Ben:95, Gwen:95, Rook:85 },
-  Rook:{ Highbreed:50, Incursean:15, Anodite:70, Galvan:90, Human:64, Ben:98, Gwen:80, Kevin:85 },
-  Highbreed:{ Ben:70,Gwen:65,Kevin:60,Rook:55,Incursean:18,Anodite:45,Galvan:58,Human:22 },
-  Incursean:{ Ben:35,Gwen:30,Kevin:25,Rook:28,Highbreed:18,Anodite:40,Galvan:55,Human:32 },
-  Anodite:{ Ben:75,Gwen:85,Kevin:50,Rook:70,Highbreed:45,Incursean:40,Galvan:65,Human:70 },
-  Galvan:{ Ben:90,Gwen:85,Kevin:88,Rook:92,Highbreed:58,Incursean:55,Anodite:65,Human:78 },
-  Human:{ Ben:98,Gwen:90,Kevin:75,Rook:64,Highbreed:22,Incursean:32,Anodite:70,Galvan:78 }
-};
+export class SimulationSystem {
+  static ENTITY_NAMES = ["Ben", "Gwen", "Kevin", "Rook", "Highbreed", "Incursean", "Anodite", "Galvan", "Human"];
+  static SPECIES = ["Highbreed", "Incursean", "Anodite", "Galvan", "Human"];
+  static CREW = ["Ben", "Gwen", "Kevin", "Rook"];
+  static ENTITY_CLASSES = { Ben, Gwen, Kevin, Rook, Highbreed, Incursean, Anodite, Galvan, Human };
 
-const initialEntities = Object.fromEntries(Object.entries(initialRelationships).map(([name, relationships]) => [
-  name,
-  { relationships: Object.fromEntries(Object.entries(relationships).map(([other, value]) => [other, value * 2 - 100])) }
-]));
-for (const speciesName of ["Highbreed", "Incursean", "Galvan"]) {
-  initialEntities.Anodite.relationships[speciesName] = 3;
-  initialEntities[speciesName].relationships.Anodite = 3;
-}
+  static clamp(value, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, value));
+  }
 
-const defaults = {
-  entities: initialEntities,
+  static key(value) {
+    return String(value).toLowerCase();
+  }
+
+  static createInitialEntities() {
+    return Object.fromEntries(
+      this.ENTITY_NAMES.map(name => [
+        name,
+        { relationships: { ...(this.ENTITY_CLASSES[name].relationships || {}) } }
+      ])
+    );
+  }
+
+  static createDefaults() {
+    return {
+  entities: this.createInitialEntities(),
   populations: { Highbreed:820, Incursean:540, Anodite:180, Galvan:240, Human:810 },
   treasury: { Highbreed:920000, Incursean:510000, Anodite:740000, Galvan:1250000, Human:1800000 },
   revenue: { Highbreed:12500, Incursean:9200, Anodite:6500, Galvan:18000, Human:22000 },
@@ -46,9 +53,31 @@ const defaults = {
   },
   transactions: [],
   eventLog: []
-};
+}
+  }
 
-function loadData() {
+  constructor() {
+    this.species = SimulationSystem.SPECIES;
+    this.crew = SimulationSystem.CREW;
+    this.data = this.loadData();
+    this.healthEnergy = {
+      Ben: { health: 100, energy: 100, energyLabel: "OMNITRIX" },
+      Chromastone: { health: 100, energy: 100, energyLabel: "CHROMASTONE" },
+      Gwen: { health: 100, energy: 100, energyLabel: "MANA" },
+      Kevin: { health: 100, energy: 100, energyLabel: "ABSORBED MATERIAL" },
+      Rook: { health: 100, energy: 100, energyLabel: "PROTO-TOOL" },
+      Rustbucket: { health: 100, energy: this.data.team.fuel, energyLabel: "FUEL" }
+    };
+    this.elapsed = 0;
+    this.healthRecoveryDelay = Object.fromEntries(Object.keys(this.healthEnergy).map(name => [name, 0]));
+    this.energyRecoveryDelay = Object.fromEntries(Object.keys(this.healthEnergy).map(name => [name, 0]));
+    this.chromastoneActive = false;
+    this.lastHostileAt = 0;
+    this._onEvent = () => {};
+  }
+
+loadData() {
+    const defaults = SimulationSystem.createDefaults();
   try {
     const saved = JSON.parse(localStorage.getItem("rustbucket.simulation") || localStorage.getItem("rustbucket.phase2"));
     if (saved) {
@@ -57,7 +86,7 @@ function loadData() {
         populations:{...structuredClone(defaults.populations),...(saved.populations||{})},
         entities: {}
       };
-      for (const name of ENTITY_NAMES) {
+      for (const name of SimulationSystem.ENTITY_NAMES) {
         const base = structuredClone(defaults.entities[name] || {relationships:{}});
         const savedEntity = saved.entities?.[name] || {};
         const legacy = Object.fromEntries(Object.entries(saved.relationships?.[name] || {}).map(([other,value]) => [other, Number(value) * 2 - 100]));
@@ -72,208 +101,190 @@ function loadData() {
         merged.entities.Anodite.relationships[speciesName] = 3;
         merged.entities[speciesName].relationships.Anodite = 3;
       }
-      for (const name of species) merged.populations[name] = clamp(Number(merged.populations[name]) || 0, 0, 999);
+      for (const name of SimulationSystem.SPECIES) merged.populations[name] = SimulationSystem.clamp(Number(merged.populations[name]) || 0, 0, 999);
       return merged;
     }
   } catch (error) { console.warn("Simulation save could not be read", error); }
   return structuredClone(defaults);
 }
 
-function createSimulationSystem() {
-  const data = loadData();
-  const healthEnergy = {
-    Ben:{health:100,energy:100,energyLabel:"OMNITRIX"},
-    Chromastone:{health:100,energy:100,energyLabel:"CHROMASTONE"},
-    Gwen:{health:100,energy:100,energyLabel:"MANA"},
-    Kevin:{health:100,energy:100,energyLabel:"ABSORBED MATERIAL"},
-    Rook:{health:100,energy:100,energyLabel:"PROTO-TOOL"},
-    Rustbucket:{health:100,energy:data.team.fuel,energyLabel:"FUEL"}
-  };
-  let elapsed = 0;
-  const healthRecoveryDelay = Object.fromEntries(Object.keys(healthEnergy).map(name => [name, 0]));
-  const energyRecoveryDelay = Object.fromEntries(Object.keys(healthEnergy).map(name => [name, 0]));
-  let chromastoneActive = false;
-  let lastHostileAt = 0;
-  let onEvent = () => {};
-
-  function save() {
-    try { localStorage.setItem("rustbucket.simulation", JSON.stringify(data)); }
+save() {
+    try { localStorage.setItem("rustbucket.simulation", JSON.stringify(this.data)); }
     catch (error) { console.warn("Simulation save could not be stored", error); }
   }
-  function getRelationship(from,to) {
+
+getRelationship(from,to) {
     if (from === to) return 0;
-    return Math.max(-100,Math.min(100,Number(data.entities[from]?.relationships?.[to] ?? 0)));
+    return Math.max(-100,Math.min(100,Number(this.data.entities[from]?.relationships?.[to] ?? 0)));
   }
-  function setRelationship(from,to,value) {
+
+setRelationship(from,to,value) {
     if (from === to) return;
-    if (!data.entities[from]) data.entities[from] = {relationships:{}};
-    if (!data.entities[from].relationships) data.entities[from].relationships = {};
-    data.entities[from].relationships[to] = Math.max(-100,Math.min(100,Number(value)||0));
-    save();
+    if (!this.data.entities[from]) this.data.entities[from] = {relationships:{}};
+    if (!this.data.entities[from].relationships) this.data.entities[from].relationships = {};
+    this.data.entities[from].relationships[to] = Math.max(-100,Math.min(100,Number(value)||0));
+    this.save();
   }
-  function canTrade(from,to) { return getRelationship(from,to) >= -30; }
-  function isHostile(from,to) { return getRelationship(from,to) < -30; }
-  function recordEvent(type, description, details={}) {
-    const event={id:Date.now()+"-"+Math.random().toString(36).slice(2,7),type,description,details,at:new Date().toISOString(),status:"active"};
-    data.eventLog.unshift(event);
-    data.eventLog=data.eventLog.slice(0,60);
-    onEvent(event); save(); return event;
-  }
-  function startWar(attacker,defender) {
-    if (attacker===defender || !species.includes(attacker) || !species.includes(defender)) return null;
-    if (!isHostile(attacker,defender)) setRelationship(attacker,defender,-55);
-    const loot=Math.min(data.treasury[defender]||0,Math.max(100,Math.round((data.treasury[defender]||0)*0.025)));
-    data.treasury[defender]=Math.max(0,(data.treasury[defender]||0)-loot);
-    data.treasury[attacker]=(data.treasury[attacker]||0)+loot;
-    const stock=(data.resources[defender]||[]).find(item=>item.quantity>0);
+
+canTrade(from,to) { return this.getRelationship(from,to) >= -30; }
+
+isHostile(from,to) { return this.getRelationship(from,to) < -30; }
+
+recordEvent(type, description, details={}
+
+startWar(attacker,defender) {
+    if (attacker===defender || !this.species.includes(attacker) || !this.species.includes(defender)) return null;
+    if (!this.isHostile(attacker,defender)) this.setRelationship(attacker,defender,-55);
+    const loot=Math.min(this.data.treasury[defender]||0,Math.max(100,Math.round((this.data.treasury[defender]||0)*0.025)));
+    this.data.treasury[defender]=Math.max(0,(this.data.treasury[defender]||0)-loot);
+    this.data.treasury[attacker]=(this.data.treasury[attacker]||0)+loot;
+    const stock=(this.data.resources[defender]||[]).find(item=>item.quantity>0);
     let seized=null;
     if(stock){
       const quantity=Math.min(stock.quantity,Math.max(1,Math.floor(stock.quantity*0.01)));
       stock.quantity-=quantity;
-      const target=(data.resources[attacker]||[]).find(item=>item.id===stock.id);
+      const target=(this.data.resources[attacker]||[]).find(item=>item.id===stock.id);
       if(target)target.quantity+=quantity;
-      else (data.resources[attacker]||(data.resources[attacker]=[])).push({...stock,quantity});
+      else (this.data.resources[attacker]||(this.data.resources[attacker]=[])).push({...stock,quantity});
       seized={resource:stock.name,quantity};
     }
-    return recordEvent("war",attacker+" has declared war on "+defender+" to seize Taydenite and resources.",{attacker,defender,loot,seized});
+    return this.recordEvent("war",attacker+" has declared war on "+defender+" to seize Taydenite and resources.",{attacker,defender,loot,seized});
   }
-  function update(dt, selected="Ben", location="earth", isNearHome=false) {
-    elapsed+=dt;
-    for (const [name,status] of Object.entries(healthEnergy)) {
-      healthRecoveryDelay[name] = Math.max(0,healthRecoveryDelay[name] - dt);
-      energyRecoveryDelay[name] = Math.max(0,energyRecoveryDelay[name] - dt);
-      if (healthRecoveryDelay[name] <= 0 && status.health < 100) status.health = Math.min(100,status.health + dt * 0.32);
-      if (energyRecoveryDelay[name] <= 0 && status.energy < 100) status.energy = Math.min(100,status.energy + dt * 0.48);
-      if (name === "Rustbucket") data.team.fuel = status.energy;
+
+update(dt, selected="Ben", location="earth", isNearHome=false) {
+    this.elapsed+=dt;
+    for (const [name,status] of Object.entries(this.healthEnergy)) {
+      this.healthRecoveryDelay[name] = Math.max(0,this.healthRecoveryDelay[name] - dt);
+      this.energyRecoveryDelay[name] = Math.max(0,this.energyRecoveryDelay[name] - dt);
+      if (this.healthRecoveryDelay[name] <= 0 && status.health < 100) status.health = Math.min(100,status.health + dt * 0.32);
+      if (this.energyRecoveryDelay[name] <= 0 && status.energy < 100) status.energy = Math.min(100,status.energy + dt * 0.48);
+      if (name === "Rustbucket") this.data.team.fuel = status.energy;
     }
     const now=Date.now();
-    for(const event of data.eventLog){
+    for(const event of this.data.eventLog){
       if(event.status==="active"&&now-Date.parse(event.at)>90000){
         event.status="ended";event.endedAt=new Date(now).toISOString();
       }
     }
-    if (elapsed>=30) {
-      elapsed=0;
-      for (const name of species) {
-        const growth=(data.populations[name]||0)*0.00002;
-        const warLoss=data.eventLog.some(e=>e.type==="war"&&e.status==="active"&&(e.details.attacker===name||e.details.defender===name)) ? (data.populations[name]||0)*0.00001 : 0;
-        data.populations[name]=clamp(Math.round(data.populations[name]+growth-warLoss),0,999);
-        const net=(data.revenue[name]||0)-(data.expenses[name]||0);
-        data.treasury[name]=Math.max(0,(data.treasury[name]||0)+net);
-        if (data.expenses[name] > data.revenue[name]*1.5 && Math.random()<0.22) {
-          const candidates=species.filter(other=>other!==name);
+    if (this.elapsed>=30) {
+      this.elapsed=0;
+      for (const name of this.species) {
+        const growth=(this.data.populations[name]||0)*0.00002;
+        const warLoss=this.data.eventLog.some(e=>e.type==="war"&&e.status==="active"&&(e.details.attacker===name||e.details.defender===name)) ? (this.data.populations[name]||0)*0.00001 : 0;
+        this.data.populations[name]=SimulationSystem.clamp(Math.round(this.data.populations[name]+growth-warLoss),0,999);
+        const net=(this.data.revenue[name]||0)-(this.data.expenses[name]||0);
+        this.data.treasury[name]=Math.max(0,(this.data.treasury[name]||0)+net);
+        if (this.data.expenses[name] > this.data.revenue[name]*1.5 && Math.random()<0.22) {
+          const candidates=this.species.filter(other=>other!==name);
           const target=candidates[Math.floor(Math.random()*candidates.length)];
-          startWar(name,target);
+          this.startWar(name,target);
         }
       }
-      save();
+      this.save();
     }
-    const person=crew.includes(selected)?selected:null;
-    const worldSpecies=species.find(name=>key(name)===key(location));
-    if (person && isNearHome && worldSpecies && isHostile(person,worldSpecies) && elapsed-lastHostileAt>12) {
-      lastHostileAt=elapsed;
-      setHealth(person,healthEnergy[person].health-8);
-      recordEvent("attack",worldSpecies+" forces attacked "+person+" in "+worldSpecies+" territory.",{attacker:worldSpecies,target:person});
+    const person=this.crew.includes(selected)?selected:null;
+    const worldSpecies=this.species.find(name=>SimulationSystem.key(name)===SimulationSystem.key(location));
+    if (person && isNearHome && worldSpecies && this.isHostile(person,worldSpecies) && this.elapsed-this.lastHostileAt>12) {
+      this.lastHostileAt=this.elapsed;
+      this.setHealth(person,this.healthEnergy[person].health-8);
+      this.recordEvent("attack",worldSpecies+" forces attacked "+person+" in "+worldSpecies+" territory.",{attacker:worldSpecies,target:person});
     }
-    if (worldSpecies && elapsed-lastHostileAt>12) {
-      const rival=species.find(name=>name!==worldSpecies&&isHostile(worldSpecies,name));
-      if(rival){lastHostileAt=elapsed;recordEvent("attack",worldSpecies+" forces engaged "+rival+" near the homeworld.",{attacker:worldSpecies,target:rival});}
+    if (worldSpecies && this.elapsed-this.lastHostileAt>12) {
+      const rival=this.species.find(name=>name!==worldSpecies&&this.isHostile(worldSpecies,name));
+      if(rival){this.lastHostileAt=this.elapsed;this.recordEvent("attack",worldSpecies+" forces engaged "+rival+" near the homeworld.",{attacker:worldSpecies,target:rival});}
     }
   }
-  function getStatus(name) { return healthEnergy[name] || healthEnergy.Ben; }
-  function setHealth(name,value) {
-    const s=getStatus(name), next=clamp(value);
-    if (next < s.health) healthRecoveryDelay[name] = 4;
+
+getStatus(name) { return this.healthEnergy[name] || this.healthEnergy.Ben; }
+
+setHealth(name,value) {
+    const s=this.getStatus(name), next=SimulationSystem.clamp(value);
+    if (next < s.health) this.healthRecoveryDelay[name] = 4;
     s.health = next;
   }
-  function setEnergy(name,value) {
-    const s=getStatus(name), next=clamp(value);
-    if (next < s.energy) energyRecoveryDelay[name] = 4;
+
+setEnergy(name,value) {
+    const s=this.getStatus(name), next=SimulationSystem.clamp(value);
+    if (next < s.energy) this.energyRecoveryDelay[name] = 4;
     s.energy = next;
-    if (name === "Rustbucket") data.team.fuel = next;
+    if (name === "Rustbucket") this.data.team.fuel = next;
   }
-  function spendEnergy(name,amount) {
-    const s=getStatus(name);if(s.energy<amount)return false;
-    setEnergy(name,s.energy-amount);return true;
+
+spendEnergy(name,amount) {
+    const s=this.getStatus(name);if(s.energy<amount)return false;
+    this.setEnergy(name,s.energy-amount);return true;
   }
-  function tradeWithSpecies(character,speciesName,resourceId,quantity=1) {
-    const stock=(data.resources[speciesName]||[]).find(x=>x.id===resourceId);
+
+tradeWithSpecies(character,speciesName,resourceId,quantity=1) {
+    const stock=(this.data.resources[speciesName]||[]).find(x=>x.id===resourceId);
     if(!stock||quantity<1||stock.quantity<quantity)return {ok:false,reason:"Insufficient stock."};
-    if(!canTrade(character,speciesName))return {ok:false,reason:"Trade denied: relationship below 30%."};
+    if(!this.canTrade(character,speciesName))return {ok:false,reason:"Trade denied: relationship below 30%."};
     const cost=stock.price*quantity;
-    if(data.team.cash<cost)return {ok:false,reason:"Insufficient Taydenite."};
-    stock.quantity-=quantity;data.team.cash-=cost;
-    data.revenue[speciesName]=(data.revenue[speciesName]||0)+cost;
-    data.treasury[speciesName]=(data.treasury[speciesName]||0)+cost;
-    addItem({id:stock.id,name:stock.name,category:"Trade goods",value:stock.price},quantity);
-    data.transactions.unshift({type:"purchase",from:speciesName,item:stock.name,quantity,cost,at:new Date().toISOString()});
-    data.transactions=data.transactions.slice(0,100);save();
-    recordEvent("trade",character+" purchased "+quantity+" "+stock.name+" from "+speciesName+".",{character,species:speciesName,cost});
+    if(this.data.team.cash<cost)return {ok:false,reason:"Insufficient Taydenite."};
+    stock.quantity-=quantity;this.data.team.cash-=cost;
+    this.data.revenue[speciesName]=(this.data.revenue[speciesName]||0)+cost;
+    this.data.treasury[speciesName]=(this.data.treasury[speciesName]||0)+cost;
+    this.addItem({id:stock.id,name:stock.name,category:"Trade goods",value:stock.price},quantity);
+    this.data.transactions.unshift({type:"purchase",from:speciesName,item:stock.name,quantity,cost,at:new Date().toISOString()});
+    this.data.transactions=this.data.transactions.slice(0,100);this.save();
+    this.recordEvent("trade",character+" purchased "+quantity+" "+stock.name+" from "+speciesName+".",{character,this.species:speciesName,cost});
     return {ok:true,cost};
   }
-  function addItem(item,quantity=1) {
-    const found=data.team.inventory.find(x=>x.id===item.id);
-    if(found)found.quantity+=quantity;else data.team.inventory.push({...item,quantity});
-    save();
+
+addItem(item,quantity=1) {
+    const found=this.data.team.inventory.find(x=>x.id===item.id);
+    if(found)found.quantity+=quantity;else this.data.team.inventory.push({...item,quantity});
+    this.save();
   }
-  function removeItem(id,quantity=1) {
-    const item=data.team.inventory.find(x=>x.id===id);
+
+removeItem(id,quantity=1) {
+    const item=this.data.team.inventory.find(x=>x.id===id);
     if(!item||item.quantity<quantity)return false;
     item.quantity-=quantity;
-    if(item.quantity===0)data.team.inventory=data.team.inventory.filter(x=>x.id!==id);
-    save();return true;
+    if(item.quantity===0)this.data.team.inventory=this.data.team.inventory.filter(x=>x.id!==id);
+    this.save();return true;
   }
-  function moveItemToCharacter(id,character,quantity=1) {
-    const item=data.team.inventory.find(x=>x.id===id);
+
+moveItemToCharacter(id,character,quantity=1) {
+    const item=this.data.team.inventory.find(x=>x.id===id);
     if(!item||item.quantity<quantity)return false;
     item.quantity-=quantity;
-    if(item.quantity===0)data.team.inventory=data.team.inventory.filter(x=>x.id!==id);
-    const carried=data.team.carried[character]||(data.team.carried[character]=[]);
+    if(item.quantity===0)this.data.team.inventory=this.data.team.inventory.filter(x=>x.id!==id);
+    const carried=this.data.team.carried[character]||(this.data.team.carried[character]=[]);
     carried.push(item.name+(quantity>1?" ×"+quantity:""));
-    save();return true;
+    this.save();return true;
   }
-  function moveItemToShip(character,index) {
-    const carried=data.team.carried[character]||[];
+
+moveItemToShip(character,index) {
+    const carried=this.data.team.carried[character]||[];
     if(index<0||index>=carried.length)return false;
     const name=carried.splice(index,1)[0];
-    addItem({id:key(name).replace(/[^a-z0-9]+/g,"-"),name,weight:1,category:"Recovered"});
-    save();return true;
+    this.addItem({id:SimulationSystem.key(name).replace(/[^a-z0-9]+/g,"-"),name,weight:1,category:"Recovered"});
+    this.save();return true;
   }
-  function useCarriedItem(character,index) {
-    const carried=data.team.carried[character]||[];
+
+useCarriedItem(character,index) {
+    const carried=this.data.team.carried[character]||[];
     const item=carried[index];
     if(!item)return {ok:false,reason:"No item selected."};
     const name=item.toLowerCase();
-    if(name.includes("medkit"))setHealth(character,getStatus(character).health+35);
-    else if(name.includes("energy cell"))recharge(character==="Ben"&&chromastoneActive?"Chromastone":character,30);
+    if(name.includes("medkit"))this.setHealth(character,this.getStatus(character).health+35);
+    else if(name.includes("energy cell"))this.recharge(character==="Ben"&&this.chromastoneActive?"Chromastone":character,30);
     else return {ok:false,reason:"This item has no direct-use action yet."};
-    carried.splice(index,1);save();return {ok:true};
+    carried.splice(index,1);this.save();return {ok:true};
   }
-  function getChromastoneActive(){return chromastoneActive;}
-  function setChromastoneActive(value){chromastoneActive=Boolean(value);}
-  function consumeFuel(amount){const status=getStatus("Rustbucket");if(status.energy<amount)return false;setEnergy("Rustbucket",status.energy-amount);save();return true;}
-  function damage(name,amount){setHealth(name,getStatus(name).health-amount);}
-  function recharge(name,amount){setEnergy(name,getStatus(name).energy+amount);}
-  return {
-    data, ENTITY_NAMES, crew, species, healthEnergy, getRelationship,setRelationship,canTrade,isHostile,
-    recordEvent,startWar,update,getStatus,setHealth,setEnergy,spendEnergy,addItem,removeItem,moveItemToCharacter,moveItemToShip,useCarriedItem,tradeWithSpecies,
-    getChromastoneActive,setChromastoneActive,damage,recharge,consumeFuel,save,
-    set onEvent(fn){onEvent=fn||(()=>{});}
-  };
-}
 
+getChromastoneActive(){return this.chromastoneActive;}
 
+setChromastoneActive(value){this.chromastoneActive=Boolean(value);}
 
-export class SimulationSystem {
-  constructor() {
-    this.system = createSimulationSystem();
-    return new Proxy(this, {
-      get: (target, property) => property in target ? target[property] : target.system[property],
-      set: (target, property, value) => {
-        if (property in target) target[property] = value;
-        else target.system[property] = value;
-        return true;
-      }
-    });
+consumeFuel(amount){const status=this.getStatus("Rustbucket");if(status.energy<amount)return false;this.setEnergy("Rustbucket",status.energy-amount);this.save();return true;}
+
+damage(name,amount){this.setHealth(name,this.getStatus(name).health-amount);}
+
+recharge(name,amount){this.setEnergy(name,this.getStatus(name).energy+amount);}
+
+  set onEvent(callback) {
+    this._onEvent = callback || (() => {});
   }
 }

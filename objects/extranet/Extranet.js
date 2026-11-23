@@ -1,60 +1,77 @@
-export function createExtranet({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {}, onJumpSystem = () => {} } = {}) {
-  const root = document.createElement("section");
-  root.id = "extranet-overlay";
-  root.innerHTML = `
+export class Extranet {
+  constructor({ onContinue = () => {}, onComplete = () => {}, simulation = null, onData = () => {}, onJumpSystem = () => {} } = {}) {
+  this.simulation = simulation;
+  const root = this.root = document.createElement("section");
+  this.root.id = "extranet-overlay";
+  this.root.innerHTML = `
     <div id="extranet-window">
       <nav id="extranet-toolbar"><button id="extranet-back" aria-label="Back">BACK</button><input id="extranet-address" aria-label="Web address" value="extranet://home"><button id="extranet-home" aria-label="Home">HOME</button><button id="extranet-close" aria-label="Close">CLOSE</button></nav>
       <main id="extranet-page"></main>
     </div>`;
   document.body.appendChild(root);
-  const page = root.querySelector("#extranet-page");
-  const address = root.querySelector("#extranet-address");
-  const relationshipNames = ["Ben","Gwen","Kevin","Rook","Highbreed","Incursean","Anodite","Galvan","Human"];
-  const photos = [];
-  let current = "home";
-  let completed = false;
-  let storedCount = 0;
-  let completionPresented = false;
-  let completionValues = [];
-  let currentLocation = "earth";
+  this.styles = {
+    root: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", padding: "max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left))", background: "rgba(0, 8, 4, .72)", zIndex: "100" },
+    window: { width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid rgba(126,255,168,.42)", borderRadius: "12px", background: "rgba(3, 18, 10, .94)", boxShadow: "0 0 45px rgba(56,255,128,.14)" },
+    toolbar: { display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderBottom: "1px solid rgba(126,255,168,.22)", background: "rgba(7,32,17,.94)" },
+    button: { padding: "9px 12px", border: "1px solid rgba(126,255,168,.38)", borderRadius: "5px", background: "rgba(7,42,22,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" },
+    address: { flex: "1", minWidth: "0", padding: "9px 12px", border: "1px solid rgba(126,255,168,.25)", borderRadius: "5px", background: "rgba(0,10,5,.7)", color: "#baffcb", font: "inherit" },
+    page: { flex: "1", minHeight: "0", overflow: "auto", color: "#eaffef", fontFamily: "Industry, sans-serif" }
+  };
+  Object.assign(this.root.style, this.styles.root);
+  Object.assign(this.root.querySelector("#extranet-window").style, this.styles.window);
+  Object.assign(this.root.querySelector("#extranet-toolbar").style, this.styles.toolbar);
+  this.root.querySelectorAll("#extranet-toolbar button").forEach(button => Object.assign(button.style, this.styles.button));
 
-  function home() {
-    current = "home"; address.value = "extranet://home";
-    page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private"><span><b>Private Cloud</b></span></button><button data-url="omnidata"><span><b>Omnidata</b></span></button></div>`;
-    page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? privateCloud() : omnidata()));
+  const page = this.page = this.root.querySelector("#extranet-page");
+  const address = this.address = this.root.querySelector("#extranet-address");
+  Object.assign(this.address.style, this.styles.address);
+  Object.assign(this.page.style, this.styles.page);
+  this.relationshipNames = ["Ben","Gwen","Kevin","Rook","Highbreed","Incursean","Anodite","Galvan","Human"];
+  this.photos = [];
+  this.current = "home";
+  this.completed = false;
+  this.storedCount = 0;
+  this.completionPresented = false;
+  this.completionValues = [];
+  this.currentLocation = "earth";
+
+  this.home = () => {
+    this.current = "home"; this.address.value = "extranet://home";
+    this.page.innerHTML = `<div class="extranet-bookmarks"><button data-url="private"><span><b>Private Cloud</b></span></button><button data-url="omnidata"><span><b>Omnidata</b></span></button></div>`;
+    this.page.querySelectorAll("[data-url]").forEach(b => b.addEventListener("click", () => b.dataset.url === "private" ? this.privateCloud() : this.omnidata()));
   }
-  function privateCloud() {
-    current = "private"; address.value = "ottps://bgkr.omnicloud.com";
-    page.innerHTML = '<div class="cloud-links">' +
+  this.privateCloud = () => {
+    this.current = "private"; this.address.value = "ottps://bgkr.omnicloud.com";
+    this.page.innerHTML = '<div class="cloud-links">' +
       '<button data-page="tasks"><span><b>Tasks</b></span></button>' +
       '<button data-page="relationships"><span><b>Relationships</b></span></button>' +
       '<button data-page="memories"><span><b>Memories</b></span></button>' +
       '<button data-page="accounts"><span><b>Accounts</b></span></button>' +
       '<button data-page="inventory"><span><b>Inventory</b></span></button>' +
       '<button data-page="event-log"><span><b>Event Log</b></span></button></div>';
-    page.querySelectorAll("[data-page]").forEach(button => button.addEventListener("click", () => {
+    this.page.querySelectorAll("[data-page]").forEach(button => button.addEventListener("click", () => {
       const target = button.dataset.page;
       const views = { accounts: "accounting", inventory: "items", "event-log": "events" };
       if (views[target]) {
-        current = target;
-        address.value = "ottps://bgkr.omnicloud.com/" + target;
+        this.current = target;
+        this.address.value = "ottps://bgkr.omnicloud.com/" + target;
         onData(page, views[target]);
       } else ({ tasks, relationships: showRelationships, memories })[target]();
     }));
   }
 
-  function tasks() {
-    current = "tasks"; address.value = "ottps://bgkr.omnicloud.com/tasks";
-    const count = storedCount;
-    page.innerHTML = `<article class="task-card"><h2>Put suitcases into Rustbucket</h2><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
-    if (completed) showCompletion();
+  this.tasks = () => {
+    this.current = "tasks"; this.address.value = "ottps://bgkr.omnicloud.com/tasks";
+    const count = this.storedCount;
+    this.page.innerHTML = `<article class="task-card"><h2>Put suitcases into Rustbucket</h2><div class="task-progress"><span style="width:${count*25}%"></span></div><b>${count}/4 SUITCASES STORED</b></article>`;
+    if (this.completed) this.showCompletion();
   }
-  function showRelationships() {
-    current = "relationships";
-    address.value = "ottps://bgkr.omnicloud.com/relationships";
-    const header = "<thead><tr><th>FROM / TO</th>" + relationshipNames.map(name => "<th>" + name + "</th>").join("") + "</tr></thead>";
-    const body = relationshipNames.map(from => {
-      const cells = relationshipNames.map(to => {
+  this.showRelationships = () => {
+    this.current = "relationships";
+    this.address.value = "ottps://bgkr.omnicloud.com/relationships";
+    const header = "<thead><tr><th>FROM / TO</th>" + this.relationshipNames.map(name => "<th>" + name + "</th>").join("") + "</tr></thead>";
+    const body = this.relationshipNames.map(from => {
+      const cells = this.relationshipNames.map(to => {
         const value = from === to ? 0 : (simulation?.getRelationship(from, to) ?? 0);
         const fillLeft = value >= 0 ? 50 : 50 + value / 2;
         const fillWidth = Math.abs(value) / 2;
@@ -63,16 +80,16 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
       }).join("");
       return "<tr><th>" + from + "</th>" + cells + "</tr>";
     }).join("");
-    page.innerHTML = "<div class=\"relationship-matrix-wrap\"><table class=\"relationship-matrix\">" + header + "<tbody>" + body + "</tbody></table></div>";
+    this.page.innerHTML = "<div class=\"relationship-matrix-wrap\"><table class=\"relationship-matrix\">" + header + "<tbody>" + body + "</tbody></table></div>";
   }
 
-  function memories() {
-    current = "memories"; address.value = "ottps://bgkr.omnicloud.com/memories";
-    page.innerHTML = `<button id="capture-memory" class="cloud-action">CAPTURE SCREEN</button><div id="memory-grid">${photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
-    page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
+  this.memories = () => {
+    this.current = "memories"; this.address.value = "ottps://bgkr.omnicloud.com/memories";
+    this.page.innerHTML = `<button id="capture-memory" class="cloud-action">CAPTURE SCREEN</button><div id="memory-grid">${this.photos.map((src,i)=>`<figure><img src="${src}" alt="Captured memory ${i+1}"></figure>`).join("")}</div>`;
+    this.page.querySelector("#capture-memory").addEventListener("click", capturePhoto);
   }
-  function omnidata(allowSystemJump = false) {
-    current = "omnidata"; address.value = "ottps://en.omnidata.org";
+  this.omnidata = (allowSystemJump = false) => {
+    this.current = "omnidata"; this.address.value = "ottps://en.omnidata.org";
     const systems = {
       solar: {name:"SOLAR SYSTEM", body:"Earth, the Moon, Mars and other known worlds orbit the Sun. Earth is the team's homeworld.", worlds:"Earth • Moon • Mars • Saturn • Pluto", status:"ACTIVE / HOME SYSTEM", source:"https://ben10.fandom.com/wiki/Solar_System"},
       highbreed: {name:"HIGHBREED HOMEWORLD", body:"Augstaka is the Highbreed homeworld. It is described as a temperate world with rolling green hills, coastal waters and large cities. At least one moon is known; the wiki does not give this system a canonical name.", worlds:"Augstaka • at least one moon", status:"ACTIVE / AUGSTAKA", source:"https://ben10.fandom.com/wiki/Augstaka"},
@@ -80,7 +97,7 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
       anodite: {name:"ANODITE HOMEWORLD", body:"Anodyne is the home planet of the Anodites. From space it appears dark red, with orange rings; the wiki does not give this system a canonical name.", worlds:"Anodyne", status:"ACTIVE / ANODYNE", source:"https://ben10.fandom.com/wiki/Anodyne"},
       galvan: {name:"GALVAN STAR SYSTEM", body:"Galvan is the system's star. Galvan Prime is the Galvan homeworld; Galvan B is its moon and home of the Galvanic Mechamorphs.", worlds:"Galvan • Galvan Prime • Galvan B", status:"ACTIVE / GALVAN PRIME", source:"https://ben10.fandom.com/wiki/Galvan_Star_System_(Classic)"}
     };
-    page.innerHTML = `<div id="omnidata-layout">
+    this.page.innerHTML = `<div id="omnidata-layout">
         <div id="omnidata-map-wrap">
           <svg id="omnidata-map" viewBox="0 0 900 520" role="img" aria-label="Omnidata directory of five separate Ben 10 star systems">
             <defs><radialGradient id="omni-nebula"><stop stop-color="#174d35" stop-opacity=".42"/><stop offset="1" stop-color="#07140f" stop-opacity="0"/></radialGradient></defs>
@@ -93,62 +110,62 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
             <g class="omni-node" data-system="galvan" tabindex="0" role="button" aria-label="Galvan Star System"><circle class="omni-halo" cx="770" cy="280" r="30"/><circle class="omni-core galvan" cx="770" cy="280" r="10"/><text x="770" y="324" text-anchor="middle">GALVAN</text></g>
             <g class="omni-node" data-system="anodite" tabindex="0" role="button" aria-label="Anodite System"><circle class="omni-halo" cx="565" cy="425" r="30"/><circle class="omni-core anodite" cx="565" cy="425" r="10"/><text x="565" y="469" text-anchor="middle">ANODITE</text></g>
           </svg>
-          <div id="omnidata-current-location"></div>
+          <div id="omnidata-this.current-location"></div>
         </div>
         <aside id="omnidata-detail"></aside>
       </div>`;
-    const detail = page.querySelector("#omnidata-detail");
+    const detail = this.page.querySelector("#omnidata-detail");
     const selectSystem = key => {
       const item = systems[key]; if (!item) return;
-      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
+      this.page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("selected",node.dataset.system===key));
       detail.innerHTML = "<h2>" + item.name + "</h2><p>" + item.body + "</p><div class=\"omni-worlds\">" + item.worlds + "</div><p class=\"omni-status\">" + item.status + "</p>" + (allowSystemJump ? '<button id="omnidata-jump" type="button">JUMP TO SYSTEM</button>' : "");
       if (allowSystemJump) detail.querySelector("#omnidata-jump").addEventListener("click",()=>onJumpSystem(key));
     };
-    page.querySelectorAll(".omni-node").forEach(node => {
+    this.page.querySelectorAll(".omni-node").forEach(node => {
       node.addEventListener("click",()=>selectSystem(node.dataset.system));
       node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectSystem(node.dataset.system);}});
     });
     selectSystem("solar");
-    setLocation(currentLocation);
+    this.setLocation(this.currentLocation);
   }
-  function setLocation(location) {
+  this.setLocation = (location) => {
     const labels = {space:"SOLAR SYSTEM",earth:"EARTH • BELLWOOD",moon:"THE MOON",augstaka:"AUGSTAKA",anodyne:"ANODYNE",galvan:"GALVAN PRIME",incursia:"INCURSIA"};
     const nextLocation = labels[location] ? location : "earth";
-    const changed = nextLocation !== currentLocation;
-    currentLocation = nextLocation;
-    const marker = page.querySelector("#omnidata-current-location");
-    const label = labels[currentLocation];
+    const changed = nextLocation !== this.currentLocation;
+    this.currentLocation = nextLocation;
+    const marker = this.page.querySelector("#omnidata-this.current-location");
+    const label = labels[this.currentLocation];
     const markerChanged = Boolean(marker && marker.textContent !== label);
     if (markerChanged) marker.textContent = label;
     if (changed || markerChanged) {
-      const nodeKey = ({earth:"solar",moon:"solar",space:"solar",augstaka:"highbreed",anodyne:"anodite",galvan:"galvan",incursia:"incursean"})[currentLocation];
-      page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("current-location", node.dataset.system === nodeKey));
+      const nodeKey = ({earth:"solar",moon:"solar",space:"solar",augstaka:"highbreed",anodyne:"anodite",galvan:"galvan",incursia:"incursean"})[this.currentLocation];
+      this.page.querySelectorAll(".omni-node").forEach(node => node.classList.toggle("this.current-location", node.dataset.system === nodeKey));
     }
   }
-  function capturePhoto() {
+  this.capturePhoto = () => {
     const canvas = document.querySelector("#omniverse");
     if (!canvas) return;
-    try { photos.unshift(canvas.toDataURL("image/jpeg",0.82)); memories(); }
+    try { this.photos.unshift(canvas.toDataURL("image/jpeg",0.82)); this.memories(); }
     catch (error) { console.warn("Could not capture memory", error); }
   }
-  function addRelationship(picker, owner) {
+  this.addRelationship = (picker, owner) => {
     if (!simulation) return;
     const from=String(picker).toLowerCase().replace(/^./,c=>c.toUpperCase());
     const to=String(owner).toLowerCase().replace(/^./,c=>c.toUpperCase());
     simulation.setRelationship(from,to,simulation.getRelationship(from,to)+0.1);
   }
-  function updateTask(count = storedCount + 1) {
-    storedCount = Math.max(storedCount, count);
-    if (current === "tasks") tasks();
-    if (storedCount >= 4 && !completed) {
-      completed = true;
+  this.updateTask = (count = this.storedCount + 1) => {
+    this.storedCount = Math.max(this.storedCount, count);
+    if (this.current === "tasks") this.tasks();
+    if (this.storedCount >= 4 && !this.completed) {
+      this.completed = true;
       onComplete();
-      showCompletion();
+      this.showCompletion();
     }
   }
-  function showCompletion() {
-    if (completionPresented || document.getElementById("mission-complete")) return;
-    completionPresented = true;
+  this.showCompletion = () => {
+    if (this.completionPresented || document.getElementById("mission-complete")) return;
+    this.completionPresented = true;
     const notice = document.createElement("div");
     notice.id = "mission-complete";
     notice.textContent = "TASK COMPLETED";
@@ -156,34 +173,26 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
     window.setTimeout(() => notice.remove(), 5200);
   }
 
-  root.querySelector("#extranet-close").addEventListener("click",close);
-  root.querySelector("#extranet-back").addEventListener("click",()=>current==="home"?close():current==="private"||current==="omnidata"?home():privateCloud());
-  root.querySelector("#extranet-home").addEventListener("click",home);
-  address.addEventListener("keydown", event => {
+  this.root.querySelector("#extranet-close").addEventListener("click", this.close);
+  this.root.querySelector("#extranet-back").addEventListener("click",()=>this.current==="home"?this.close():this.current==="private"||this.current==="omnidata"?this.home():this.privateCloud());
+  this.root.querySelector("#extranet-home").addEventListener("click", this.home);
+  this.address.addEventListener("keydown", event => {
     if (event.key !== "Enter") return;
-    const url = address.value.trim().toLowerCase();
+    const url = this.address.value.trim().toLowerCase();
     if (url.includes("bgkr.omnicloud.com")) {
-      if (url.endsWith("/tasks")) tasks();
-      else if (url.endsWith("/relationships")) showRelationships();
-      else if (url.endsWith("/memories")) memories();
-      else if (url.endsWith("/accounts")) { current="accounts"; onData(page,"accounting"); }
-      else if (url.endsWith("/inventory")) { current="inventory"; onData(page,"items"); }
-      else if (url.endsWith("/event-log")) { current="event-log"; onData(page,"events"); }
-      else privateCloud();
-    } else if (url.includes("en.omnidata.org")) omnidata();
-    else if (url === "extranet://home") home();
+      if (url.endsWith("/tasks")) this.tasks();
+      else if (url.endsWith("/relationships")) this.showRelationships();
+      else if (url.endsWith("/memories")) this.memories();
+      else if (url.endsWith("/accounts")) { this.current="accounts"; onData(page,"accounting"); }
+      else if (url.endsWith("/inventory")) { this.current="inventory"; onData(page,"items"); }
+      else if (url.endsWith("/event-log")) { this.current="event-log"; onData(page,"events"); }
+      else this.privateCloud();
+    } else if (url.includes("en.omnidata.org")) this.omnidata();
+    else if (url === "extranet://home") this.home();
   });
-  function open() { root.style.display="flex"; home(); }
-  function openOmnidata() { root.style.display="flex"; omnidata(true); }
-  function close() { root.style.display="none"; }
-  home();
-  return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return simulation?.data?.relationships || {};} };
-}
+  this.open = () => { this.root.style.display="flex"; this.home(); }
+  this.openOmnidata = () => { this.root.style.display="flex"; this.omnidata(true); }
+  this.close = () => { this.root.style.display="none"; }
+  this.home();
 
-
-export class Extranet {
-  constructor(options = {}) { this.view = createExtranet(options); }
-  open() { this.view?.open?.(); }
-  close() { this.view?.close?.(); }
-  destroy() { this.view?.destroy?.(); }
 }

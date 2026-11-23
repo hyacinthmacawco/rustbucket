@@ -1,45 +1,48 @@
 import * as THREE from "three";
-import { UIStyles } from "../ui/UIStyles.js";
 import { AudioPlayer } from "../ui/AudioPlayer.js";
 import { Camera } from "./Camera.js";
 import { PhysicsEngine } from "./PhysicsEngine.js";
 import { SimulationSystem } from "./SimulationSystem.js";
-new UIStyles();
-import { createTitleScreen } from "../title/Title.js";
-import { createJoystick, createKeyboard } from "../ui/Joystick.js";
-import { createExtranet } from "../extranet/Extranet.js";
-import { SolarSystem } from "../world/systems/solar-system.js";
-import { AugstakaSystem } from "../world/systems/augstaka.js";
-import { AnodyneSystem } from "../world/systems/anodyne.js";
-import { GalvanSystem } from "../world/systems/galvan.js";
-import { IncursiaSystem } from "../world/systems/incursia.js";
-import { EarthInterior } from "../world/interiors/EarthInterior.js";
-import { KevinStorageUnit } from "../world/interiors/KevinStorageUnit.js";
-import { Suitcases } from "../world/interiors/Suitcases.js";
-import { MoonInterior } from "../world/interiors/moon-interior.js";
-import { PLANET_WORLDS } from "../world/interiors/planet-interior.js";
-import { AugstakaInterior } from "../world/interiors/augstaka-interior.js";
-import { AnodyneInterior } from "../world/interiors/anodyne-interior.js";
-import { GalvanPrimeInterior } from "../world/interiors/galvan-interior.js";
-import { IncursiaInterior } from "../world/interiors/incursia-interior.js";
-import { Rustbucket } from "../world/rustbucket.js";
-import { AlienShip } from "../world/alien-ship.js";
-import { PlanetPopulation } from "../world/interiors/planet-population.js";
-import { PassengerTransport } from "../world/passenger-transport.js";
-import { HumanRig } from "../world/human-rig.js";
-import { Ben } from "../world/ben.js";
-import { Gwen } from "../world/gwen.js";
-import { Kevin } from "../world/kevin.js";
-import { Rook } from "../world/rook.js";
-import { createSimulationCloud } from "../extranet/ExtranetBrowser.js";
+import { Title } from "../title/Title.js";
+import { Joystick } from "../ui/Joystick.js";
+import { Extranet } from "../extranet/Extranet.js";
+import { SolarSystem } from "../systems/SolarSystem.js";
+import { AugstakaSystem } from "../systems/AugstakaSystem.js";
+import { AnodyneSystem } from "../systems/AnodyneSystem.js";
+import { GalvanSystem } from "../systems/GalvanSystem.js";
+import { IncursiaSystem } from "../systems/IncursiaSystem.js";
+import { EarthInterior } from "../interiors/EarthInterior.js";
+import { KevinStorageUnit } from "../interiors/KevinStorageUnit.js";
+import { Suitcases } from "../interiors/Suitcases.js";
+import { MoonInterior } from "../interiors/MoonInterior.js";
+import { PlanetInterior } from "../interiors/PlanetInterior.js";
+import { AugstakaInterior } from "../interiors/AugstakaInterior.js";
+import { AnodyneInterior } from "../interiors/AnodyneInterior.js";
+import { GalvanPrimeInterior } from "../interiors/GalvanPrimeInterior.js";
+import { IncursiaInterior } from "../interiors/IncursiaInterior.js";
+import { Rustbucket } from "../team/Rustbucket.js";
+import { AlienShip } from "../vehicles/AlienShip.js";
+import { PlanetPopulation } from "../interiors/PlanetPopulation.js";
+import { PassengerTransport } from "../vehicles/PassengerTransport.js";
+import { Human as HumanRig } from "../species/Human.js";
+import { Ben } from "../team/Ben.js";
+import { Gwen } from "../team/Gwen.js";
+import { Kevin } from "../team/Kevin.js";
+import { Rook } from "../team/Rook.js";
+import { ExtranetBrowser } from "../extranet/ExtranetBrowser.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
-import { Chromastone } from "../world/omnitrix/Chromastone.js";
+import { Chromastone } from "../omnitrix/Chromastone.js";
+
+const PLANET_WORLDS = PlanetInterior.WORLDS;
 
 
-export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 2080, 0) };
+
 
 export class React {
+  static state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 2080, 0) };
+
   constructor() {
+    const state = React.state;
     this.cameraConfig = {
       title: { position: [0, 0, 600000], target: [-137150, 0, 0], fov: 55, near: 0.1, far: 2000000, distance: 615500, minDistance: 10000, maxDistance: 1000000, yaw: 0, pitch: 0 },
       gameplay: { position: [0, 5.3, 18.5], target: [0, 1.8, 0], fov: 43, near: 0.1, far: 2000000, distance: 18.5, minDistance: 8, maxDistance: 30000, yaw: 0, pitch: 0.18 },
@@ -84,7 +87,7 @@ export class React {
     let entities = null;
     let alienPatrols = [];
 
-    function updateCamera() {
+    this.updateCamera = () => {
       const selectedName = keyboardController?.selected || "ben";
       const selectedEntity = activeStage === "gameplay" && entities ? entities[selectedName] : null;
       const ship = activeStage === "gameplay" ? entities?.rustbucket : null;
@@ -121,7 +124,7 @@ export class React {
       camera.lookAt(target);
     }
 
-    function setCameraPreset(preset) {
+    this.setCameraPreset = (preset) => {
       cameraPreset = preset;
       cameraController.setPreset(preset, window.innerWidth / window.innerHeight);
 
@@ -131,17 +134,13 @@ export class React {
       cameraDistance = offset.length();
       cameraYaw = Math.atan2(offset.x, offset.z);
       cameraPitch = Math.atan2(offset.y, Math.hypot(offset.x, offset.z));
-      updateCamera();
+      this.updateCamera();
     }
 
-    setCameraPreset(this.cameraConfig.title);
+    this.setCameraPreset(this.cameraConfig.title);
 
     // UI overlays are created once; the animation loop controls visibility.
-    const titleScreen = createTitleScreen({
-      onNewGame() {
-        state.stage = "prelude";
-      }
-    });
+    const titleScreen = new Title({ onNewGame: () => { state.stage = "prelude"; } });
 
     const preludeScreen = document.createElement("div");
     preludeScreen.id = "prelude-screen";
@@ -150,7 +149,7 @@ export class React {
     const preludeTitle = preludeScreen.querySelector("#prelude-title");
     let startRequested = false;
     let dialogueSfx = null;
-    function startGameplay() {
+    this.startGameplay = () => {
       if (state.stage !== "prelude") return;
       startRequested = true;
       if (dialogueSfx) { stopSfx(dialogueSfx); dialogueSfx = null; }
@@ -158,15 +157,15 @@ export class React {
       if (loadedRegion === "earth") state.stage = "gameplay";
       else preludeTitle.textContent = "LOADING";
     }
-    preludeScreen.querySelector("#skip-dialogue").addEventListener("click", startGameplay);
+    preludeScreen.querySelector("#skip-dialogue").addEventListener("click", this.startGameplay);
 
-    const joystick = createJoystick();
+    const joystick = new Joystick();
     joystick.setVisible(false);
     const pauseOverlay = document.createElement("div");
     pauseOverlay.id = "pause-overlay";
     pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><nav id="pause-tabs"><button data-pause-tab="settings" class="active">SETTINGS</button><button data-pause-tab="help">HELP</button><button data-pause-tab="credits">CREDITS</button></nav><div id="pause-content"></div><button id="resume-button" type="button">RESUME</button></div>';
     document.body.append(pauseOverlay);
-    function setPaused(value) {
+    this.setPaused = (value) => {
       state.paused = Boolean(value);
       pauseOverlay.style.display = state.paused ? "flex" : "none";
       if (audioPlayer.musicTrack) {
@@ -186,9 +185,9 @@ export class React {
       pauseOverlay.querySelectorAll("[data-pause-tab]").forEach(b=>b.classList.toggle("active",b===button));
       pauseContent.innerHTML=pauseViews[button.dataset.pauseTab];
     }));
-    pauseOverlay.querySelector("#resume-button").addEventListener("click", () => setPaused(false));
-    function pauseKey(event) { if (event.key === "Escape" && state.stage === "gameplay") setPaused(!state.paused); }
-    document.addEventListener("keydown", pauseKey);
+    pauseOverlay.querySelector("#resume-button").addEventListener("click", () => this.setPaused(false));
+    this.pauseKey = (event) => { if (event.key === "Escape" && state.stage === "gameplay") this.setPaused(!state.paused); }
+    document.addEventListener("keydown", this.pauseKey);
     const simulation = new SimulationSystem();
     const passengerTransport = new PassengerTransport(simulation);
     const eventNotice=document.createElement("div");eventNotice.id="simulation-event-notice";document.body.appendChild(eventNotice);
@@ -200,7 +199,7 @@ export class React {
       window.clearTimeout(eventNoticeTimer);
       eventNoticeTimer=window.setTimeout(()=>{eventNotice.style.display="none";},4800);
     };
-    function configureShip(ship){
+    this.configureShip = (ship) => {
       passengerTransport.attachShip(ship);
       ship.userData.maxHealth = 100;
       ship.userData.health = simulation.getStatus('Rustbucket').health;
@@ -214,7 +213,7 @@ export class React {
       ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
       return ship;
     }
-    function spawnPatrols(parent, systemKey) {
+    this.spawnPatrols = (parent, systemKey) => {
       const systems = {
         solar: {species:'Human',planet:'earth',center:new THREE.Vector3(0,0,0)},
         augstaka: {species:'Highbreed',planet:'augstaka',center:new THREE.Vector3(274300,0,0)},
@@ -231,7 +230,7 @@ export class React {
     const combatWorldPosition = new THREE.Vector3();
     const combatSegment = new THREE.Vector3();
     const combatClosest = new THREE.Vector3();
-    function updatePatrolCombat(delta) {
+    this.updatePatrolCombat = (delta) => {
       const ship = entities?.rustbucket;
       if (!ship || !alienPatrols.length || state.currentScene !== 'space') return;
       ship.updateMatrixWorld(true);
@@ -265,17 +264,17 @@ export class React {
       });
     }
 
-    const extranet = createExtranet({
+    const extranet = new Extranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./files/songs/ov-end-credits.mp3"),
       simulation,
       onData: (host, view) => simulationCloud.render(view, host),
-      onJumpSystem: key => warpToSystem(key)
+      onJumpSystem: key => this.warpToSystem(key)
     });
-    const simulationCloud=createSimulationCloud(simulation);
+    const simulationCloud = new ExtranetBrowser(simulation);
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
     hep.innerHTML='<span class="hep-meter"><i id="hep-health-fill"></i><b>H</b></span><span class="hep-meter"><i id="hep-energy-fill"></i><b>E</b></span>';
-    hep.addEventListener("click",()=>setPaused(!state.paused));
+    hep.addEventListener("click",()=>this.setPaused(!state.paused));
     document.body.append(hep);
     const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
     const carriedHud=document.createElement("div");carriedHud.id="carried-items-hud";
@@ -287,9 +286,9 @@ export class React {
       if(carriedSelect.value==="")return;
       const result=simulation.useCarriedItem(selected[0].toUpperCase()+selected.slice(1),Number(carriedSelect.value));
       if(!result.ok)carriedHud.title=result.reason;
-      refreshCarriedHud();
+      this.refreshCarriedHud();
     });
-    function refreshCarriedHud(){
+    this.refreshCarriedHud = () => {
       const selected=keyboardController?.selected||"ben";
       const who=selected[0].toUpperCase()+selected.slice(1);
       const list=simulation.data.team.carried[who]||[];
@@ -309,7 +308,7 @@ export class React {
     const abilityModes={ben:["HUMAN","CHROMASTONE"],kevin:["METAL","STONE","CRYSTAL","RUBBER"],gwen:["SHIELD","BOLT","HEAL","BIND"],rook:["GUN","SWORD"]};
     const abilityState={ben:simulation.getChromastoneActive()?1:0,kevin:0,gwen:0,rook:0};
     let abilityPointer=null;
-    function setAbilityMode(character,index){
+    this.setAbilityMode = (character,index) => {
       const modes=abilityModes[character]||[];if(!modes.length)return;
       const next=(index+modes.length)%modes.length;abilityState[character]=next;
       const mode=modes[next];
@@ -326,7 +325,7 @@ export class React {
       }
       if(entities?.[character])entities[character].userData.toolMode=mode;
     }
-    function updateAbilityDial(character){
+    this.updateAbilityDial = (character) => {
       const modes=abilityModes[character];
       abilityDial.style.display=state.stage==="gameplay"&&Boolean(modes)?"flex":"none";
       if(!modes)return;
@@ -336,14 +335,14 @@ export class React {
       abilityDialMode.textContent=modes[index];
       abilityDialIndicator.style.transform="rotate("+(index/modes.length*360)+"deg) translateY(-34px)";
     }
-    function chooseAbilityFromPointer(event){
+    this.chooseAbilityFromPointer = (event) => {
       const rect=abilityDialRing.getBoundingClientRect();
       const angle=(Math.atan2(event.clientX-(rect.left+rect.width/2),-(event.clientY-(rect.top+rect.height/2)))+Math.PI*2)%(Math.PI*2);
       const character=keyboardController?.selected||"ben",modes=abilityModes[character]||[];
-      setAbilityMode(character,Math.round(angle/(Math.PI*2)*modes.length)%modes.length);
+      this.setAbilityMode(character,Math.round(angle/(Math.PI*2)*modes.length)%modes.length);
     }
-    abilityDialRing.addEventListener("pointerdown",event=>{event.preventDefault();abilityPointer=event.pointerId;abilityDialRing.setPointerCapture(event.pointerId);chooseAbilityFromPointer(event);});
-    abilityDialRing.addEventListener("pointermove",event=>{if(event.pointerId===abilityPointer&&event.buttons)chooseAbilityFromPointer(event);});
+    abilityDialRing.addEventListener("pointerdown",event=>{event.preventDefault();abilityPointer=event.pointerId;abilityDialRing.setPointerCapture(event.pointerId);this.chooseAbilityFromPointer(event);});
+    abilityDialRing.addEventListener("pointermove",event=>{if(event.pointerId===abilityPointer&&event.buttons)this.chooseAbilityFromPointer(event);});
     abilityDialRing.addEventListener("pointerup",event=>{if(event.pointerId===abilityPointer)abilityPointer=null;});
     abilityDialRing.addEventListener("pointercancel",()=>{abilityPointer=null;});
     const extranetButton = document.createElement("button");
@@ -370,7 +369,7 @@ export class React {
     marketPanel.innerHTML='<div class="planet-market-card"><button id="planet-market-close" aria-label="Close marketplace">CLOSE</button><p class="planet-market-kicker">LOCAL TRADE EXCHANGE</p><h2 id="planet-market-title">MARKETPLACE</h2><p id="planet-market-cash"></p><div id="planet-market-stock"></div><p id="planet-market-message"></p></div>';
     document.body.appendChild(marketPanel);
     marketPanel.querySelector("#planet-market-close").addEventListener("click",()=>marketPanel.style.display="none");
-    function openPlanetMarket(){
+    this.openPlanetMarket = () => {
       const key=state.currentScene;
       const world=PLANET_WORLDS[key];if(!world)return;
       const stock=simulation.data.resources[world.species]||[];
@@ -403,10 +402,10 @@ export class React {
     warpOverlay.id = "warp-overlay";
     warpOverlay.innerHTML = '<div id="warp-flash"></div><div id="warp-caption">SPACE WARP</div>';
     document.body.appendChild(warpOverlay);
-    function openSystemMap() {
+    this.openSystemMap = () => {
       if (state.stage === "gameplay" && keyboardController?.selected === "rustbucket") extranet.openOmnidata();
     }
-    async function warpToSystem(requestedKey) {
+    this.warpToSystem = async (requestedKey) => {
       const systemKey = ({solar:"solar",highbreed:"augstaka",incursean:"incursia",anodite:"anodyne",galvan:"galvan"})[requestedKey];
       if (!systemKey) return;
       extranet.close();
@@ -421,17 +420,17 @@ export class React {
       const homePlanet = ({ solar: "earth", augstaka: "augstaka", anodyne: "anodyne", galvan: "galvan", incursia: "incursia" })[systemKey];
       const homeOrbit = SYSTEM_PLANET_ORBITS[systemKey]?.[homePlanet] || new THREE.Vector3();
       state.spaceReturnPosition = homeOrbit.clone().add(new THREE.Vector3(0, getPlanetClearance(homePlanet), 0));
-      await loadRegion(systemKey === "solar" ? "space" : "system-" + systemKey);
+      await this.loadRegion(systemKey === "solar" ? "space" : "system-" + systemKey);
       if (entities?.rustbucket) {
         entities.rustbucket.position.copy(state.spaceReturnPosition);
         entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
         entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
       }
-      setCameraPreset(cameraConfig.gameplay);
+      this.setCameraPreset(cameraConfig.gameplay);
       extranet.setLocation(systemKey === "solar" ? "space" : systemKey);
       warpOverlay.classList.remove("warp-active"); warpOverlay.style.display = "none";
     }
-    async function warpTo(destination) {
+    this.warpTo = async (destination) => {
       mapOverlay.style.display = "none";
       if (!["earth","moon","space","augstaka","anodyne","galvan","incursia"].includes(destination)) return;
       const atmosphericTransition=Boolean(destination==="earth"||destination==="moon"||PLANET_WORLDS[destination]||PLANET_WORLDS[state.currentScene]);
@@ -446,20 +445,20 @@ export class React {
       state.arrivingInShip = true;
       if(destination==="space"&&state.spaceReturnPosition){
         const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
-        await loadRegion(returnRegion);
+        await this.loadRegion(returnRegion);
         if(entities?.rustbucket){
           entities.rustbucket.position.copy(state.spaceReturnPosition);
           entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
           entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
         }
-      } else await loadRegion(destination);
+      } else await this.loadRegion(destination);
       if (destination !== "space" && loadedRegion === destination) passengerTransport.complete(destination,entities?.rustbucket);
-      setCameraPreset(cameraConfig.gameplay);
+      this.setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : destination);
       marketPanel.style.display="none";
     }
-    mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => warpTo(button.dataset.destination)));
+    mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => this.warpTo(button.dataset.destination)));
     mapOverlay.querySelector("#system-map-close").addEventListener("click", () => { mapOverlay.style.display = "none"; });
     const isMobile = (window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 900px)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     
@@ -470,8 +469,8 @@ export class React {
     const stopMusic = () => audioPlayer.stopMusic();
     const playSfx = (src, onEnded = null) => audioPlayer.playSfx(src, onEnded);
     const stopSfx = track => audioPlayer.stopSfx(track);
-    function unlockAudio() { audioPlayer.unlock(state.stage); }
-    function requestFullscreenOnGesture() {
+    this.unlockAudio = () => { audioPlayer.unlock(state.stage); }
+    this.requestFullscreenOnGesture = () => {
       if (document.fullscreenElement || document.webkitFullscreenElement) return;
       const target = document.documentElement;
       const request = target.requestFullscreen || target.webkitRequestFullscreen;
@@ -484,11 +483,11 @@ export class React {
       }
     }
     // Fullscreen is restricted by browsers to a user gesture; retry until accepted.
-    document.addEventListener("pointerdown", requestFullscreenOnGesture);
-    document.addEventListener("touchend", requestFullscreenOnGesture, { passive: true });
-    document.addEventListener("keydown", requestFullscreenOnGesture);
-    document.addEventListener("pointerdown", unlockAudio);
-    document.addEventListener("keydown", unlockAudio);
+    document.addEventListener("pointerdown", this.requestFullscreenOnGesture);
+    document.addEventListener("touchend", this.requestFullscreenOnGesture, { passive: true });
+    document.addEventListener("keydown", this.requestFullscreenOnGesture);
+    document.addEventListener("pointerdown", this.unlockAudio);
+    document.addEventListener("keydown", this.unlockAudio);
 
     // Pointer-based camera controls: one pointer rotates, two touch pointers
     // exclusively pinch-zoom. A pinch can never leak into the rotate handler.
@@ -498,7 +497,7 @@ export class React {
     let lastPointerY = 0;
     let pinchDistance = 0;
 
-    function onPointerDown(event) {
+    this.onPointerDown = (event) => {
       if (event.pointerType === "touch") {
         cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
         if (cameraPointers.size >= 2) {
@@ -517,7 +516,7 @@ export class React {
       }
       if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
     }
-    function onPointerMove(event) {
+    this.onPointerMove = (event) => {
       if (event.pointerType === "touch") {
         if (!cameraPointers.has(event.pointerId)) return;
         cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -530,7 +529,7 @@ export class React {
               cameraPreset.minDistance,
               cameraPreset.maxDistance
             );
-            updateCamera();
+            this.updateCamera();
           }
           pinchDistance = next;
           event.preventDefault();
@@ -548,9 +547,9 @@ export class React {
         cameraConfig.minPitch,
         cameraConfig.maxPitch
       );
-      updateCamera();
+      this.updateCamera();
     }
-    function onPointerUp(event) {
+    this.onPointerUp = (event) => {
       cameraPointers.delete(event.pointerId);
       if (event.pointerType === "touch") {
         draggingCamera = false;
@@ -565,10 +564,10 @@ export class React {
       }
     }
 
-    canvas.addEventListener("pointerdown", onPointerDown);
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", onPointerUp);
-    canvas.addEventListener("pointercancel", onPointerUp);
+    canvas.addEventListener("pointerdown", this.onPointerDown);
+    canvas.addEventListener("pointermove", this.onPointerMove);
+    canvas.addEventListener("pointerup", this.onPointerUp);
+    canvas.addEventListener("pointercancel", this.onPointerUp);
     canvas.addEventListener("wheel", e => {
       e.preventDefault();
       cameraDistance = THREE.MathUtils.clamp(
@@ -576,7 +575,7 @@ export class React {
         cameraPreset.minDistance,
         cameraPreset.maxDistance
       );
-      updateCamera();
+      this.updateCamera();
     }, { passive: false });
 
     // Region objects are imported and instantiated only after the camera is
@@ -588,7 +587,7 @@ export class React {
     let titleObjects = null;
 
 
-    function disposeObjectTree(root) {
+    this.disposeObjectTree = (root) => {
       if (!root) return;
       root.traverse(object => {
         object.geometry?.dispose();
@@ -603,7 +602,7 @@ export class React {
       });
     }
 
-    function disposeRegion() {
+    this.disposeRegion = () => {
       keyboardController?.destroy();
       keyboardController = null;
       ben = null;
@@ -612,7 +611,7 @@ export class React {
       entities = null;
       if (regionGroup) {
         scene.remove(regionGroup);
-        disposeObjectTree(regionGroup);
+        this.disposeObjectTree(regionGroup);
       }
       regionGroup = null;
       titleObjects = null;
@@ -637,17 +636,17 @@ export class React {
     document.body.appendChild(sceneLoadError);
     let failedRegion = null;
     sceneLoadRetry.addEventListener("click", () => {
-      if (failedRegion) loadRegion(failedRegion);
+      if (failedRegion) this.loadRegion(failedRegion);
     });
 
     let activeSystem = "solar";
-    async function loadRegion(name) {
+    this.loadRegion = async (name) => {
       if (loadingRegion === name || loadedRegion === name) return;
       const requestId = ++regionLoadId;
       loadingRegion = name;
       sceneLoadError.style.display = "none";
       failedRegion = null;
-      disposeRegion();
+      this.disposeRegion();
       if (!name) { loadedRegion = null; loadingRegion = null; return; }
       const group = new THREE.Group();
       group.name = name === "space" ? "SolarSystemScene" : name === "moon" ? "MoonScene" : "EarthScene";
@@ -656,19 +655,19 @@ export class React {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = new SolarSystem(group);
           if (state.stage === "gameplay") {
-            spawnPatrols(group,"solar");
-            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
+            this.spawnPatrols(group,"solar");
+            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
             const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
             nextPhysics.dispose();
-            disposeObjectTree(group);
+            this.disposeObjectTree(group);
             return;
           }
           physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = { rustbucket: ship }; regionGroup = group; scene.add(regionGroup);
-            keyboardController = createKeyboard({
-              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+            keyboardController = joystick.createKeyboard({
+              entities,camera,joystick,this.updateCamera,isMobile,initialSelected:"rustbucket",onJump:this.openSystemMap,
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
               onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
             });
@@ -681,15 +680,15 @@ export class React {
           scene.background = new THREE.Color(0x02040a); scene.fog = null;
           titleObjects = new SystemClass(group);
           if (state.stage === "gameplay") {
-            spawnPatrols(group,systemKey);
-            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
+            this.spawnPatrols(group,systemKey);
+            const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
             ship.position.set(15000,12,0);
             const nextPhysics = await PhysicsEngine.create();
-            if (requestId !== regionLoadId) { nextPhysics.dispose(); disposeObjectTree(group); return; }
+            if (requestId !== regionLoadId) { nextPhysics.dispose(); this.disposeObjectTree(group); return; }
             physics = nextPhysics; physics.setEnvironment("space"); physics.addVehicle(ship);
             entities = {rustbucket:ship}; regionGroup = group; scene.add(regionGroup);
-            keyboardController = createKeyboard({
-              entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+            keyboardController = joystick.createKeyboard({
+              entities,camera,joystick,this.updateCamera,isMobile,initialSelected:"rustbucket",onJump:this.openSystemMap,
               onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
               onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
             });
@@ -698,11 +697,11 @@ export class React {
         } else if (name === "moon") {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
           new MoonInterior(group);
-          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;configureShip(ship);
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;this.configureShip(ship);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
-          keyboardController=createKeyboard({
-            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+          keyboardController=joystick.createKeyboard({
+            entities,camera,joystick,this.updateCamera,isMobile,initialSelected:"rustbucket",onJump:this.openSystemMap,
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
             onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
@@ -716,12 +715,12 @@ export class React {
           const interior = new InteriorClass(group);
           group.userData.population = interior.environment.population;
           const { marketPosition } = interior.environment;
-          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship); ship.position.set(0,2,13);
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship); ship.position.set(0,2,13);
           passengerTransport.bindShip(ship,interior.environment.inhabitants);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
-          keyboardController=createKeyboard({
-            entities,camera,joystick,updateCamera,isMobile,initialSelected:"rustbucket",onJump:openSystemMap,
+          keyboardController=joystick.createKeyboard({
+            entities,camera,joystick,this.updateCamera,isMobile,initialSelected:"rustbucket",onJump:this.openSystemMap,
             onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
             onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
           });
@@ -734,13 +733,13 @@ export class React {
           const population = new PlanetPopulation(earthEnvironment.bellwood,"earth");
           group.userData.population = population;
           const storageUnit = new KevinStorageUnit(group); const unit = storageUnit.unit;
-          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; configureShip(ship);
+          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
           passengerTransport.bindShip(ship,population.inhabitants);
 
           const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
             nextPhysics.dispose();
-            disposeObjectTree(group);
+            this.disposeObjectTree(group);
             return;
           }
           physics = nextPhysics;
@@ -750,7 +749,7 @@ export class React {
           physics.addVehicle(ship);
           const carriedSuitcases = new Map();
           let storedSuitcaseCount = 0;
-          function tryPickup(characterName, characterGroup, rig) {
+          this.tryPickup = (characterName, characterGroup, rig) => {
             const carried = carriedSuitcases.get(characterName);
             if (carried) {
               if (characterGroup.position.distanceTo(ship.position) > 9) return;
@@ -791,7 +790,7 @@ export class React {
           if(simulation.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
           joystick.buttons.querySelector("#pick-button").textContent="PICK";
           benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
-          setAbilityMode("ben",simulation.getChromastoneActive()?1:0);
+          this.setAbilityMode("ben",simulation.getChromastoneActive()?1:0);
           benCharacter.group.userData.performChromastoneAttack=()=>{
             if(!simulation.spendEnergy("Chromastone",8))return;
             const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
@@ -832,7 +831,7 @@ export class React {
               character.rig.updateWalk(character.animationTime);
             };
             character.group.setAnimation("idle");
-            character.group.userData.performPickup = () => tryPickup(name, character.group, character.rig);
+            character.group.userData.performPickup = () => this.tryPickup(name, character.group, character.rig);
             character.group.userData.performAttack = () => {
               if(name==="ben"&&simulation.getChromastoneActive()){character.group.userData.performChromastoneAttack?.();return;}
               character.group.userData.actionActive = true;
@@ -841,7 +840,7 @@ export class React {
             };
             character.group.userData.performPickup = () => {
               if(name==="ben"&&simulation.getChromastoneActive()){simulation.recharge("Chromastone",12);return;}
-              tryPickup(name, character.group, character.rig);
+              this.tryPickup(name, character.group, character.rig);
             };
             characterEntities[name] = character.group;
             group.add(character.group);
@@ -851,9 +850,9 @@ export class React {
           entities = { ...characterEntities, rustbucket: ship };
           regionGroup = group;
           scene.add(regionGroup);
-          keyboardController = createKeyboard({
-            entities, camera, joystick, updateCamera, isMobile, initialSelected: state.arrivingInShip ? "rustbucket" : "ben",
-            onJump: openSystemMap,
+          keyboardController = joystick.createKeyboard({
+            entities, camera, joystick, this.updateCamera, isMobile, initialSelected: state.arrivingInShip ? "rustbucket" : "ben",
+            onJump: this.openSystemMap,
             onToggleRamp: () => { ship.userData.toggleRamp?.(); rampButton.textContent = ship.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; },
             
             onSelect: selected => {
@@ -868,7 +867,7 @@ export class React {
         regionGroup=group;scene.add(regionGroup);loadedRegion=name;
       } catch (error) {
         if (requestId !== regionLoadId) {
-          disposeObjectTree(group);
+          this.disposeObjectTree(group);
           return;
         }
         console.error("Could not load scene:", name, error);
@@ -880,7 +879,7 @@ export class React {
         entities = null;
         ben = null;
         scene.remove(group);
-        disposeObjectTree(group);
+        this.disposeObjectTree(group);
         if (regionGroup === group) regionGroup = null;
         titleObjects = null;
         failedRegion = name;
@@ -892,7 +891,7 @@ export class React {
         if (requestId === regionLoadId) loadingRegion = null;
       }
     }
-    loadRegion("space");
+    this.loadRegion("space");
 
     const updateStage = () => {
       if (activeStage === state.stage) return;
@@ -901,31 +900,31 @@ export class React {
       if (activeStage === "title") {
         activeSystem = "solar";
         state.currentScene = "space";
-        if (loadedRegion !== "space" && !loadingRegion) loadRegion("space");
+        if (loadedRegion !== "space" && !loadingRegion) this.loadRegion("space");
         preludeScreen.style.display = "none";
         titleScreen.setVisible(true);
         joystick.setVisible(false);
         
-        setCameraPreset(this.cameraConfig.title);
+        this.setCameraPreset(this.cameraConfig.title);
         playMusic("./files/songs/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
         state.currentScene = "earth";
         titleScreen.setVisible(false);
         joystick.setVisible(false);
-        setCameraPreset(cameraConfig.gameplay);
-        if (loadedRegion !== "earth" && loadingRegion !== "earth") loadRegion("earth");
+        this.setCameraPreset(cameraConfig.gameplay);
+        if (loadedRegion !== "earth" && loadingRegion !== "earth") this.loadRegion("earth");
         
         preludeScreen.style.display = "flex";
         stopMusic();
-        dialogueSfx = playSfx("./files/songs/ov-final-dialogues.mp3", startGameplay);
+        dialogueSfx = playSfx("./files/songs/ov-final-dialogues.mp3", this.startGameplay);
       } else if (activeStage === "gameplay") {
-        if (loadedRegion !== state.currentScene && !loadingRegion) loadRegion(state.currentScene);
+        if (loadedRegion !== state.currentScene && !loadingRegion) this.loadRegion(state.currentScene);
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
         joystick.setVisible(true);
         
         
-        setCameraPreset(cameraConfig.gameplay);
+        this.setCameraPreset(cameraConfig.gameplay);
         playMusic("./files/songs/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
@@ -936,7 +935,7 @@ export class React {
       }
     };
 
-    const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",openPlanetMarket);document.body.appendChild(marketButton);
+    const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",this.openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
       solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1547,0,0)},
       augstaka: {augstaka:new THREE.Vector3(274300,0,0)},
@@ -966,13 +965,13 @@ export class React {
         planetEntryCooldown=3;warpOverlay.querySelector("#warp-caption").textContent="";
         warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
         await new Promise(resolve=>window.setTimeout(resolve,1250));
-        state.currentScene=nearestPlanet.key;await loadRegion(nearestPlanet.key);setCameraPreset(cameraConfig.gameplay);
+        state.currentScene=nearestPlanet.key;await this.loadRegion(nearestPlanet.key);this.setCameraPreset(cameraConfig.gameplay);
         if (loadedRegion === nearestPlanet.key) passengerTransport.complete(nearestPlanet.key,entities?.rustbucket);
         extranet.setLocation(nearestPlanet.key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
         planetTransitionBusy=false;
       }
     };
-    async function leavePlanetInterior(){
+    this.leavePlanetInterior = async () => {
       if(planetTransitionBusy||(state.currentScene!=="earth"&&state.currentScene!=="moon"&&!PLANET_WORLDS[state.currentScene])||!entities?.rustbucket)return;
       const planet=state.currentScene,orbit=SYSTEM_PLANET_ORBITS[activeSystem]?.[planet];if(!orbit)return;
       planetTransitionBusy=true;
@@ -983,21 +982,21 @@ export class React {
       state.spaceReturnPosition=orbit.clone().add(new THREE.Vector3(0,getPlanetClearance(planet),0));
       state.currentScene="space";
       const returnRegion = activeSystem === "solar" ? "space" : "system-" + activeSystem;
-      await loadRegion(returnRegion);
+      await this.loadRegion(returnRegion);
       if(entities?.rustbucket){
         entities.rustbucket.position.copy(state.spaceReturnPosition);
         entities.rustbucket.userData.vehicleBody?.setTranslation({x:state.spaceReturnPosition.x,y:state.spaceReturnPosition.y,z:state.spaceReturnPosition.z},true);
         entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
       }
-      setCameraPreset(cameraConfig.gameplay);extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
+      this.setCameraPreset(cameraConfig.gameplay);extranet.setLocation(activeSystem === "solar" ? "space" : activeSystem);
       warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
       planetTransitionBusy=false;planetEntryCooldown=2;
     }
     const clock = new THREE.Clock();
     let animationFrame = 0;
 
-    function animate() {
-      animationFrame = requestAnimationFrame(animate);
+    this.animate = () => {
+      animationFrame = requestAnimationFrame(this.animate);
 
       updateStage();
       titleScreen.setVisible(state.stage === "title");
@@ -1006,9 +1005,9 @@ export class React {
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
       carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
-      updateAbilityDial(keyboardController?.selected||"ben");
+      this.updateAbilityDial(keyboardController?.selected||"ben");
       if (state.stage !== "gameplay") { rampButton.style.display = "none"; }
-      if (state.stage !== "gameplay" && state.paused) setPaused(false);
+      if (state.stage !== "gameplay" && state.paused) this.setPaused(false);
 
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.elapsedTime;
@@ -1020,12 +1019,12 @@ export class React {
       if (!state.paused && state.stage==="gameplay"&&state.currentScene==="space") enterNearbyPlanet();
       if (!state.paused && state.stage==="gameplay" && (state.currentScene==="earth"||state.currentScene==="moon"||PLANET_WORLDS[state.currentScene]) && entities?.rustbucket && !planetTransitionBusy) {
         const shipHeight = entities.rustbucket.userData.vehicleBody?.translation().y ?? entities.rustbucket.position.y;
-        if (shipHeight > 12) leavePlanetInterior();
+        if (shipHeight > 12) this.leavePlanetInterior();
       }
       if (!state.paused && physics && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") physics.step(delta);
       if (!state.paused && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex" && entities?.rustbucket?.userData.updateVehicle) entities.rustbucket.userData.updateVehicle(delta);
       if (!state.paused && state.stage === "gameplay" && mapOverlay.style.display !== "flex" && warpOverlay.style.display !== "flex") {
-        updatePatrolCombat(delta);
+        this.updatePatrolCombat(delta);
         regionGroup?.userData.population?.update(delta);
       }
 
@@ -1041,8 +1040,8 @@ export class React {
         const status=simulation.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&simulation.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
         hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
         hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
-        updateAbilityDial(selectedName);
-        refreshCarriedHud();
+        this.updateAbilityDial(selectedName);
+        this.refreshCarriedHud();
       }
 
       if (state.stage === "title" && titleObjects) {
@@ -1056,35 +1055,35 @@ export class React {
       renderer.render(scene, camera);
     }
 
-    function onResize() {
+    this.onResize = () => {
       cameraController.resize(window.innerWidth / window.innerHeight);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     }
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", this.onResize);
 
-    animate();
+    this.animate();
 
     window.addEventListener("beforeunload", () => {
       cancelAnimationFrame(animationFrame);
-      window.removeEventListener("resize", onResize);
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", onPointerUp);
-      canvas.removeEventListener("pointercancel", onPointerUp);
-      document.removeEventListener("pointerdown", unlockAudio);
-      document.removeEventListener("keydown", unlockAudio);
-      document.removeEventListener("pointerdown", requestFullscreenOnGesture);
-      document.removeEventListener("touchend", requestFullscreenOnGesture);
-      document.removeEventListener("keydown", requestFullscreenOnGesture);
-      document.removeEventListener("keydown", pauseKey);
+      window.removeEventListener("resize", this.onResize);
+      canvas.removeEventListener("pointerdown", this.onPointerDown);
+      canvas.removeEventListener("pointermove", this.onPointerMove);
+      canvas.removeEventListener("pointerup", this.onPointerUp);
+      canvas.removeEventListener("pointercancel", this.onPointerUp);
+      document.removeEventListener("pointerdown", this.unlockAudio);
+      document.removeEventListener("keydown", this.unlockAudio);
+      document.removeEventListener("pointerdown", this.requestFullscreenOnGesture);
+      document.removeEventListener("touchend", this.requestFullscreenOnGesture);
+      document.removeEventListener("keydown", this.requestFullscreenOnGesture);
+      document.removeEventListener("keydown", this.pauseKey);
       sceneLoadError.remove();
       pauseOverlay.remove();
       extranetButton.remove();
       rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
       extranet.close();
       passengerTransport.destroy();
-      disposeRegion();
+      this.disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
       joystick.destroy();

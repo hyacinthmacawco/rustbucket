@@ -1,41 +1,53 @@
 import * as THREE from "three";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
-async function createPhysics() {
-  await RAPIER.init();
-  const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
-  const floor = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, -1, 0));
-  world.createCollider(RAPIER.ColliderDesc.cuboid(260, 0.5, 260).setFriction(0.9), floor);
 
-  const bodies = [];
-  const colliders = [];
-  const bounds = new THREE.Box3();
-  const size = new THREE.Vector3();
-  const center = new THREE.Vector3();
-  let environment = "planet";
+export class PhysicsEngine {
+  constructor() {
+    this.world = null;
+    this.bodies = [];
+    this.colliders = [];
+    this.bounds = new THREE.Box3();
+    this.size = new THREE.Vector3();
+    this.center = new THREE.Vector3();
+    this.environment = "planet";
+  }
 
-  function addStaticScene(root) {
+  static async create() {
+    const engine = new PhysicsEngine();
+    await engine.initialize();
+    return engine;
+  }
+
+  async initialize() {
+await RAPIER.init();
+  this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+  const floor = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, -1, 0));
+  this.world.createCollider(RAPIER.ColliderDesc.cuboid(260, 0.5, 260).setFriction(0.9), floor);
+  }
+
+addStaticScene(root) {
     root.updateMatrixWorld(true);
     root.traverse(object => {
       if (!object.isMesh || !object.geometry || object.userData.noPhysics || object.material?.transparent) return;
-      bounds.setFromObject(object);
-      if (!Number.isFinite(bounds.min.x)) return;
-      bounds.getSize(size);
-      bounds.getCenter(center);
-      if (size.x < 0.3 || size.y < 0.3 || size.z < 0.3 || size.x > 600 || size.y > 150 || size.z > 600) return;
-      const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(center.x, center.y, center.z));
-      const collider = world.createCollider(
-        RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setFriction(0.85),
+      this.bounds.setFromObject(object);
+      if (!Number.isFinite(this.bounds.min.x)) return;
+      this.bounds.getSize(this.size);
+      this.bounds.getCenter(this.center);
+      if (this.size.x < 0.3 || this.size.y < 0.3 || this.size.z < 0.3 || this.size.x > 600 || this.size.y > 150 || this.size.z > 600) return;
+      const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(this.center.x, this.center.y, this.center.z));
+      const collider = this.world.createCollider(
+        RAPIER.ColliderDesc.cuboid(this.size.x / 2, this.size.y / 2, this.size.z / 2).setFriction(0.85),
         body
       );
-      colliders.push(collider);
+      this.colliders.push(collider);
     });
   }
 
-  function addCharacter(object) {
+addCharacter(object) {
     const p = object.position;
-    const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y+0.75,p.z));
-    const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.48,0.27).setFriction(0.8),body);
-    const controller = world.createCharacterController(0.025);
+    const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y+0.75,p.z));
+    const collider = this.world.createCollider(RAPIER.ColliderDesc.capsule(0.48,0.27).setFriction(0.8),body);
+    const controller = this.world.createCharacterController(0.025);
     controller.setSlideEnabled(true);
     controller.setMaxSlopeClimbAngle(Math.PI/4);
     controller.setMinSlopeSlideAngle(Math.PI/3);
@@ -56,14 +68,14 @@ async function createPhysics() {
       if(grounded){coyoteTime=0.14;if(verticalVelocity<0)verticalVelocity=0;}
       else coyoteTime=Math.max(0,coyoteTime-stepDt);
     };
-    bodies.push({object,body,kind:"character"});
+    this.bodies.push({object,body,kind:"character"});
     return body;
   }
 
-  function addVehicle(object) {
+addVehicle(object) {
     const p=object.position, scale=object.scale.x||1;
     const s=value=>value*scale;
-    const body=world.createRigidBody(
+    const body=this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic().setTranslation(p.x,p.y,p.z)
         .setLinearDamping(0).setAngularDamping(0).setCanSleep(false)
     );
@@ -80,13 +92,13 @@ async function createPhysics() {
       RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(s(0.92),s(-0.82),s(-3.35)),
       RAPIER.ColliderDesc.cuboid(s(0.16),s(0.12),s(0.52)).setTranslation(0,s(-0.82),s(3.0))
     ];
-    for(const desc of walls) world.createCollider(desc,body);
+    for(const desc of walls) this.world.createCollider(desc,body);
     const attitude={yaw:0,pitch:0,roll:0};
     const q=new THREE.Quaternion();
     object.userData.vehicleBody=body;
     object.userData.moveVehicle=(worldX,worldZ,lift,dt,steerInput=0,heading=attitude.yaw)=>{
       const velocity=body.linvel();
-      const inSpace=environment==="space";
+      const inSpace=this.environment==="space";
       const maxHorizontal=inSpace?30000:22;
       const maxVertical=inSpace?14000:14;
       const acceleration=inSpace?42000:34;
@@ -121,24 +133,24 @@ async function createPhysics() {
       q.setFromEuler(new THREE.Euler(attitude.pitch,attitude.yaw,attitude.roll,"YXZ"));
       body.setRotation({x:q.x,y:q.y,z:q.z,w:q.w},true);
     };
-    bodies.push({object,body,kind:"vehicle"});
+    this.bodies.push({object,body,kind:"vehicle"});
     return body;
   }
 
-  function setEnvironment(next) {
-    environment=next==="space"?"space":"planet";
-    for(const entry of bodies){
+setEnvironment(next) {
+    this.environment=next==="space"?"space":"planet";
+    for(const entry of this.bodies){
       if(entry.kind!=="vehicle")continue;
       entry.body.setGravityScale(0,true);
-      entry.body.setLinearDamping(environment==="space"?0.005:0.035);
-      entry.body.setAngularDamping(environment==="space"?0.04:0.12);
+      entry.body.setLinearDamping(this.environment==="space"?0.005:0.035);
+      entry.body.setAngularDamping(this.environment==="space"?0.04:0.12);
     }
   }
 
-  function step(delta) {
-    world.timestep=Math.min(delta,1/30);
-    world.step();
-    for(const {object,body,kind} of bodies){
+step(delta) {
+    this.world.timestep=Math.min(delta,1/30);
+    this.world.step();
+    for(const {object,body,kind} of this.bodies){
       const p=body.translation();
       object.position.set(p.x,p.y-(kind==="character"?0.75:0),p.z);
       if(kind==="vehicle"){
@@ -148,12 +160,10 @@ async function createPhysics() {
     }
   }
 
-  return {
-    world,addCharacter,addVehicle,addStaticScene,setEnvironment,step,
-    dispose(){for(const entry of bodies)world.removeRigidBody(entry.body);world.free();bodies.length=0;colliders.length=0;}
-  };
-}
-
-export class PhysicsEngine {
-  static async create() { return Object.assign(new PhysicsEngine(), await createPhysics()); }
+  dispose() {
+    for (const entry of this.bodies) this.world.removeRigidBody(entry.body);
+    this.world.free();
+    this.bodies.length = 0;
+    this.colliders.length = 0;
+  }
 }

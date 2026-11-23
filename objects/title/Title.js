@@ -1,61 +1,56 @@
-// The title module owns only the title-screen DOM and its controls.
-// The Omniverse scene, camera, animation loop, and music are managed by index.html.
-
-export function createTitleScreen({ onNewGame = () => {} } = {}) {
-  const screen = document.createElement("main");
-  screen.id = "title-screen";
-  screen.innerHTML = `
-    <section id="title-menu" aria-label="Main menu">
-      <h1 id="game-title">RUSTBUCKET</h1>
-      <div id="title-buttons">
-        <button id="new-game-button" type="button">NEW GAME</button>
-        <button id="load-game-button" type="button" aria-label="Load game" aria-expanded="false">
-          <span>LOAD GAME</span>
-          <svg class="chevron" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </button>
-      </div>
-      <div id="load-game-panel" hidden><p>NO SAVED GAMES</p></div>
-    </section>
-  `;
-
-  const newGameButton = screen.querySelector("#new-game-button");
-  const loadGameButton = screen.querySelector("#load-game-button");
-  const loadGamePanel = screen.querySelector("#load-game-panel");
-
-  function handleNewGame() {
-    onNewGame();
-    screen.dispatchEvent(new CustomEvent("rustbucket:newgame", { bubbles: true }));
-  }
-
-  function handleLoadGame() {
-    const expanded = loadGameButton.getAttribute("aria-expanded") === "true";
-    loadGameButton.setAttribute("aria-expanded", String(!expanded));
-    loadGamePanel.hidden = expanded;
-  }
-
-  newGameButton.addEventListener("click", handleNewGame);
-  loadGameButton.addEventListener("click", handleLoadGame);
-  document.body.appendChild(screen);
-
-  return {
-    element: screen,
-    setVisible(visible) {
-      screen.hidden = !visible;
-      screen.style.display = visible ? "block" : "none";
-    },
-    destroy() {
-      newGameButton.removeEventListener("click", handleNewGame);
-      loadGameButton.removeEventListener("click", handleLoadGame);
-      screen.remove();
-    }
-  };
-}
-
+import { NewGame } from "./NewGame.js";
+import { LoadGame } from "./LoadGame.js";
 
 export class Title {
-  constructor(options = {}) { this.screen = createTitleScreen(options); }
-  setVisible(value) { this.screen?.setVisible?.(value); }
-  destroy() { this.screen?.destroy?.(); }
+  constructor({ onNewGame = () => {} } = {}) {
+    this.onNewGame = onNewGame;
+    this.styles = {
+      screen: { position: "fixed", inset: "0", display: "grid", placeItems: "center", zIndex: "20", pointerEvents: "none" },
+      menu: { width: "min(88vw, 560px)", display: "grid", justifyItems: "center", gap: "22px", pointerEvents: "auto", textAlign: "center" },
+      heading: { margin: "0", color: "#f5fff7", fontFamily: "Nulshock, sans-serif", fontSize: "clamp(2.2rem, 8vw, 5.5rem)", letterSpacing: ".08em", textShadow: "0 0 28px rgba(83,255,151,.32)" },
+      buttons: { display: "grid", width: "min(78vw, 320px)", gap: "12px" },
+      panel: { color: "#a9e9bd", letterSpacing: ".12em", fontSize: "1rem" }
+    };
+
+    this.element = document.createElement("main");
+    this.element.id = "title-screen";
+    this.element.style.position = this.styles.screen.position;
+    this.element.style.inset = this.styles.screen.inset;
+    this.element.style.display = this.styles.screen.display;
+    this.element.style.placeItems = this.styles.screen.placeItems;
+    this.element.style.zIndex = this.styles.screen.zIndex;
+    this.element.style.pointerEvents = this.styles.screen.pointerEvents;
+
+    this.menu = document.createElement("section");
+    this.menu.id = "title-menu";
+    Object.assign(this.menu.style, this.styles.menu);
+
+    this.heading = document.createElement("h1");
+    this.heading.id = "game-title";
+    this.heading.textContent = "RUSTBUCKET";
+    Object.assign(this.heading.style, this.styles.heading);
+
+    this.buttons = document.createElement("div");
+    this.buttons.id = "title-buttons";
+    Object.assign(this.buttons.style, this.styles.buttons);
+
+    this.newGame = new NewGame({ onSelect: () => this.onNewGame() });
+    this.loadGame = new LoadGame();
+    this.buttons.append(this.newGame.create(), this.loadGame.create());
+
+    this.menu.append(this.heading, this.buttons, this.loadGame.panel);
+    this.element.append(this.menu);
+    document.body.append(this.element);
+  }
+
+  setVisible(visible) {
+    this.element.hidden = !visible;
+    this.element.style.display = visible ? "grid" : "none";
+  }
+
+  destroy() {
+    this.newGame.destroy();
+    this.loadGame.destroy();
+    this.element.remove();
+  }
 }
