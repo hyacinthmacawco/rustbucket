@@ -6,14 +6,10 @@ export class Extranet {
   constructor({
     onContinue = () => {},
     onComplete = () => {},
-    simulation = null,
-    onData = () => {},
     onJumpSystem = () => {}
   } = {}) {
     this.onContinue = onContinue;
     this.onComplete = onComplete;
-    this.simulation = simulation;
-    this.onData = onData;
     this.onJumpSystem = onJumpSystem;
 
     this.current = "home";
@@ -21,7 +17,7 @@ export class Extranet {
     this.completionPresented = false;
     this.pages = {
       tasks: new Tasks({ onComplete: this.onComplete }),
-      relationships: new Relationships(this.simulation),
+      relationships: new Relationships(),
       memories: new Memories()
     };
 
@@ -285,9 +281,6 @@ export class Extranet {
       if (url.endsWith("/tasks")) this.tasks();
       else if (url.endsWith("/relationships")) this.showRelationships();
       else if (url.endsWith("/memories")) this.memories();
-      else if (url.endsWith("/accounts")) this.onData(this.page, "accounting");
-      else if (url.endsWith("/inventory")) this.onData(this.page, "items");
-      else if (url.endsWith("/event-log")) this.onData(this.page, "events");
       else this.privateCloud();
     } else if (url.includes("en.omnidata.org")) {
       this.omnidata();
@@ -330,10 +323,7 @@ export class Extranet {
     for (const [label, target] of [
       ["Tasks", "tasks"],
       ["Relationships", "relationships"],
-      ["Memories", "memories"],
-      ["Accounts", "accounts"],
-      ["Inventory", "inventory"],
-      ["Event Log", "event-log"]
+      ["Memories", "memories"]
     ]) {
       const button = document.createElement("button");
       button.type = "button";
@@ -343,19 +333,6 @@ export class Extranet {
         if (target === "tasks") this.tasks();
         else if (target === "relationships") this.showRelationships();
         else if (target === "memories") this.memories();
-        else if (target === "accounts") {
-          this.current = "accounts";
-          this.address.value = "ottps://bgkr.omnicloud.com/accounts";
-          this.onData(this.page, "accounting");
-        } else if (target === "inventory") {
-          this.current = "inventory";
-          this.address.value = "ottps://bgkr.omnicloud.com/inventory";
-          this.onData(this.page, "items");
-        } else {
-          this.current = "event-log";
-          this.address.value = "ottps://bgkr.omnicloud.com/event-log";
-          this.onData(this.page, "events");
-        }
       });
       grid.append(button);
     }
@@ -465,13 +442,9 @@ export class Extranet {
   }
 
   addRelationship(picker, owner) {
-    if (!this.simulation) return;
-    const from = String(picker).toLowerCase().replace(/^./, character => character.toUpperCase());
-    const to = String(owner).toLowerCase().replace(/^./, character => character.toUpperCase());
-    this.simulation.setRelationship(
-      from,
-      to,
-      this.simulation.getRelationship(from, to) + 0.1
+    this.pages.relationships.addRelationship(
+      String(picker).replace(/^./, character => character.toUpperCase()),
+      String(owner).replace(/^./, character => character.toUpperCase())
     );
   }
 
