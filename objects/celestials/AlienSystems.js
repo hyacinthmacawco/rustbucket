@@ -4,10 +4,10 @@ import { Starfield } from "./Starfield.js";
 // Stylised Ben 10 planetary systems. Planet colours and silhouettes are
 // procedural so these models do not depend on remote image assets.
 export class AlienSystems {
-static this.constructor.TAU = Math.PI * 2;
+static TAU = Math.PI * 2;
 static SHIP_LENGTH = 26;
 static STAR_RADIUS = 26 * 500;
-static this.constructor.PLANET_RADIUS = 26 * 50;
+static PLANET_RADIUS = 26 * 50;
 scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
 
 makePlanetTexture(palette, style = "bands") {
