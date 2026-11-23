@@ -15,6 +15,17 @@ export class Galvan {
   constructor(parent = null, options = {}) {
     this.group = new THREE.Group();
     this.group.name = "Galvan";
+    this.homeworld = "galvan";
+    this.currentWorld = null;
+    this.taydenite = 350 + Math.floor(Math.random() * 251);
+    this.health = 100;
+    this.energy = 100;
+    this.energyLabel = "ENERGY";
+    this.maxHealth = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
+    this.boardedShip = null;
 
     this.materials = {
       skin: this.createMaterial(0x8d9b8c),
@@ -39,6 +50,8 @@ export class Galvan {
     if (parent) parent.add(this.group);
     this.model = this.group;
     this.mesh = this.group;
+    this.group.userData.statusOwner = this;
+    this.group.userData.speciesInstance = this;
   }
 
   createMaterial(color, options = {}) {
@@ -160,4 +173,68 @@ export class Galvan {
     this.addBox(dark, [0.26, 0.23, 0.04], [0, 1.43, 0.155]);
     this.addBox(green, [0.12, 0.12, 0.025], [0, 1.43, 0.185]);
   }
+
+  updateStatus(delta) {
+    this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
+    this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
+    if (this.healthRecoveryDelay === 0 && this.health < 100) this.health = Math.min(100, this.health + delta * 0.32);
+    if (this.energyRecoveryDelay === 0 && this.energy < 100) this.energy = Math.min(100, this.energy + delta * 0.48);
+  }
+
+  takeDamage(amount) {
+    this.health = Math.max(0, this.health - Math.max(0, amount));
+    this.healthRecoveryDelay = 4;
+    return this.health;
+  }
+
+  useEnergy(amount) {
+    if (this.energy < amount) return false;
+    this.energy = Math.max(0, this.energy - amount);
+    this.energyRecoveryDelay = 4;
+    return true;
+  }
+
+  restoreEnergy(amount) {
+    this.energy = Math.min(100, this.energy + Math.max(0, amount));
+    return this.energy;
+  }
+
+  boardRustbucket(ship, seatIndex = 0) {
+    if (!ship || this.boardedShip || this.homeworld === this.currentWorld) return false;
+    this.group.userData.boarded = true;
+    this.attachToRustbucket(ship, seatIndex);
+    return true;
+  }
+
+  attachToRustbucket(ship, seatIndex = 0) {
+    if (!ship) return false;
+    this.boardedShip = ship;
+    this.group.userData.boarded = true;
+    ship.add(this.group);
+    const seats = [
+      [-0.58, -1.12, -1.85],
+      [0.58, -1.12, -1.85],
+      [-0.58, -1.12, -3.15],
+      [0.58, -1.12, -3.15]
+    ];
+    this.group.position.set(...seats[seatIndex % seats.length]);
+    this.group.rotation.set(0, Math.PI, 0);
+    return true;
+  }
+
+  deliverAtHomeworld(worldKey, destination, ship) {
+    if (!this.boardedShip || this.homeworld !== worldKey || !destination || !ship) return false;
+
+    const payment = this.taydenite;
+    this.taydenite = 0;
+    ship.userData.taydenite = (ship.userData.taydenite || 0) + payment;
+    this.boardedShip = null;
+    this.currentWorld = worldKey;
+    this.group.userData.boarded = false;
+    destination.add(this.group);
+    this.group.position.set(4, 0, 5);
+    this.group.rotation.set(0, Math.PI, 0);
+    return payment;
+  }
+
 }
