@@ -1,7 +1,17 @@
+import { Ben } from "../team/Ben.js";
+import { Gwen } from "../team/Gwen.js";
+import { Kevin } from "../team/Kevin.js";
+import { Rook } from "../team/Rook.js";
+import { Highbreed } from "../species/Highbreed.js";
+import { Incursean } from "../species/Incursean.js";
+import { Anodite } from "../species/Anodite.js";
+import { Galvan } from "../species/Galvan.js";
+import { Human } from "../species/Human.js";
+
 export class Relationships {
-  constructor(simulation) {
-    this.simulation = simulation;
+  constructor() {
     this.names = ["Ben", "Gwen", "Kevin", "Rook", "Highbreed", "Incursean", "Anodite", "Galvan", "Human"];
+    this.entityClasses = { Ben, Gwen, Kevin, Rook, Highbreed, Incursean, Anodite, Galvan, Human };
     this.styles = {
       wrapper: { overflowX: "auto" },
       table: { width: "100%", borderCollapse: "collapse", minWidth: "760px", fontSize: ".78rem" },
@@ -9,6 +19,17 @@ export class Relationships {
       track: { position: "relative", display: "block", height: "5px", minWidth: "44px", marginTop: "4px", borderRadius: "5px", background: "rgba(255,255,255,.1)" },
       fill: { position: "absolute", top: "0", height: "100%", borderRadius: "5px" }
     };
+  }
+
+  getRelationship(from, to) {
+    if (from === to) return 0;
+    return Number(this.entityClasses[from]?.relationships?.[to] ?? 0);
+  }
+
+  addRelationship(from, to, amount = 0.1) {
+    if (from === to || !this.entityClasses[from]) return;
+    const relationships = this.entityClasses[from].relationships;
+    relationships[to] = Math.max(-100, Math.min(100, this.getRelationship(from, to) + amount));
   }
 
   render(host) {
@@ -41,9 +62,9 @@ export class Relationships {
       for (const to of this.names) {
         const cell = document.createElement("td");
         Object.assign(cell.style, this.styles.cell);
-        const value = from === to ? 0 : (this.simulation?.getRelationship(from, to) ?? 0);
+        const value = this.getRelationship(from, to);
         const number = document.createElement("span");
-        number.textContent = Number(value).toFixed(0) + "%";
+        number.textContent = value.toFixed(0) + "%";
         cell.append(number);
 
         if (from !== to) {
@@ -57,10 +78,8 @@ export class Relationships {
           track.append(fill);
           cell.append(track);
         }
-
         row.append(cell);
       }
-
       table.append(row);
     }
 
