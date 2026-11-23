@@ -44,7 +44,9 @@ export class PlanetPopulation {
     this.planetKey = planetKey;
     this.inhabitants = [];
     const localSpecies = Object.keys(this.constructor.HOME_PLANETS).find(name => this.constructor.HOME_PLANETS[name] === planetKey) || "Human";
-    const visitors = planetKey === "earth" ? [] : Object.keys(this.constructor.HOME_PLANETS).filter(name => name !== localSpecies);
+    const visitorSpecies = planetKey === "earth"
+      ? []
+      : ["Highbreed", "Galvan"].filter(species => species !== localSpecies);
     this.clock = 0;
     const layout = planetKey === "earth" ? [
       [-26,0,-14],[-30,0,-6],[-25,0,3],[-31,0,14],
@@ -55,7 +57,9 @@ export class PlanetPopulation {
     ];
     for (let i = 0; i < 8; i++) {
       const isVisitor = planetKey !== "earth" && i >= 6;
-      const species = isVisitor ? visitors[(i - 6 + Object.keys(this.constructor.HOME_PLANETS).indexOf(localSpecies)) % visitors.length] : localSpecies;
+      const species = isVisitor
+        ? visitorSpecies[(i - 6) % visitorSpecies.length]
+        : localSpecies;
       const nameList = this.constructor.NAMES[species];
       const name = nameList[(i + Object.keys(this.constructor.HOME_PLANETS).indexOf(localSpecies)) % nameList.length];
       const homePlanet = this.constructor.HOME_PLANETS[species];
