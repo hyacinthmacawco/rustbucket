@@ -4,11 +4,11 @@ import { Starfield } from "./Starfield.js";
 // Stylised Ben 10 planetary systems. Planet colours and silhouettes are
 // procedural so these models do not depend on remote image assets.
 export class AlienSystems {
-static TAU = Math.PI * 2;
+static this.constructor.TAU = Math.PI * 2;
 static SHIP_LENGTH = 26;
 static STAR_RADIUS = 26 * 500;
-static PLANET_RADIUS = 26 * 50;
-scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
+static this.constructor.PLANET_RADIUS = 26 * 50;
+scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
 
 makePlanetTexture(palette, style = "bands") {
   const canvas = document.createElement("canvas");
@@ -23,7 +23,7 @@ makePlanetTexture(palette, style = "bands") {
       const x = (i * 173) % 1024, y = 45 + ((i * 97) % 410);
       ctx.fillStyle = i % 3 ? palette[2] : palette[0];
       ctx.globalAlpha = .25 + (i % 4) * .08;
-      ctx.beginPath(); ctx.ellipse(x, y, 24 + (i % 8) * 13, 8 + (i % 5) * 5, (i % 7) * .3, 0, this.constructor.TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x, y, 24 + (i % 8) * 13, 8 + (i % 5) * 5, (i % 7) * .3, 0, this.constructor.this.constructor.TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
@@ -40,16 +40,16 @@ makePlanetTexture(palette, style = "bands") {
   if (style === "crater") {
     const crater = ctx.createRadialGradient(520, 250, 20, 520, 250, 210);
     crater.addColorStop(0, "#152d22"); crater.addColorStop(.72, "#304c32"); crater.addColorStop(1, "rgba(20,50,25,0)");
-    ctx.fillStyle = crater; ctx.beginPath(); ctx.arc(520, 250, 215, 0, this.constructor.TAU); ctx.fill();
+    ctx.fillStyle = crater; ctx.beginPath(); ctx.arc(520, 250, 215, 0, this.constructor.this.constructor.TAU); ctx.fill();
     ctx.strokeStyle = "rgba(196,255,157,.45)"; ctx.lineWidth = 13;
-    ctx.beginPath(); ctx.ellipse(520, 250, 225, 170, -.18, 0, this.constructor.TAU); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(520, 250, 225, 170, -.18, 0, this.constructor.this.constructor.TAU); ctx.stroke();
   }
   if (style === "scorched") {
     for (let i = 0; i < 19; i++) {
       const x = (i * 251) % 1024, y = 30 + ((i * 137) % 450);
       ctx.save(); ctx.translate(x, y); ctx.rotate((i % 5) * .37);
       ctx.fillStyle = "#17131a"; ctx.globalAlpha = .75;
-      ctx.beginPath(); ctx.ellipse(0, 0, 18 + (i % 6) * 10, 8 + (i % 4) * 9, 0, 0, this.constructor.TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 0, 18 + (i % 6) * 10, 8 + (i % 4) * 9, 0, 0, this.constructor.this.constructor.TAU); ctx.fill();
       ctx.restore();
     }
     ctx.globalAlpha = 1;
@@ -82,12 +82,12 @@ makeWorld(parent, name, baseRadius, palette, style, options = {}) {
     roughness: .9,
     metalness: style === "city" ? .12 : .02
   });
-  const planet = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.PLANET_RADIUS, 64, 48), material);
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.this.constructor.PLANET_RADIUS, 64, 48), material);
   planet.name = name;
   planet.rotation.z = options.tilt || 0;
   parent.add(planet);
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(this.constructor.PLANET_RADIUS * 1.035, 48, 32),
+    new THREE.SphereGeometry(this.constructor.this.constructor.PLANET_RADIUS * 1.035, 48, 32),
     new THREE.MeshBasicMaterial({ color: options.atmosphere || palette[0], transparent: true, opacity: .13, side: THREE.BackSide, depthWrite: false })
   );
   parent.add(atmosphere);
@@ -123,12 +123,12 @@ makeOrbit(parent, radius, color = 0x9bb8c7) {
     const { planet } = this.makeWorld(group, "Augstaka", 5.2, ["#9fb76a", "#4d8658", "#244e45"], "hills", { atmosphere: 0x9fcf9d });
     planet.position.set(distance, 0, 0);
     this.makeOrbit(group, distance);
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(PLANET_RADIUS * .16, 32, 24), new THREE.MeshStandardMaterial({ color: 0xaab7a0, roughness: 1 }));
-    moon.position.set(distance, 0, PLANET_RADIUS * 1.55); group.add(moon);
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.PLANET_RADIUS * .16, 32, 24), new THREE.MeshStandardMaterial({ color: 0xaab7a0, roughness: 1 }));
+    moon.position.set(distance, 0, this.constructor.PLANET_RADIUS * 1.55); group.add(moon);
     const city = new THREE.Group(); city.position.set(distance, 0, 0); group.add(city);
-    const cityScale = PLANET_RADIUS / 5.2;
+    const cityScale = this.constructor.PLANET_RADIUS / 5.2;
     for (let i = 0; i < 18; i++) {
-      const a = i * TAU / 18, r = (5.25 + (i % 3) * .35) * cityScale;
+      const a = i * this.constructor.TAU / 18, r = (5.25 + (i % 3) * .35) * cityScale;
       const h = (.35 + (i % 5) * .19) * cityScale;
       const tower = new THREE.Mesh(new THREE.BoxGeometry(.18 * cityScale, h, .18 * cityScale), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x9bbd9a : 0xd0d7b1, emissive: 0x1e4630, emissiveIntensity: .25 }));
       tower.position.set(Math.cos(a) * r, Math.sin(a) * r * .55, Math.sin(a) * r);
@@ -145,7 +145,7 @@ makeOrbit(parent, radius, color = 0x9bb8c7) {
     const distance = this.scaledSeparation(17, 4.5, 4.7);
     const { planet } = this.makeWorld(group, "Anodyne", 4.7, ["#70252d", "#45131e", "#210d19"], "bands", { atmosphere: 0x9c3440 });
     planet.position.set(distance, 0, 0);
-    for (const [radius, tube, opacity] of [[7.2*(PLANET_RADIUS/4.7),.24*(PLANET_RADIUS/4.7),.85],[8.4*(PLANET_RADIUS/4.7),.16*(PLANET_RADIUS/4.7),.65]]) {
+    for (const [radius, tube, opacity] of [[7.2*(this.constructor.PLANET_RADIUS/4.7),.24*(this.constructor.PLANET_RADIUS/4.7),.85],[8.4*(this.constructor.PLANET_RADIUS/4.7),.16*(this.constructor.PLANET_RADIUS/4.7),.65]]) {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 160), new THREE.MeshBasicMaterial({ color: 0xe97835, transparent: true, opacity, side: THREE.DoubleSide }));
       ring.position.copy(planet.position); ring.rotation.set(1.18, .18, .16); group.add(ring);
     }
@@ -162,8 +162,8 @@ makeOrbit(parent, radius, color = 0x9bb8c7) {
     const { planet } = this.makeWorld(group, "Galvan Prime", 4.1, ["#b5d99a", "#5f9d52", "#24753a"], "crater", { atmosphere: 0x75d8c4 });
     planet.position.set(distance, 0, 0);
     this.makeOrbit(group, distance, 0x8de2bb);
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(PLANET_RADIUS * .22, 32, 24), new THREE.MeshStandardMaterial({ color: 0x3e8c9a, roughness: .55, metalness: .22, emissive: 0x0b3238, emissiveIntensity: .2 }));
-    moon.position.set(distance, 0, PLANET_RADIUS * 1.55); moon.name = "Galvan B"; group.add(moon);
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.PLANET_RADIUS * .22, 32, 24), new THREE.MeshStandardMaterial({ color: 0x3e8c9a, roughness: .55, metalness: .22, emissive: 0x0b3238, emissiveIntensity: .2 }));
+    moon.position.set(distance, 0, this.constructor.PLANET_RADIUS * 1.55); moon.name = "Galvan B"; group.add(moon);
     systems.push(group);
   }
 
@@ -180,9 +180,9 @@ makeOrbit(parent, radius, color = 0x9bb8c7) {
     // Radial fractures and detached crust fragments make the destruction
     // readable at a distance without turning the whole planet into noise.
     const shardMaterial = new THREE.MeshStandardMaterial({ color: 0xd78b75, roughness: .95 });
-    const shardScale = PLANET_RADIUS / 4.3;
+    const shardScale = this.constructor.PLANET_RADIUS / 4.3;
     for (let i = 0; i < 13; i++) {
-      const a = i * TAU / 13, r = (4.5 + (i % 3) * .65) * shardScale;
+      const a = i * this.constructor.TAU / 13, r = (4.5 + (i % 3) * .65) * shardScale;
       const shard = new THREE.Mesh(new THREE.DodecahedronGeometry((.55 + (i % 4) * .16) * shardScale, 0), shardMaterial);
       shard.position.set(Math.cos(a) * r, Math.sin(a * 1.7) * 1.5 * shardScale, Math.sin(a) * r);
       shard.rotation.set(a, a * .7, a * .3); shell.add(shard);
