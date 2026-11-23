@@ -275,13 +275,19 @@ export class Highbreed {
 
     const payment = this.taydenite;
     this.taydenite = 0;
-    ship.userData.taydenite = (ship.userData.taydenite || 0) + payment;
+    const shipStatus = ship.userData.statusOwner;
+    shipStatus.taydenite += payment;
+    ship.userData.taydenite = shipStatus.taydenite;
     this.boardedShip = null;
     this.currentWorld = worldKey;
     this.group.userData.boarded = false;
     destination.add(this.group);
     this.group.position.set(4, 0, 5);
     this.group.rotation.set(0, Math.PI, 0);
+    this.group.userData.wanderOrigin = this.group.position.clone();
+    this.group.userData.wanderTarget = this.group.position.clone();
+    this.group.userData.wanderTimer = 1;
+    this.group.userData.wanderRange = { x: 19, z: 19 };
     return payment;
   }
 
