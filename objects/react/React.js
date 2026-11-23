@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { AudioPlayer } from "../ui/AudioPlayer.js";
 import { Camera } from "./Camera.js";
 import { PhysicsEngine } from "./PhysicsEngine.js";
-import { SimulationSystem } from "./SimulationSystem.js";
 import { Title } from "../title/Title.js";
 import { Joystick } from "../ui/Joystick.js";
 import { Pause } from "../ui/Pause.js";
@@ -15,26 +14,43 @@ import { IncursiaSystem } from "../systems/IncursiaSystem.js";
 import { EarthInterior } from "../interiors/EarthInterior.js";
 import { KevinStorageUnit } from "../interiors/KevinStorageUnit.js";
 import { Suitcases } from "../interiors/Suitcases.js";
-import { MoonInterior } from "../interiors/MoonInterior.js";
-import { PlanetInterior } from "../interiors/PlanetInterior.js";
 import { AugstakaInterior } from "../interiors/AugstakaInterior.js";
 import { AnodyneInterior } from "../interiors/AnodyneInterior.js";
 import { GalvanPrimeInterior } from "../interiors/GalvanPrimeInterior.js";
 import { IncursiaInterior } from "../interiors/IncursiaInterior.js";
 import { Rustbucket } from "../team/Rustbucket.js";
-import { AlienShip } from "../vehicles/AlienShip.js";
+import { AlienShip } from "../technology/ships/AlienShip.js";
 import { PlanetPopulation } from "../interiors/PlanetPopulation.js";
-import { PassengerTransport } from "../vehicles/PassengerTransport.js";
 import { Human as HumanRig } from "../species/Human.js";
+import { Human as HumanSpecies } from "../species/Human.js";
+import { Highbreed } from "../species/Highbreed.js";
+import { Incursean } from "../species/Incursean.js";
+import { Anodite } from "../species/Anodite.js";
+import { Galvan } from "../species/Galvan.js";
+import { LunarSurface } from "../interiors/LunarSurface.js";
 import { Ben } from "../team/Ben.js";
 import { Gwen } from "../team/Gwen.js";
 import { Kevin } from "../team/Kevin.js";
 import { Rook } from "../team/Rook.js";
-import { ExtranetBrowser } from "../extranet/ExtranetBrowser.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
 import { Chromastone } from "../omnitrix/Chromastone.js";
 
-const PLANET_WORLDS = PlanetInterior.WORLDS;
+const PLANET_INTERIOR_CLASSES = {
+  augstaka: AugstakaInterior,
+  anodyne: AnodyneInterior,
+  galvan: GalvanPrimeInterior,
+  incursia: IncursiaInterior
+};
+const PLANET_WORLDS = Object.fromEntries(
+  Object.entries(PLANET_INTERIOR_CLASSES).map(([key, Interior]) => [key, Interior.WORLD])
+);
+const SPECIES_RELATIONSHIPS = {
+  Highbreed: Highbreed.relationships,
+  Incursean: Incursean.relationships,
+  Anodite: Anodite.relationships,
+  Galvan: Galvan.relationships,
+  Human: HumanSpecies.relationships
+};
 
 
 
@@ -87,6 +103,8 @@ export class React {
     let physics = null;
     let entities = null;
     let alienPatrols = [];
+    const passengers = [];
+    let chromastoneActive = false;
 
     this.updateCamera = () => {
       const selectedName = keyboardController?.selected || "ben";
@@ -187,31 +205,38 @@ export class React {
     };
     document.addEventListener("keydown", this.pauseKey);
 
-    const simulation = new SimulationSystem();
-    const passengerTransport = new PassengerTransport(simulation);
-    const eventNotice=document.createElement("div");eventNotice.id="simulation-event-notice";document.body.appendChild(eventNotice);
-    let eventNoticeTimer=0;
-    simulation.onEvent=event=>{
-      eventNotice.textContent=event.description;
-      eventNotice.style.display="block";
-      eventNotice.classList.toggle("hostile",event.type==="attack"||event.type==="war");
-      window.clearTimeout(eventNoticeTimer);
-      eventNoticeTimer=window.setTimeout(()=>{eventNotice.style.display="none";},4800);
+    this.attachPassengers = ship => {
+      passengers.forEach((passenger, index) => passenger.attachToRustbucket(ship, index));
     };
-    this.configureShip = (ship) => {
-      passengerTransport.attachShip(ship);
+    this.deliverPassengers = (worldKey, interior, ship) => {
+      for (let index = passengers.length - 1; index >= 0; index--) {
+        const passenger = passengers[index];
+        const payment = passenger.deliverAtHomeworld(worldKey, interior.root, ship);
+        if (payment) {
+          interior.populationManager.inhabitants.push(passenger.group);
+          passengers.splice(index, 1);
+        } else {
+          passenger.attachToRustbucket(ship, index);
+        }
+      }
+    };
+    this.configureShip = ship => {
+      const owner = ship.userData.statusOwner;
       ship.userData.maxHealth = 100;
-      ship.userData.health = simulation.getStatus('Rustbucket').health;
+      ship.userData.health = owner.health;
+      ship.userData.energy = owner.energy;
       ship.userData.takeDamage = amount => {
-        simulation.damage('Rustbucket',amount);
-        ship.userData.health = simulation.getStatus('Rustbucket').health;
-        return ship.userData.health;
+        owner.takeDamage(amount);
+        ship.userData.health = owner.health;
+        return owner.health;
       };
-      ship.userData.onFuelUse=amount=>simulation.consumeFuel(amount*0.45);
-      const fire=ship.userData.performAttack;
-      ship.userData.performAttack=()=>{if(simulation.consumeFuel(1))fire?.();};
+      ship.userData.onFuelUse = amount => owner.useEnergy(amount * 0.45);
+      const fire = ship.userData.performAttack;
+      ship.userData.performAttack = () => {
+        if (owner.useEnergy(1)) fire?.();
+      };
       return ship;
-    }
+    };
     this.spawnPatrols = (parent, systemKey) => {
       const systems = {
         solar: {species:'Human',planet:'earth',center:new THREE.Vector3(0,0,0)},
@@ -234,10 +259,10 @@ export class React {
       if (!ship || !alienPatrols.length || state.currentScene !== 'space') return;
       ship.updateMatrixWorld(true);
       for (const patrol of [...alienPatrols]) {
-        const hostile = simulation.crew.some(member => simulation.isHostile(patrol.species,member));
+        const hostile = ["Ben", "Gwen", "Kevin", "Rook"].some(member => Number(SPECIES_RELATIONSHIPS[patrol.species]?.[member] ?? 0) < -30);
         patrol.update(delta,ship,hostile,() => {
           ship.userData.takeDamage?.(5);
-          simulation.recordEvent('attack',patrol.species + ' patrol fired on Rustbucket.',{attacker:patrol.species,target:'Rustbucket',damage:5});
+
         });
         if (!patrol.destroyed) {
           for (const laser of [...(ship.userData.getLasers?.() || [])]) {
@@ -250,7 +275,7 @@ export class React {
             if (patrol.group.position.distanceTo(combatClosest) < 55) {
               patrol.takeDamage(laser.damage || 5);
               ship.userData.removeLaser?.(laser);
-              if (patrol.destroyed) simulation.recordEvent('combat',patrol.species + ' patrol fighter was destroyed.',{species:patrol.species});
+
               break;
             }
           }
@@ -266,36 +291,13 @@ export class React {
     const extranet = new Extranet({
       onContinue: () => extranet.close(),
       onComplete: () => playSfx("./files/songs/ov-end-credits.mp3"),
-      simulation,
-      onData: (host, view) => simulationCloud.render(view, host),
       onJumpSystem: key => this.warpToSystem(key)
     });
-    const simulationCloud = new ExtranetBrowser(simulation);
     const hep=document.createElement("button");hep.id="hep-control";hep.type="button";hep.setAttribute("aria-label","Health and energy; click to pause");
     hep.innerHTML='<span class="hep-meter"><i id="hep-health-fill"></i><b>H</b></span><span class="hep-meter"><i id="hep-energy-fill"></i><b>E</b></span>';
     hep.addEventListener("click",()=>this.setPaused(!state.paused));
     document.body.append(hep);
     const hepHealth=hep.querySelector("#hep-health-fill"),hepEnergy=hep.querySelector("#hep-energy-fill");
-    const carriedHud=document.createElement("div");carriedHud.id="carried-items-hud";
-    carriedHud.innerHTML='<span>IN HAND</span><select id="carried-item-select"><option value="">NO ITEMS</option></select><button id="use-carried-item">USE</button>';
-    document.body.appendChild(carriedHud);
-    const carriedSelect=carriedHud.querySelector("select");
-    carriedHud.querySelector("button").addEventListener("click",()=>{
-      const selected=keyboardController?.selected||"ben";
-      if(carriedSelect.value==="")return;
-      const result=simulation.useCarriedItem(selected[0].toUpperCase()+selected.slice(1),Number(carriedSelect.value));
-      if(!result.ok)carriedHud.title=result.reason;
-      this.refreshCarriedHud();
-    });
-    this.refreshCarriedHud = () => {
-      const selected=keyboardController?.selected||"ben";
-      const who=selected[0].toUpperCase()+selected.slice(1);
-      const list=simulation.data.team.carried[who]||[];
-      const previous=carriedSelect.value;
-      carriedSelect.innerHTML=list.map((name,i)=>'<option value="'+i+'">'+name+'</option>').join("")||'<option value="">NO ITEMS</option>';
-      if(previous!==""&&list[Number(previous)])carriedSelect.value=previous;
-      carriedHud.style.display=state.stage==="gameplay"&&selected!=="rustbucket"?"flex":"none";
-    }
     const abilityDial=document.createElement("div");
     abilityDial.id="ability-dial";
     abilityDial.innerHTML='<div id="ability-dial-title">OMNITRIX</div><div id="ability-dial-ring"><div id="ability-dial-indicator"></div><div id="ability-dial-center">BEN</div></div><div id="ability-dial-mode">HUMAN</div>';
@@ -305,7 +307,7 @@ export class React {
     const abilityDialCenter=abilityDial.querySelector("#ability-dial-center");
     const abilityDialMode=abilityDial.querySelector("#ability-dial-mode");
     const abilityModes={ben:["HUMAN","CHROMASTONE"],kevin:["METAL","STONE","CRYSTAL","RUBBER"],gwen:["SHIELD","BOLT","HEAL","BIND"],rook:["GUN","SWORD"]};
-    const abilityState={ben:simulation.getChromastoneActive()?1:0,kevin:0,gwen:0,rook:0};
+    const abilityState={ben:chromastoneActive?1:0,kevin:0,gwen:0,rook:0};
     let abilityPointer=null;
     this.setAbilityMode = (character,index) => {
       const modes=abilityModes[character]||[];if(!modes.length)return;
@@ -316,7 +318,7 @@ export class React {
       abilityDialMode.textContent=mode;
       abilityDialIndicator.style.transform="rotate("+(next/modes.length*360)+"deg) translateY(-34px)";
       if(character==="ben"){
-        simulation.setChromastoneActive(next===1);
+        chromastoneActive = next === 1;
         const visual=entities?.ben?.userData.chromastoneVisual;
         if(visual)visual.visible=next===1;
         entities?.ben?.children?.forEach(child=>{if(child!==visual)child.visible=next===0;});
@@ -357,40 +359,6 @@ export class React {
     mapOverlay.innerHTML = '<div id="system-map-panel"><div id="system-map-title">PLANETARY NAVIGATION</div><div id="system-map-graphic"><button class="system-map-node sun-node" disabled>SUN</button><button class="system-map-node earth-node" data-destination="earth">EARTH<br><small>BELLWOOD</small></button><button class="system-map-node moon-node" data-destination="moon">MOON</button><button class="system-map-node" style="left:8%;top:8%" data-destination="augstaka">AUGSTAKA</button><button class="system-map-node" style="left:70%;top:8%" data-destination="anodyne">ANODYNE</button><button class="system-map-node" style="left:12%;top:68%" data-destination="galvan">GALVAN PRIME</button><button class="system-map-node" style="right:8%;top:68%" data-destination="incursia">INCURSIA</button></div><div id="system-map-actions"><button data-destination="space">TAKE OFF / RETURN TO ORBIT</button><button id="system-map-close">CLOSE</button></div></div>';
     document.body.appendChild(mapOverlay);
 
-    const marketPanel=document.createElement("div");
-    marketPanel.id="planet-market";
-    marketPanel.innerHTML='<div class="planet-market-card"><button id="planet-market-close" aria-label="Close marketplace">CLOSE</button><p class="planet-market-kicker">LOCAL TRADE EXCHANGE</p><h2 id="planet-market-title">MARKETPLACE</h2><p id="planet-market-cash"></p><div id="planet-market-stock"></div><p id="planet-market-message"></p></div>';
-    document.body.appendChild(marketPanel);
-    marketPanel.querySelector("#planet-market-close").addEventListener("click",()=>marketPanel.style.display="none");
-    this.openPlanetMarket = () => {
-      const key=state.currentScene;
-      const world=PLANET_WORLDS[key];if(!world)return;
-      const stock=simulation.data.resources[world.species]||[];
-      marketPanel.querySelector("#planet-market-title").textContent=world.name+" MARKET";
-      marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+simulation.data.team.cash.toLocaleString()+" TAYDENITE";
-      const list=marketPanel.querySelector("#planet-market-stock");list.replaceChildren();
-      for(const item of stock){
-        const row=document.createElement("div");row.className="planet-market-item";
-        const info=document.createElement("div");const name=document.createElement("b");name.textContent=item.name;
-        const detail=document.createElement("small");detail.textContent=item.quantity+" AVAILABLE • "+item.price+" T EACH";
-        info.append(name,detail);
-        const buy=document.createElement("button");buy.textContent="BUY 1";
-        buy.disabled=item.quantity<=0;
-        buy.addEventListener("click",()=>{
-          const selected=keyboardController?.selected||"ben";
-          const buyer=selected==="ben"?"Ben":selected==="gwen"?"Gwen":selected==="kevin"?"Kevin":"Rook";
-          const result=simulation.tradeWithSpecies(buyer,world.species,item.id,1);
-          const message=marketPanel.querySelector("#planet-market-message");
-          message.textContent=result.ok?"PURCHASE COMPLETE • "+result.cost+" TAYDENITE":result.reason;
-          marketPanel.querySelector("#planet-market-cash").textContent="TEAM FUNDS: "+simulation.data.team.cash.toLocaleString()+" TAYDENITE";
-          detail.textContent=item.quantity+" AVAILABLE • "+item.price+" T EACH";
-          buy.disabled=item.quantity<=0;
-        });
-        row.append(info,buy);list.append(row);
-      }
-      marketPanel.querySelector("#planet-market-message").textContent="Select a resource to purchase. Trade access depends on crew relationships.";
-      marketPanel.style.display="flex";
-    }
     const warpOverlay = document.createElement("div");
     warpOverlay.id = "warp-overlay";
     warpOverlay.innerHTML = '<div id="warp-flash"></div><div id="warp-caption">SPACE WARP</div>';
@@ -445,11 +413,9 @@ export class React {
           entities.rustbucket.userData.vehicleBody?.setLinvel({x:0,y:0,z:0},true);
         }
       } else await this.loadRegion(destination);
-      if (destination !== "space" && loadedRegion === destination) passengerTransport.complete(destination,entities?.rustbucket);
       this.setCameraPreset(cameraConfig.gameplay);
       warpOverlay.classList.remove("warp-active","atmospheric"); warpOverlay.style.display = "none";
       extranet.setLocation(destination === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : destination);
-      marketPanel.style.display="none";
     }
     mapOverlay.querySelectorAll("[data-destination]").forEach(button => button.addEventListener("click", () => this.warpTo(button.dataset.destination)));
     mapOverlay.querySelector("#system-map-close").addEventListener("click", () => { mapOverlay.style.display = "none"; });
@@ -602,6 +568,7 @@ export class React {
       physics?.dispose();
       physics = null;
       entities = null;
+      for (const passenger of passengers) passenger.group.removeFromParent();
       if (regionGroup) {
         scene.remove(regionGroup);
         this.disposeObjectTree(regionGroup);
@@ -650,6 +617,7 @@ export class React {
           if (state.stage === "gameplay") {
             this.spawnPatrols(group,"solar");
             const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
+            this.attachPassengers(ship);
             if(state.spaceReturnPosition)ship.position.copy(state.spaceReturnPosition);
             const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
@@ -675,6 +643,7 @@ export class React {
           if (state.stage === "gameplay") {
             this.spawnPatrols(group,systemKey);
             const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
+            this.attachPassengers(ship);
             ship.position.set(15000,12,0);
             const nextPhysics = await PhysicsEngine.create();
             if (requestId !== regionLoadId) { nextPhysics.dispose(); this.disposeObjectTree(group); return; }
@@ -689,8 +658,9 @@ export class React {
           loadedRegion=name; loadingRegion=null; return;
         } else if (name === "moon") {
           scene.background=new THREE.Color(0x080b14);scene.fog=new THREE.Fog(0x080b14,90,360);
-          new MoonInterior(group);
+          new LunarSurface(group);
           const rustbucket = new Rustbucket(group); const ship = rustbucket.ship;this.configureShip(ship);
+          this.attachPassengers(ship);
           physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
           entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
           keyboardController=joystick.createKeyboard({
@@ -701,33 +671,69 @@ export class React {
           loadedRegion=name;loadingRegion=null;return;
 
         } else if (PLANET_WORLDS[name]) {
-          const world=PLANET_WORLDS[name];
-          scene.background=new THREE.Color(world.sky);
-          scene.fog=new THREE.Fog(world.sky,38,190);
-          const InteriorClass = { augstaka: AugstakaInterior, anodyne: AnodyneInterior, galvan: GalvanPrimeInterior, incursia: IncursiaInterior }[name];
+          const world = PLANET_WORLDS[name];
+          scene.background = new THREE.Color(world.sky);
+          scene.fog = new THREE.Fog(world.sky, 38, 190);
+          const InteriorClass = PLANET_INTERIOR_CLASSES[name];
           const interior = new InteriorClass(group);
-          group.userData.population = interior.environment.population;
-          const { marketPosition } = interior.environment;
-          const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship); ship.position.set(0,2,13);
-          passengerTransport.bindShip(ship,interior.environment.inhabitants);
-          physics=await PhysicsEngine.create();physics.setEnvironment("planet");physics.addStaticScene(group);physics.addVehicle(ship);
-          entities={rustbucket:ship};regionGroup=group;scene.add(regionGroup);
-          keyboardController=joystick.createKeyboard({
-            entities,camera,joystick,this.updateCamera,isMobile,initialSelected:"rustbucket",onJump:this.openSystemMap,
-            onToggleRamp:()=>{ship.userData.toggleRamp?.();rampButton.textContent=ship.userData.getRampOpen?.()?"CLOSE RAMP":"OPEN RAMP";},
-            onSelect:selected=>{rampButton.style.display=selected==="rustbucket"?"block":"none";}
+          group.userData.population = interior.populationManager;
+          group.userData.interior = interior;
+
+          const rustbucket = new Rustbucket(group);
+          const ship = rustbucket.ship;
+          this.configureShip(ship);
+          ship.position.set(0, 2, 13);
+          this.deliverPassengers(name, interior, ship);
+
+          ship.userData.performPickup = () => {
+            if (passengers.length >= 4) return;
+            let nearest = null;
+            let nearestDistance = 12;
+            for (const person of interior.populationManager.inhabitants) {
+              const passenger = person.userData.speciesInstance;
+              if (!passenger || passenger.homeworld === name || passenger.boardedShip) continue;
+              const distance = ship.position.distanceTo(person.position);
+              if (distance < nearestDistance) {
+                nearest = passenger;
+                nearestDistance = distance;
+              }
+            }
+            if (nearest && nearest.boardRustbucket(ship, passengers.length)) passengers.push(nearest);
+          };
+
+          const nextPhysics = await PhysicsEngine.create();
+          if (requestId !== regionLoadId) {
+            nextPhysics.dispose();
+            this.disposeObjectTree(group);
+            return;
+          }
+          physics = nextPhysics;
+          physics.setEnvironment("planet");
+          physics.addStaticScene(group);
+          physics.addVehicle(ship);
+          entities = { rustbucket: ship };
+          regionGroup = group;
+          scene.add(regionGroup);
+          keyboardController = joystick.createKeyboard({
+            entities, camera, joystick, this.updateCamera, isMobile, initialSelected: "rustbucket", onJump: this.openSystemMap,
+            onToggleRamp: () => { ship.userData.toggleRamp?.(); rampButton.textContent = ship.userData.getRampOpen?.() ? "CLOSE RAMP" : "OPEN RAMP"; },
+            onSelect: selected => { rampButton.style.display = selected === "rustbucket" ? "block" : "none"; }
           });
-          regionGroup.userData.marketPosition=marketPosition;
-          loadedRegion=name;loadingRegion=null;return;
+          loadedRegion = name;
+          loadingRegion = null;
+          return;
         } else if (name === "earth") {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           const earthEnvironment = new EarthInterior(scene, group);
           const population = new PlanetPopulation(earthEnvironment.bellwood,"earth");
           group.userData.population = population;
+          group.userData.interior = earthEnvironment;
+          earthEnvironment.populationManager = population;
+          earthEnvironment.inhabitants = population.inhabitants;
           const storageUnit = new KevinStorageUnit(group); const unit = storageUnit.unit;
           const rustbucket = new Rustbucket(group); const ship = rustbucket.ship; this.configureShip(ship);
-          passengerTransport.bindShip(ship,population.inhabitants);
+          this.attachPassengers(ship);
 
           const nextPhysics = await PhysicsEngine.create();
           if (requestId !== regionLoadId) {
@@ -778,14 +784,14 @@ export class React {
           const benCharacter = new Ben({ HumanRig });
           const chromastoneVisual=new Chromastone().model;
           benCharacter.group.add(chromastoneVisual);
-          chromastoneVisual.visible=simulation.getChromastoneActive();
+          chromastoneVisual.visible=chromastoneActive;
           benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
-          if(simulation.getChromastoneActive())benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
+          if(chromastoneActive)benCharacter.group.children.forEach(child=>{if(child!==chromastoneVisual)child.visible=false;});
           joystick.buttons.querySelector("#pick-button").textContent="PICK";
           benCharacter.group.userData.chromastoneVisual=chromastoneVisual;
-          this.setAbilityMode("ben",simulation.getChromastoneActive()?1:0);
+          this.setAbilityMode("ben",chromastoneActive?1:0);
           benCharacter.group.userData.performChromastoneAttack=()=>{
-            if(!simulation.spendEnergy("Chromastone",8))return;
+            if(!benCharacter.useEnergy(8))return;
             const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.12,7,8),new THREE.MeshBasicMaterial({color:0x8b63ff,transparent:true,opacity:.9}));
             beam.rotation.x=Math.PI/2;beam.position.set(0,1.65,-3.8);chromastoneVisual.add(beam);
             window.setTimeout(()=>{chromastoneVisual.remove(beam);beam.geometry.dispose();beam.material.dispose();},180);
@@ -826,13 +832,13 @@ export class React {
             character.group.setAnimation("idle");
             character.group.userData.performPickup = () => this.tryPickup(name, character.group, character.rig);
             character.group.userData.performAttack = () => {
-              if(name==="ben"&&simulation.getChromastoneActive()){character.group.userData.performChromastoneAttack?.();return;}
+              if(name==="ben"&&chromastoneActive){character.group.userData.performChromastoneAttack?.();return;}
               character.group.userData.actionActive = true;
               character.group.userData.actionRemaining = 0.78;
               character.rig.playAnimation("punch");
             };
             character.group.userData.performPickup = () => {
-              if(name==="ben"&&simulation.getChromastoneActive()){simulation.recharge("Chromastone",12);return;}
+              if(name==="ben"&&chromastoneActive){benCharacter.restoreEnergy(12);return;}
               this.tryPickup(name, character.group, character.rig);
             };
             characterEntities[name] = character.group;
@@ -928,7 +934,6 @@ export class React {
       }
     };
 
-    const marketButton=document.createElement("button");marketButton.id="planet-market-button";marketButton.textContent="OPEN MARKETPLACE";marketButton.addEventListener("click",this.openPlanetMarket);document.body.appendChild(marketButton);
     const SYSTEM_PLANET_ORBITS = {
       solar: {earth:new THREE.Vector3(0,0,0),moon:new THREE.Vector3(1547,0,0)},
       augstaka: {augstaka:new THREE.Vector3(274300,0,0)},
@@ -959,7 +964,6 @@ export class React {
         warpOverlay.classList.add("atmospheric");warpOverlay.style.display="flex";warpOverlay.classList.remove("warp-active");void warpOverlay.offsetWidth;warpOverlay.classList.add("warp-active");
         await new Promise(resolve=>window.setTimeout(resolve,1250));
         state.currentScene=nearestPlanet.key;await this.loadRegion(nearestPlanet.key);this.setCameraPreset(cameraConfig.gameplay);
-        if (loadedRegion === nearestPlanet.key) passengerTransport.complete(nearestPlanet.key,entities?.rustbucket);
         extranet.setLocation(nearestPlanet.key);warpOverlay.classList.remove("warp-active","atmospheric");warpOverlay.style.display="none";
         planetTransitionBusy=false;
       }
@@ -997,7 +1001,6 @@ export class React {
       joystick.setVisible(state.stage === "gameplay");
       extranetButton.style.display = state.stage === "gameplay" ? "grid" : "none";
       hep.style.display=state.stage==="gameplay"?"flex":"none";
-      carriedHud.style.display=state.stage==="gameplay"?"flex":"none";
       this.updateAbilityDial(keyboardController?.selected||"ben");
       if (state.stage !== "gameplay") { rampButton.style.display = "none"; }
       if (state.stage !== "gameplay" && state.paused) this.setPaused(false);
@@ -1023,18 +1026,19 @@ export class React {
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
-        if(PLANET_WORLDS[state.currentScene]&&entities?.rustbucket&&regionGroup?.userData.marketPosition){
-          const near=entities.rustbucket.position.distanceTo(regionGroup.userData.marketPosition)<15;
-          const marketButtonVisible=near&&marketPanel.style.display!=="flex";
-          marketButton.style.display=marketButtonVisible?"block":"none";
-        } else marketButton.style.display="none";
-        if(!state.paused)simulation.update(delta,(keyboardController?.selected||"ben").replace(/^./,c=>c.toUpperCase()),PLANET_WORLDS[state.currentScene]?.species||state.currentScene,state.currentScene!=="space");
-        const selectedName=keyboardController?.selected||"ben";
-        const status=simulation.getStatus(selectedName==="rustbucket"?"Rustbucket":selectedName==="ben"&&simulation.getChromastoneActive()?"Chromastone":selectedName[0].toUpperCase()+selectedName.slice(1));
-        hepHealth.style.height=status.health+"%";hepEnergy.style.height=status.energy+"%";
-        hep.title="HEALTH "+Math.round(status.health)+"% / "+status.energyLabel+" "+Math.round(status.energy)+"%";
+        for (const entity of Object.values(entities || {})) {
+          entity.userData.statusOwner?.updateStatus(delta);
+        }
+        regionGroup?.userData.interior?.update(delta);
+        const selectedName = keyboardController?.selected || "ben";
+        const selectedEntity = entities?.[selectedName];
+        const status = selectedEntity?.userData.statusOwner;
+        if (status) {
+          hepHealth.style.height = status.health + "%";
+          hepEnergy.style.height = status.energy + "%";
+          hep.title = "HEALTH " + Math.round(status.health) + "% / " + status.energyLabel + " " + Math.round(status.energy) + "%";
+        }
         this.updateAbilityDial(selectedName);
-        this.refreshCarriedHud();
       }
 
       if (state.stage === "title" && titleObjects) {
@@ -1073,9 +1077,8 @@ export class React {
       sceneLoadError.remove();
       pause.destroy();
       extranetButton.remove();
-      rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
+      rampButton.remove(); mapOverlay.remove(); warpOverlay.remove();
       extranet.destroy();
-      passengerTransport.destroy();
       this.disposeRegion();
       titleScreen.destroy();
       preludeScreen.remove();
