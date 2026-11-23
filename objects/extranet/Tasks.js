@@ -17,7 +17,7 @@ export class Tasks {
     const card = document.createElement("article");
     Object.assign(card.style, this.styles.card);
     const title = document.createElement("h2");
-    title.textContent = "Put suitcases into Rustbucket";
+    title.textContent = "Put bags into Rustbucket";
     Object.assign(title.style, this.styles.title);
     const progress = document.createElement("div");
     Object.assign(progress.style, this.styles.progress);
@@ -34,7 +34,7 @@ export class Tasks {
   updateProgress() {
     if (!this.progressFill || !this.progressLabel) return;
     this.progressFill.style.width = Math.min(100, this.storedCount * 25) + "%";
-    this.progressLabel.textContent = this.storedCount + "/4 SUITCASES STORED";
+    this.progressLabel.textContent = this.storedCount + "/4 BAGS STORED";
   }
 
   update(count = this.storedCount + 1) {
