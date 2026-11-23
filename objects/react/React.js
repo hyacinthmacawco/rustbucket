@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { UIStyles } from "../ui/UIStyles.js";
 import { AudioPlayer } from "../ui/AudioPlayer.js";
+import { Camera } from "./Camera.js";
 import { PhysicsEngine } from "./PhysicsEngine.js";
 import { SimulationSystem } from "./SimulationSystem.js";
 new UIStyles();
@@ -67,12 +68,8 @@ export class React {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
 
-    const camera = new THREE.PerspectiveCamera(
-      this.cameraConfig.title.fov,
-      window.innerWidth / window.innerHeight,
-      this.cameraConfig.title.near,
-      this.cameraConfig.title.far
-    );
+    const cameraController = new Camera(THREE, this.cameraConfig.title, window.innerWidth / window.innerHeight);
+    const camera = cameraController.camera;
     scene.add(camera);
 
     let activeStage = null;
@@ -126,12 +123,7 @@ export class React {
 
     function setCameraPreset(preset) {
       cameraPreset = preset;
-      camera.fov = window.innerWidth / window.innerHeight < 0.8
-        ? Math.max(preset.fov, 65)
-        : preset.fov;
-      camera.near = preset.near;
-      camera.far = preset.far;
-      camera.updateProjectionMatrix();
+      cameraController.setPreset(preset, window.innerWidth / window.innerHeight);
 
       cameraTarget.set(...preset.target);
       const position = new THREE.Vector3(...preset.position);
@@ -1065,11 +1057,7 @@ export class React {
     }
 
     function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.fov = window.innerWidth / window.innerHeight < 0.8
-        ? Math.max(cameraPreset.fov, 65)
-        : cameraPreset.fov;
-      camera.updateProjectionMatrix();
+      cameraController.resize(window.innerWidth / window.innerHeight);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     }
