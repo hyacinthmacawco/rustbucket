@@ -1,13 +1,15 @@
 import * as THREE from "three";
 
 export class Rook {
+  static health = 100;
+  static energy = 100;
   static relationships = {"Highbreed":0,"Incursean":-70,"Anodite":40,"Galvan":80,"Human":28,"Ben":96,"Gwen":60,"Kevin":70};
 
   constructor({ HumanRig }) {
     this.startPosition = [7,-0.5,-7];
     this.startScale = [0.52,0.52,0.52];
-    this.health = 100;
-    this.energy = 100;
+    this.health = this.constructor.health;
+    this.energy = this.constructor.energy;
     this.energyLabel = "PROTO-TOOL";
     this.maxHealth = 100;
     this.maxEnergy = 100;
@@ -100,11 +102,14 @@ export class Rook {
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
     if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
     if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
+    this.constructor.health = this.health;
+    this.constructor.energy = this.energy;
   }
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
     this.healthRecoveryDelay = 4;
+    this.constructor.health = this.health;
     return this.health;
   }
 
@@ -112,16 +117,19 @@ export class Rook {
     if (this.energy < amount) return false;
     this.energy = Math.max(0, this.energy - amount);
     this.energyRecoveryDelay = 4;
+    this.constructor.energy = this.energy;
     return true;
   }
 
   restoreEnergy(amount) {
     this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount));
+    this.constructor.energy = this.energy;
     return this.energy;
   }
 
   restoreHealth(amount) {
     this.health = Math.min(this.maxHealth, this.health + Math.max(0, amount));
+    this.constructor.health = this.health;
     return this.health;
   }
 
