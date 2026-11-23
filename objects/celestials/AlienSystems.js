@@ -8,7 +8,7 @@ static this.constructor.TAU = Math.PI * 2;
 static SHIP_LENGTH = 26;
 static STAR_RADIUS = 26 * 500;
 static this.constructor.PLANET_RADIUS = 26 * 50;
-scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
+scaledSeparation(distance, oldStarRadius, oldPlanetRadius) { return this.constructor.STAR_RADIUS + this.constructor.PLANET_RADIUS + this.constructor.SHIP_LENGTH * 10000; }
 
 makePlanetTexture(palette, style = "bands") {
   const canvas = document.createElement("canvas");
@@ -23,7 +23,7 @@ makePlanetTexture(palette, style = "bands") {
       const x = (i * 173) % 1024, y = 45 + ((i * 97) % 410);
       ctx.fillStyle = i % 3 ? palette[2] : palette[0];
       ctx.globalAlpha = .25 + (i % 4) * .08;
-      ctx.beginPath(); ctx.ellipse(x, y, 24 + (i % 8) * 13, 8 + (i % 5) * 5, (i % 7) * .3, 0, this.constructor.this.constructor.TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x, y, 24 + (i % 8) * 13, 8 + (i % 5) * 5, (i % 7) * .3, 0, this.constructor.TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
@@ -40,16 +40,16 @@ makePlanetTexture(palette, style = "bands") {
   if (style === "crater") {
     const crater = ctx.createRadialGradient(520, 250, 20, 520, 250, 210);
     crater.addColorStop(0, "#152d22"); crater.addColorStop(.72, "#304c32"); crater.addColorStop(1, "rgba(20,50,25,0)");
-    ctx.fillStyle = crater; ctx.beginPath(); ctx.arc(520, 250, 215, 0, this.constructor.this.constructor.TAU); ctx.fill();
+    ctx.fillStyle = crater; ctx.beginPath(); ctx.arc(520, 250, 215, 0, this.constructor.TAU); ctx.fill();
     ctx.strokeStyle = "rgba(196,255,157,.45)"; ctx.lineWidth = 13;
-    ctx.beginPath(); ctx.ellipse(520, 250, 225, 170, -.18, 0, this.constructor.this.constructor.TAU); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(520, 250, 225, 170, -.18, 0, this.constructor.TAU); ctx.stroke();
   }
   if (style === "scorched") {
     for (let i = 0; i < 19; i++) {
       const x = (i * 251) % 1024, y = 30 + ((i * 137) % 450);
       ctx.save(); ctx.translate(x, y); ctx.rotate((i % 5) * .37);
       ctx.fillStyle = "#17131a"; ctx.globalAlpha = .75;
-      ctx.beginPath(); ctx.ellipse(0, 0, 18 + (i % 6) * 10, 8 + (i % 4) * 9, 0, 0, this.constructor.this.constructor.TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 0, 18 + (i % 6) * 10, 8 + (i % 4) * 9, 0, 0, this.constructor.TAU); ctx.fill();
       ctx.restore();
     }
     ctx.globalAlpha = 1;
@@ -82,12 +82,12 @@ makeWorld(parent, name, baseRadius, palette, style, options = {}) {
     roughness: .9,
     metalness: style === "city" ? .12 : .02
   });
-  const planet = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.this.constructor.PLANET_RADIUS, 64, 48), material);
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(this.constructor.PLANET_RADIUS, 64, 48), material);
   planet.name = name;
   planet.rotation.z = options.tilt || 0;
   parent.add(planet);
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(this.constructor.this.constructor.PLANET_RADIUS * 1.035, 48, 32),
+    new THREE.SphereGeometry(this.constructor.PLANET_RADIUS * 1.035, 48, 32),
     new THREE.MeshBasicMaterial({ color: options.atmosphere || palette[0], transparent: true, opacity: .13, side: THREE.BackSide, depthWrite: false })
   );
   parent.add(atmosphere);
