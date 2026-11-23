@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Human } from "../species/Human.js";
+import { PlanetPopulation } from "./PlanetPopulation.js";
 
 export class EarthInterior {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x78b9f5, ground: 0x64734f, accent: 0x9b9b91 };
@@ -146,6 +147,8 @@ export class EarthInterior {
   }
 
   Object.assign(this, { bellwood: root, root, sunlight });
+  this.populationManager = new PlanetPopulation(root, "earth");
+  this.inhabitants = this.populationManager.inhabitants;
   }
 
   loadState() {
