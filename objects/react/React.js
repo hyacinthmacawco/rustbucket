@@ -2,6 +2,15 @@ import * as THREE from "three";
 import { Omniverse } from "../omniverse/Omniverse.js";
 import { Title } from "../title/Title.js";
 import { SolarSystem } from "../celestials/SolarSystem.js";
+import { AugstakaSystem } from "../celestials/AugstakaSystem.js";
+import { AnodyneSystem } from "../celestials/AnodyneSystem.js";
+import { GalvanSystem } from "../celestials/GalvanSystem.js";
+import { IncursiaSystem } from "../celestials/IncursiaSystem.js";
+import { Moon } from "../celestials/Moon.js";
+import { Augstaka } from "../celestials/Augstaka.js";
+import { Anodyne } from "../celestials/Anodyne.js";
+import { GalvanPrime } from "../celestials/GalvanPrime.js";
+import { Incursia } from "../celestials/Incursia.js";
 import { Earth } from "../celestials/Earth.js";
 import { Rustbucket } from "../team/Rustbucket.js";
 import { Ben } from "../team/Ben.js";
@@ -44,6 +53,21 @@ export class React {
     this.activeWorld.name = "ActiveWorld";
     this.scene.add(this.activeWorld);
     this.titleWorld = new SolarSystem(this.activeWorld);
+    this.systemClasses = {
+      solar: SolarSystem,
+      augstaka: AugstakaSystem,
+      anodyne: AnodyneSystem,
+      galvan: GalvanSystem,
+      incursia: IncursiaSystem
+    };
+    this.planetClasses = {
+      earth: Earth,
+      moon: Moon,
+      augstaka: Augstaka,
+      anodyne: Anodyne,
+      galvan: GalvanPrime,
+      incursia: Incursia
+    };
 
     this.createPrelude();
     this.titleScreen = new Title({ onNewGame: () => this.setStage("prelude") });
@@ -180,7 +204,48 @@ export class React {
     this.camera.lookAt(0, 1.5, 0);
     this.cameraTarget = new THREE.Vector3(0, 1.5, 0);
     this.state.currentScene = "earth";
+    this.currentPlanet = this.earth;
     this.extranet.setLocation("earth");
+  }
+
+  enterPlanet(key) {
+    const PlanetClass = this.planetClasses[key];
+    if (!PlanetClass) return false;
+
+    this.clearWorld();
+    this.currentPlanet = new PlanetClass(this.activeWorld);
+    const world = PlanetClass.WORLD;
+    this.scene.background = new THREE.Color(world.sky);
+    this.scene.fog = new THREE.Fog(world.sky, 180, 700);
+    this.camera.position.set(0, 8, 23);
+    this.camera.lookAt(0, 1.5, 0);
+    this.cameraTarget = new THREE.Vector3(0, 1.5, 0);
+    this.state.stage = "gameplay";
+    this.state.currentScene = key;
+    this.titleScreen.setVisible(false);
+    this.prelude.style.display = "none";
+    this.extranetButton.style.display = "block";
+    this.extranet.setLocation(key);
+    return this.currentPlanet;
+  }
+
+  exitPlanet() {
+    if (!this.currentPlanet) return false;
+
+    const systemKey = this.currentPlanet.system;
+    const SystemClass = this.systemClasses[systemKey];
+    if (!SystemClass) return false;
+
+    this.clearWorld();
+    this.systemWorld = new SystemClass(this.activeWorld);
+    this.currentPlanet = null;
+    this.scene.background = new THREE.Color(0x02040a);
+    this.scene.fog = null;
+    this.camera.position.set(0, 0, 600000);
+    this.camera.lookAt(0, 0, 0);
+    this.state.currentScene = systemKey === "solar" ? "space" : "system-" + systemKey;
+    this.extranet.setLocation(systemKey === "solar" ? "space" : systemKey);
+    return this.systemWorld;
   }
 
   clearWorld() {
@@ -193,6 +258,8 @@ export class React {
     this.activeWorld.clear();
     this.scene.fog = null;
     this.earth = null;
+    this.currentPlanet = null;
+    this.systemWorld = null;
     this.vehicle = null;
     this.crew = [];
   }
