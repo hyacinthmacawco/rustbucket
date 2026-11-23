@@ -58,6 +58,7 @@ export class AugstakaInterior {
         ...defaults,
         ...saved,
         resources: Array.isArray(saved.resources) ? saved.resources : defaults.resources,
+        relationships: { ...this.relationships, ...(saved.relationships || {}) },
         wars: Array.isArray(saved.wars) ? saved.wars : [],
         events: Array.isArray(saved.events) ? saved.events : []
       };
@@ -74,6 +75,7 @@ export class AugstakaInterior {
       revenue: this.revenue,
       expenses: this.expenses,
       resources: this.resources,
+      relationships: this.relationships,
       wars: this.wars,
       events: this.events
     };
@@ -84,7 +86,7 @@ export class AugstakaInterior {
     }
   }
 
-  update(delta) {
+  update(delta, rivalInteriors = []) {
     this.elapsed += delta;
     if (this.elapsed < 30) return;
     this.elapsed = 0;
@@ -95,6 +97,11 @@ export class AugstakaInterior {
     this.population = Math.max(0, Math.min(999, Math.round(this.population + growth - losses)));
     this.treasury = Math.max(0, this.treasury + this.revenue - this.expenses);
 
+    if (this.expenses > this.revenue * 1.5 && rivalInteriors.length && Math.random() < 0.22) {
+      const candidates = rivalInteriors.filter(interior => interior !== this && interior.species !== this.species);
+      if (candidates.length) this.declareWar(candidates[Math.floor(Math.random() * candidates.length)]);
+    }
+
     for (const war of activeWars) {
       if (Date.now() - Date.parse(war.startedAt) > 90000) {
         war.status = "ended";
@@ -103,6 +110,10 @@ export class AugstakaInterior {
     }
 
     this.saveState();
+  }
+
+  isHostileTo(species) {
+    return Number(this.relationships[species] ?? 0) < -30;
   }
 
   declareWar(targetInterior) {
