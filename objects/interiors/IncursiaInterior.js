@@ -17,7 +17,11 @@ export class IncursiaInterior {
     treasury: 510000,
     revenue: 9200,
     expenses: 16000,
-    resources: [{"id":"mil-alloy","name":"Military alloy","quantity":900},{"id":"weapon-parts","name":"Weapon parts","quantity":400},{"id":"inc-energy","name":"Energy cells","quantity":700}],
+    resources: [
+      { id: "mil-alloy", name: "Military alloy", quantity: 900 },
+      { id: "weapon-parts", name: "Weapon parts", quantity: 400 },
+      { id: "inc-energy", name: "Energy cells", quantity: 700 }
+    ],
     wars: [],
     events: []
   };
@@ -173,7 +177,14 @@ export class IncursiaInterior {
     for (let index = 0; index < 26; index++) {
       const angle = index * Math.PI * 2 / 26;
       const radius = 45 + (index % 5) * 16;
-      const crater = new THREE.Mesh(new THREE.CylinderGeometry(3 + (index % 3), 5 + (index % 4), 0.7, 12, 1, true), new THREE.MeshStandardMaterial({ color: 0x57423e, side: THREE.DoubleSide, roughness: 1 }));
+      const crater = new THREE.Mesh(
+        new THREE.CylinderGeometry(3 + (index % 3), 5 + (index % 4), 0.7, 12, 1, true),
+        new THREE.MeshStandardMaterial({
+          color: 0x57423e,
+          side: THREE.DoubleSide,
+          roughness: 1
+        })
+      );
       crater.position.set(Math.cos(angle) * radius, -0.25, Math.sin(angle) * radius);
       this.root.add(crater);
       const shard = new THREE.Mesh(new THREE.ConeGeometry(2 + (index % 3), 8 + (index % 4) * 2, 5), new THREE.MeshStandardMaterial({ color: index % 2 ? 0x5c3934 : 0xc27c60 }));
