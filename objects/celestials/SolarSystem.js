@@ -38,7 +38,7 @@ export class SolarSystem {
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
   animate(delta, elapsed) {
-    for (const planet of this.root.children) {
+    for (const planet of this.root.parent?.children || []) {
       if (planet.name === "EarthExterior" || planet.name === "MoonExterior") {
         planet.rotation.y += delta * 0.04;
       }
