@@ -83,6 +83,7 @@ export class AlienShip {
     this.group.userData.noPhysics = true;
     this.model = this.group;
     this.mesh = this.group;
+    this.ship = this.group;
     if (parent) parent.add(this.group);
   }
 
@@ -132,6 +133,7 @@ export class AlienShip {
     this.group.userData.noPhysics = true;
     this.model = this.group;
     this.mesh = this.group;
+    this.ship = this.group;
     parent?.add(this.group);
   }
 
