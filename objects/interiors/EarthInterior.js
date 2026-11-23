@@ -157,6 +157,7 @@ export class EarthInterior {
         ...defaults,
         ...saved,
         resources: Array.isArray(saved.resources) ? saved.resources : defaults.resources,
+        relationships: { ...this.relationships, ...(saved.relationships || {}) },
         wars: Array.isArray(saved.wars) ? saved.wars : [],
         events: Array.isArray(saved.events) ? saved.events : []
       };
@@ -173,6 +174,7 @@ export class EarthInterior {
       revenue: this.revenue,
       expenses: this.expenses,
       resources: this.resources,
+      relationships: this.relationships,
       wars: this.wars,
       events: this.events
     };
@@ -183,7 +185,7 @@ export class EarthInterior {
     }
   }
 
-  update(delta) {
+  update(delta, rivalInteriors = []) {
     this.elapsed += delta;
     if (this.elapsed < 30) return;
     this.elapsed = 0;
@@ -199,6 +201,10 @@ export class EarthInterior {
       }
     }
     this.saveState();
+  }
+
+  isHostileTo(species) {
+    return Number(this.relationships[species] ?? 0) < -30;
   }
 
   declareWar(targetInterior) {
