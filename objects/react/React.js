@@ -5,6 +5,7 @@ import { PhysicsEngine } from "./PhysicsEngine.js";
 import { SimulationSystem } from "./SimulationSystem.js";
 import { Title } from "../title/Title.js";
 import { Joystick } from "../ui/Joystick.js";
+import { Pause } from "../ui/Pause.js";
 import { Extranet } from "../extranet/Extranet.js";
 import { SolarSystem } from "../systems/SolarSystem.js";
 import { AugstakaSystem } from "../systems/AugstakaSystem.js";
@@ -161,33 +162,31 @@ export class React {
 
     const joystick = new Joystick();
     joystick.setVisible(false);
-    const pauseOverlay = document.createElement("div");
-    pauseOverlay.id = "pause-overlay";
-    pauseOverlay.innerHTML = '<div id="pause-panel"><div id="pause-title">PAUSED</div><nav id="pause-tabs"><button data-pause-tab="settings" class="active">SETTINGS</button><button data-pause-tab="help">HELP</button><button data-pause-tab="credits">CREDITS</button></nav><div id="pause-content"></div><button id="resume-button" type="button">RESUME</button></div>';
-    document.body.append(pauseOverlay);
-    this.setPaused = (value) => {
-      state.paused = Boolean(value);
-      pauseOverlay.style.display = state.paused ? "flex" : "none";
-      if (audioPlayer.musicTrack) {
-        if (state.paused) audioPlayer.musicTrack.pause();
-        else if (audioPlayer.unlocked) audioPlayer.musicTrack.play().catch(() => {});
-      }
-    }
+    const pause = new Pause({
+      onResume: () => this.setPaused(false)
+    });
+    const pauseOverlay = pause.create();
 
-    const pauseContent=pauseOverlay.querySelector("#pause-content");
-    const pauseViews={
-      settings:'<h3>SETTINGS</h3><label>CAMERA SENSITIVITY <input type="range" min="1" max="15" value="6"></label><label>MASTER VOLUME <input type="range" min="0" max="100" value="70"></label>',
-      help:'<h3>CONTROLS</h3><p>WASD / joystick: move. Drag: camera. Pinch / wheel: zoom. F / double-tap joystick: switch team member. Space / jump: system map when Rustbucket is selected. E / pick: interact. Q / attack: use weapon. R: open or close Rustbucket ramp.</p>',
-      credits:'<h3>CREDITS</h3><p>Developed by Hyacinth Macaw.</p><p>Soundtrack artists: see soundtrack credits.</p><p>Ben 10 created by Man of Action.</p>'
+    this.setPaused = value => {
+      state.paused = Boolean(value);
+      pause.setVisible(state.paused);
+
+      if (audioPlayer.musicTrack) {
+        if (state.paused) {
+          audioPlayer.musicTrack.pause();
+        } else if (audioPlayer.unlocked) {
+          audioPlayer.musicTrack.play().catch(() => {});
+        }
+      }
     };
-    pauseContent.innerHTML=pauseViews.settings;
-    pauseOverlay.querySelectorAll("[data-pause-tab]").forEach(button=>button.addEventListener("click",()=>{
-      pauseOverlay.querySelectorAll("[data-pause-tab]").forEach(b=>b.classList.toggle("active",b===button));
-      pauseContent.innerHTML=pauseViews[button.dataset.pauseTab];
-    }));
-    pauseOverlay.querySelector("#resume-button").addEventListener("click", () => this.setPaused(false));
-    this.pauseKey = (event) => { if (event.key === "Escape" && state.stage === "gameplay") this.setPaused(!state.paused); }
+
+    this.pauseKey = event => {
+      if (event.key === "Escape" && state.stage === "gameplay") {
+        this.setPaused(!state.paused);
+      }
+    };
     document.addEventListener("keydown", this.pauseKey);
+
     const simulation = new SimulationSystem();
     const passengerTransport = new PassengerTransport(simulation);
     const eventNotice=document.createElement("div");eventNotice.id="simulation-event-notice";document.body.appendChild(eventNotice);
@@ -345,13 +344,7 @@ export class React {
     abilityDialRing.addEventListener("pointermove",event=>{if(event.pointerId===abilityPointer&&event.buttons)this.chooseAbilityFromPointer(event);});
     abilityDialRing.addEventListener("pointerup",event=>{if(event.pointerId===abilityPointer)abilityPointer=null;});
     abilityDialRing.addEventListener("pointercancel",()=>{abilityPointer=null;});
-    const extranetButton = document.createElement("button");
-    extranetButton.id = "extranet-button";
-    extranetButton.type = "button";
-    extranetButton.setAttribute("aria-label", "Open Extranet");
-    extranetButton.textContent = "EXTRANET";
-    extranetButton.addEventListener("click", () => extranet.open());
-    document.body.appendChild(extranetButton);
+    const extranetButton = extranet.createButton();
     const rampButton = document.createElement("button");
     rampButton.id = "ramp-toggle-button";
     rampButton.type = "button";
@@ -1078,7 +1071,7 @@ export class React {
       document.removeEventListener("keydown", this.requestFullscreenOnGesture);
       document.removeEventListener("keydown", this.pauseKey);
       sceneLoadError.remove();
-      pauseOverlay.remove();
+      pause.destroy();
       extranetButton.remove();
       rampButton.remove(); mapOverlay.remove(); warpOverlay.remove(); marketPanel.remove(); marketButton.remove();
       extranet.close();

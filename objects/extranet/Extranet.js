@@ -16,7 +16,8 @@ export class Extranet {
     toolbar: { display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderBottom: "1px solid rgba(126,255,168,.22)", background: "rgba(7,32,17,.94)" },
     button: { padding: "9px 12px", border: "1px solid rgba(126,255,168,.38)", borderRadius: "5px", background: "rgba(7,42,22,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" },
     address: { flex: "1", minWidth: "0", padding: "9px 12px", border: "1px solid rgba(126,255,168,.25)", borderRadius: "5px", background: "rgba(0,10,5,.7)", color: "#baffcb", font: "inherit" },
-    page: { flex: "1", minHeight: "0", overflow: "auto", color: "#eaffef", fontFamily: "Industry, sans-serif" }
+    page: { flex: "1", minHeight: "0", overflow: "auto", color: "#eaffef", fontFamily: "Industry, sans-serif" },
+    launchButton: { position: "fixed", top: "max(14px, env(safe-area-inset-top))", right: "max(70px, calc(env(safe-area-inset-right) + 70px))", zIndex: "30", padding: "10px 14px", border: "1px solid rgba(126,255,168,.5)", borderRadius: "20px", background: "rgba(5,30,18,.84)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" }
   };
   Object.assign(this.root.style, this.styles.root);
   Object.assign(this.root.querySelector("#extranet-window").style, this.styles.window);
@@ -127,6 +128,18 @@ export class Extranet {
         }
       });
     });
+
+  createButton() {
+    this.launchButton = document.createElement("button");
+    this.launchButton.type = "button";
+    this.launchButton.id = "extranet-button";
+    this.launchButton.setAttribute("aria-label", "Open Extranet");
+    this.launchButton.textContent = "EXTRANET";
+    Object.assign(this.launchButton.style, this.styles.launchButton);
+    this.launchButton.addEventListener("click", this.open);
+    document.body.append(this.launchButton);
+    return this.launchButton;
+  }
 
   selectSystem(key) {
     const item = this.systems[key];

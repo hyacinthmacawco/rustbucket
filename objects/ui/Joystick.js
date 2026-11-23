@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { Jump } from "./Jump.js";
+import { Attack } from "./Attack.js";
+import { Pick } from "./Pick.js";
 
 export class Joystick {
   static TEAM_MEMBERS = ["ben", "gwen", "kevin", "rook", "rustbucket"];
@@ -12,7 +15,6 @@ export class Joystick {
       lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "25", touchAction: "none" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       actionGroup: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", display: "flex", gap: "10px", zIndex: "25" },
-      actionButton: { minWidth: "58px", minHeight: "48px", border: "1px solid rgba(126,255,168,.55)", borderRadius: "24px", background: "rgba(2,24,13,.82)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none" },
       label: { position: "absolute", color: "#c8ffd7", fontSize: "11px", fontFamily: "Industry, sans-serif", textShadow: "0 0 8px #0a3" }
     };
 
@@ -74,9 +76,28 @@ export class Joystick {
     this.buttons = document.createElement("div");
     this.buttons.id = "action-controls";
     Object.assign(this.buttons.style, this.styles.actionGroup);
-    this.jumpButton = this.createActionButton("JUMP", "Jump");
-    this.pickButton = this.createActionButton("PICK", "Pick up");
-    this.attackButton = this.createActionButton("ATTACK", "Attack");
+    this.jump = new Jump({
+      onPress: () => {
+        this.input.jumpRequested = true;
+      }
+    });
+    this.pick = new Pick({
+      onPress: () => {
+        this.input.pickRequested = true;
+      }
+    });
+    this.attack = new Attack({
+      onStart: () => {
+        this.input.attackHeld = true;
+      },
+      onEnd: () => {
+        this.input.attackHeld = false;
+      }
+    });
+
+    this.jumpButton = this.jump.create();
+    this.pickButton = this.pick.create();
+    this.attackButton = this.attack.create();
     this.buttons.append(this.jumpButton, this.pickButton, this.attackButton);
     document.body.append(this.buttons);
 
@@ -96,50 +117,9 @@ export class Joystick {
     this.liftBase.addEventListener("pointermove", this.handleLiftMove);
     this.liftBase.addEventListener("pointerup", this.handleLiftUp);
     this.liftBase.addEventListener("pointercancel", this.handleLiftUp);
-    this.jumpButton.addEventListener("pointerdown", this.handleJump);
-    this.pickButton.addEventListener("pointerdown", this.handlePick);
-    this.attackButton.addEventListener("pointerdown", this.handleAttackDown);
-    this.attackButton.addEventListener("pointerup", this.handleAttackUp);
-    this.attackButton.addEventListener("pointercancel", this.handleAttackUp);
-    this.attackButton.addEventListener("lostpointercapture", this.handleAttackUp);
     this.liftElement.style.display = "none";
   }
 
-  createActionButton(label, ariaLabel) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-label", ariaLabel);
-    Object.assign(button.style, this.styles.actionButton);
-    return button;
-  }
-
-  handleJump = event => {
-    event.preventDefault();
-    event.stopPropagation();
-    this.input.jumpRequested = true;
-  };
-
-  handlePick = event => {
-    event.preventDefault();
-    event.stopPropagation();
-    this.input.pickRequested = true;
-  };
-
-  handleAttackDown(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.input.attackHeld = true;
-    this.attackButton.setPointerCapture?.(event.pointerId);
-  }
-
-  handleAttackUp(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    this.input.attackHeld = false;
-  }
 
   updateBase(event) {
     const rect = this.base.getBoundingClientRect();
@@ -423,12 +403,9 @@ export class Joystick {
     this.liftBase.removeEventListener("pointermove", this.handleLiftMove);
     this.liftBase.removeEventListener("pointerup", this.handleLiftUp);
     this.liftBase.removeEventListener("pointercancel", this.handleLiftUp);
-    this.jumpButton.removeEventListener("pointerdown", this.handleJump);
-    this.pickButton.removeEventListener("pointerdown", this.handlePick);
-    this.attackButton.removeEventListener("pointerdown", this.handleAttackDown);
-    this.attackButton.removeEventListener("pointerup", this.handleAttackUp);
-    this.attackButton.removeEventListener("pointercancel", this.handleAttackUp);
-    this.attackButton.removeEventListener("lostpointercapture", this.handleAttackUp);
+    this.jump.destroy();
+    this.pick.destroy();
+    this.attack.destroy();
     this.element.remove();
     this.liftElement.remove();
     this.buttons.remove();
