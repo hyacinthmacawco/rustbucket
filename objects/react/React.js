@@ -726,7 +726,7 @@ export class React {
           // Earth interior: Bellwood, the storage unit, the crew, and the Rustbucket.
 
           const earthEnvironment = new EarthInterior(scene, group);
-          const population = new PlanetPopulation(earthEnvironment.bellwood,"earth");
+          const population = earthEnvironment.populationManager;
           group.userData.population = population;
           group.userData.interior = earthEnvironment;
           earthEnvironment.populationManager = population;
