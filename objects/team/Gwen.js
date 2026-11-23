@@ -6,6 +6,13 @@ export class Gwen {
   constructor({ HumanRig }) {
     this.startPosition = [-7,-0.5,-7];
     this.startScale = [0.5,0.5,0.5];
+    this.health = 100;
+    this.energy = 100;
+    this.energyLabel = "MANA";
+    this.maxHealth = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
   if (typeof HumanRig !== "function") throw new TypeError(" Gwen requires the HumanRig class.");
   const rig = new HumanRig();
   const { group, joints } = rig;
@@ -142,5 +149,37 @@ export class Gwen {
     this.box(joints[side + "Ankle"], "GwenBlueBootSole", [0.215, 0.045, 0.315], [0, -0.145, 0.075], mat.sole);
   }
   Object.assign(this, { group, rig, joints });
+  group.userData.statusOwner = this;
   }
+
+  updateStatus(delta) {
+    this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
+    this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
+    if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
+    if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
+  }
+
+  takeDamage(amount) {
+    this.health = Math.max(0, this.health - Math.max(0, amount));
+    this.healthRecoveryDelay = 4;
+    return this.health;
+  }
+
+  useEnergy(amount) {
+    if (this.energy < amount) return false;
+    this.energy = Math.max(0, this.energy - amount);
+    this.energyRecoveryDelay = 4;
+    return true;
+  }
+
+  restoreEnergy(amount) {
+    this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount));
+    return this.energy;
+  }
+
+  restoreHealth(amount) {
+    this.health = Math.min(this.maxHealth, this.health + Math.max(0, amount));
+    return this.health;
+  }
+
 }
