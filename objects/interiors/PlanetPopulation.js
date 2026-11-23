@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Highbreed } from "../species/Highbreed.js";
+import { Galvan } from "../species/Galvan.js";
 
 export class PlanetPopulation {
   static HOME_PLANETS = {
@@ -70,6 +72,29 @@ export class PlanetPopulation {
   }
 
   createPerson(species, name, homePlanet, isVisitor, index) {
+    if (species === "Highbreed" || species === "Galvan") {
+      const SpeciesClass = species === "Highbreed" ? Highbreed : Galvan;
+      const instance = new SpeciesClass(null, { scale: 0.72 });
+      instance.currentWorld = this.planetKey;
+      instance.group.name = name + " (" + species + ")";
+      instance.group.userData = {
+        ...instance.group.userData,
+        species,
+        name,
+        homePlanet,
+        homeworld: instance.homeworld,
+        isVisitor,
+        boarded: false,
+        questAccepted: false,
+        populationIndex: index,
+        walkArms: [],
+        walkLegs: [],
+        noPhysics: true,
+        speciesInstance: instance
+      };
+      return instance.group;
+    }
+
     const style = this.constructor.SPECIES_STYLE[species];
     const group = new THREE.Group();
     group.name = name + " (" + species + ")";
@@ -95,6 +120,7 @@ export class PlanetPopulation {
       species,
       name,
       homePlanet,
+      homeworld: homePlanet,
       isVisitor,
       boarded: false,
       questAccepted: false,
