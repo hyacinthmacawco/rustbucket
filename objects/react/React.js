@@ -29,7 +29,7 @@ import { Kevin } from "../world/kevin.js";
 import { Rook } from "../world/rook.js";
 import { createSimulationCloud } from "../extranet/ExtranetBrowser.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
-import { Chromastone } from "../world/transformations/chromastone.js";
+import { Chromastone } from "../world/omnitrix/Chromastone.js";
 
 
 export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 2080, 0) };
