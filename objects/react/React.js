@@ -42,6 +42,13 @@ const PLANET_INTERIOR_CLASSES = {
 const PLANET_WORLDS = Object.fromEntries(
   Object.entries(PLANET_INTERIOR_CLASSES).map(([key, Interior]) => [key, Interior.WORLD])
 );
+const SPECIES_HOMEWORLDS = {
+  Highbreed: "augstaka",
+  Incursean: "incursia",
+  Anodite: "anodyne",
+  Galvan: "galvan",
+  Human: "earth"
+};
 const SPECIES_RELATIONSHIPS = {
   Highbreed: Highbreed.relationships,
   Incursean: Incursean.relationships,
@@ -235,6 +242,18 @@ export class React {
       };
       return ship;
     };
+    this.getSpeciesRelationships = species => {
+      const defaults = SPECIES_RELATIONSHIPS[species] || {};
+      const homeworld = SPECIES_HOMEWORLDS[species];
+      if (!homeworld) return defaults;
+      try {
+        const saved = JSON.parse(localStorage.getItem("rustbucket.planet." + homeworld) || "null");
+        return { ...defaults, ...(saved?.relationships || {}) };
+      } catch (error) {
+        return defaults;
+      }
+    };
+
     this.spawnPatrols = (parent, systemKey) => {
       const systems = {
         solar: {species:'Human',planet:'earth',center:new THREE.Vector3(0,0,0)},
@@ -257,7 +276,8 @@ export class React {
       if (!ship || !alienPatrols.length || state.currentScene !== 'space') return;
       ship.updateMatrixWorld(true);
       for (const patrol of [...alienPatrols]) {
-        const hostile = ["Ben", "Gwen", "Kevin", "Rook"].some(member => Number(SPECIES_RELATIONSHIPS[patrol.species]?.[member] ?? 0) < -30);
+        const relationships = this.getSpeciesRelationships(patrol.species);
+        const hostile = ["Ben", "Gwen", "Kevin", "Rook"].some(member => Number(relationships[member] ?? 0) < -30);
         patrol.update(delta,ship,hostile,() => {
           ship.userData.takeDamage?.(5);
 
