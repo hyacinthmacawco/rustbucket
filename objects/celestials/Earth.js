@@ -38,14 +38,31 @@ export class Earth {
     const sunlight = new THREE.DirectionalLight(0xffe4c4, 2);
     sunlight.position.set(-35, 70, 25);
     interior.add(sunlight);
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(420, 420), new THREE.MeshStandardMaterial({ color: 0x557c45, roughness: 1 }));
+    const groundCanvas = document.createElement("canvas");
+    groundCanvas.width = 1024;
+    groundCanvas.height = 1024;
+    const groundContext = groundCanvas.getContext("2d");
+    groundContext.fillStyle = "#557c45";
+    groundContext.fillRect(0, 0, 1024, 1024);
+    groundContext.fillStyle = "#343a40";
+    groundContext.fillRect(0, 470, 1024, 84);
+    groundContext.strokeStyle = "#d9d5a8";
+    groundContext.lineWidth = 5;
+    groundContext.setLineDash([34, 26]);
+    groundContext.beginPath();
+    groundContext.moveTo(0, 512);
+    groundContext.lineTo(1024, 512);
+    groundContext.stroke();
+
+    const groundTexture = new THREE.CanvasTexture(groundCanvas);
+    groundTexture.colorSpace = THREE.SRGBColorSpace;
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(420, 420),
+      new THREE.MeshStandardMaterial({ map: groundTexture, roughness: 1 })
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.6;
     interior.add(ground);
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(420, 12), new THREE.MeshStandardMaterial({ color: 0x343a40, roughness: 0.95 }));
-    road.rotation.x = -Math.PI / 2;
-    road.position.set(0, -0.57, 25);
-    interior.add(road);
     const storage = new THREE.Group();
     storage.name = "KevinStorageUnit";
     storage.position.set(0, 0, -8);
