@@ -20,9 +20,7 @@ import { GalvanPrimeInterior } from "../interiors/GalvanPrimeInterior.js";
 import { IncursiaInterior } from "../interiors/IncursiaInterior.js";
 import { Rustbucket } from "../team/Rustbucket.js";
 import { AlienShip } from "../technology/ships/AlienShip.js";
-import { PlanetPopulation } from "../interiors/PlanetPopulation.js";
 import { Human as HumanRig } from "../species/Human.js";
-import { Human as HumanSpecies } from "../species/Human.js";
 import { Highbreed } from "../species/Highbreed.js";
 import { Incursean } from "../species/Incursean.js";
 import { Anodite } from "../species/Anodite.js";
@@ -49,7 +47,7 @@ const SPECIES_RELATIONSHIPS = {
   Incursean: Incursean.relationships,
   Anodite: Anodite.relationships,
   Galvan: Galvan.relationships,
-  Human: HumanSpecies.relationships
+  Human: HumanRig.relationships
 };
 
 
