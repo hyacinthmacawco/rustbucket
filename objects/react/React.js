@@ -1,31 +1,31 @@
 import * as THREE from "three";
-import { createTitleScreen } from "../hud/title.js";
-import { createJoystick, createKeyboard } from "../hud/joystick.js";
-import { createExtranet } from "../hud/extranet.js";
-import { SolarSystem } from "../omniverse/systems/solar-system.js";
-import { AugstakaSystem } from "../omniverse/systems/augstaka.js";
-import { AnodyneSystem } from "../omniverse/systems/anodyne.js";
-import { GalvanSystem } from "../omniverse/systems/galvan.js";
-import { IncursiaSystem } from "../omniverse/systems/incursia.js";
-import { EarthInterior, KevinStorageUnit, Suitcases } from "../omniverse/interiors/earth-interior.js";
-import { MoonInterior } from "../omniverse/interiors/moon-interior.js";
-import { PLANET_WORLDS } from "../omniverse/interiors/planet-interior.js";
-import { AugstakaInterior } from "../omniverse/interiors/augstaka-interior.js";
-import { AnodyneInterior } from "../omniverse/interiors/anodyne-interior.js";
-import { GalvanPrimeInterior } from "../omniverse/interiors/galvan-interior.js";
-import { IncursiaInterior } from "../omniverse/interiors/incursia-interior.js";
-import { Rustbucket } from "../omniverse/rustbucket.js";
-import { AlienShip } from "../omniverse/alien-ship.js";
-import { PlanetPopulation } from "../omniverse/interiors/planet-population.js";
-import { PassengerTransport } from "../omniverse/passenger-transport.js";
-import { HumanRig } from "../omniverse/human-rig.js";
-import { Ben } from "../omniverse/ben.js";
-import { Gwen } from "../omniverse/gwen.js";
-import { Kevin } from "../omniverse/kevin.js";
-import { Rook } from "../omniverse/rook.js";
-import { createSimulationCloud } from "../hud/simulation-cloud.js";
+import { createTitleScreen } from "../title/Title.js";
+import { createJoystick, createKeyboard } from "../ui/Joystick.js";
+import { createExtranet } from "../extranet/Extranet.js";
+import { SolarSystem } from "../world/systems/solar-system.js";
+import { AugstakaSystem } from "../world/systems/augstaka.js";
+import { AnodyneSystem } from "../world/systems/anodyne.js";
+import { GalvanSystem } from "../world/systems/galvan.js";
+import { IncursiaSystem } from "../world/systems/incursia.js";
+import { EarthInterior, KevinStorageUnit, Suitcases } from "../world/interiors/earth-interior.js";
+import { MoonInterior } from "../world/interiors/moon-interior.js";
+import { PLANET_WORLDS } from "../world/interiors/planet-interior.js";
+import { AugstakaInterior } from "../world/interiors/augstaka-interior.js";
+import { AnodyneInterior } from "../world/interiors/anodyne-interior.js";
+import { GalvanPrimeInterior } from "../world/interiors/galvan-interior.js";
+import { IncursiaInterior } from "../world/interiors/incursia-interior.js";
+import { Rustbucket } from "../world/rustbucket.js";
+import { AlienShip } from "../world/alien-ship.js";
+import { PlanetPopulation } from "../world/interiors/planet-population.js";
+import { PassengerTransport } from "../world/passenger-transport.js";
+import { HumanRig } from "../world/human-rig.js";
+import { Ben } from "../world/ben.js";
+import { Gwen } from "../world/gwen.js";
+import { Kevin } from "../world/kevin.js";
+import { Rook } from "../world/rook.js";
+import { createSimulationCloud } from "../extranet/ExtranetBrowser.js";
 import RAPIER from "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/+esm";
-import { ChromastoneTransformation } from "../omniverse/transformations/chromastone.js";
+import { ChromastoneTransformation } from "../world/transformations/chromastone.js";
 
 
 async function createPhysics() {
@@ -468,7 +468,7 @@ class SimulationSystem {
 
 export const state = { stage: "title", currentScene: "space", arrivingInShip: false, spaceReturnPosition: new THREE.Vector3(0, 2080, 0) };
 
-class RustbucketGame {
+export class React {
   constructor() {
     this.cameraConfig = {
       title: { position: [0, 0, 600000], target: [-137150, 0, 0], fov: 55, near: 0.1, far: 2000000, distance: 615500, minDistance: 10000, maxDistance: 1000000, yaw: 0, pitch: 0 },
@@ -706,7 +706,7 @@ class RustbucketGame {
 
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
-      onComplete: () => playSfx("./hud/ov-end-credits.mp3"),
+      onComplete: () => playSfx("../../files/songs/ov-end-credits.mp3"),
       simulation,
       onData: (host, view) => simulationCloud.render(view, host),
       onJumpSystem: key => warpToSystem(key)
@@ -959,7 +959,7 @@ class RustbucketGame {
 
     function unlockAudio() {
       if (!audioUnlocked) audioUnlocked = true;
-      if (state.stage === "title" && !musicTrack) playMusic("./hud/senji-v2-ov.mp3");
+      if (state.stage === "title" && !musicTrack) playMusic("../../files/songs/senji-v2-ov.mp3");
       else if (musicTrack?.paused) musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
     }
     function requestFullscreenOnGesture() {
@@ -1398,7 +1398,7 @@ class RustbucketGame {
         joystick.setVisible(false);
         
         setCameraPreset(this.cameraConfig.title);
-        playMusic("./hud/senji-v2-ov.mp3");
+        playMusic("../../files/songs/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
         state.currentScene = "earth";
         titleScreen.setVisible(false);
@@ -1408,7 +1408,7 @@ class RustbucketGame {
         
         preludeScreen.style.display = "flex";
         stopMusic();
-        dialogueSfx = playSfx("./hud/ov-final-dialogues.mp3", startGameplay);
+        dialogueSfx = playSfx("../../files/songs/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
         if (loadedRegion !== state.currentScene && !loadingRegion) loadRegion(state.currentScene);
         titleScreen.setVisible(false);
@@ -1417,7 +1417,7 @@ class RustbucketGame {
         
         
         setCameraPreset(cameraConfig.gameplay);
-        playMusic("./hud/neodevol-ov.mp3");
+        playMusic("../../files/songs/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";
@@ -1591,4 +1591,4 @@ class RustbucketGame {
   }
 }
 
-new RustbucketGame();
+new React();
