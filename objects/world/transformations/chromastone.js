@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export class ChromastoneTransformation {
+export class Chromastone {
   constructor() {
   const root=new THREE.Group();root.name="Chromastone";
   const dark=new THREE.MeshStandardMaterial({color:0x171526,roughness:.35,metalness:.35});

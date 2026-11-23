@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { UIStyles } from "../ui/UIStyles.js";
+new UIStyles();
 import { createTitleScreen } from "../title/Title.js";
 import { createJoystick, createKeyboard } from "../ui/Joystick.js";
 import { createExtranet } from "../extranet/Extranet.js";
@@ -706,7 +708,7 @@ export class React {
 
     const extranet = createExtranet({
       onContinue: () => extranet.close(),
-      onComplete: () => playSfx("../../files/songs/ov-end-credits.mp3"),
+      onComplete: () => playSfx("./files/songs/ov-end-credits.mp3"),
       simulation,
       onData: (host, view) => simulationCloud.render(view, host),
       onJumpSystem: key => warpToSystem(key)
@@ -959,7 +961,7 @@ export class React {
 
     function unlockAudio() {
       if (!audioUnlocked) audioUnlocked = true;
-      if (state.stage === "title" && !musicTrack) playMusic("../../files/songs/senji-v2-ov.mp3");
+      if (state.stage === "title" && !musicTrack) playMusic("./files/songs/senji-v2-ov.mp3");
       else if (musicTrack?.paused) musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
     }
     function requestFullscreenOnGesture() {
@@ -1398,7 +1400,7 @@ export class React {
         joystick.setVisible(false);
         
         setCameraPreset(this.cameraConfig.title);
-        playMusic("../../files/songs/senji-v2-ov.mp3");
+        playMusic("./files/songs/senji-v2-ov.mp3");
       } else if (activeStage === "prelude") {
         state.currentScene = "earth";
         titleScreen.setVisible(false);
@@ -1408,7 +1410,7 @@ export class React {
         
         preludeScreen.style.display = "flex";
         stopMusic();
-        dialogueSfx = playSfx("../../files/songs/ov-final-dialogues.mp3", startGameplay);
+        dialogueSfx = playSfx("./files/songs/ov-final-dialogues.mp3", startGameplay);
       } else if (activeStage === "gameplay") {
         if (loadedRegion !== state.currentScene && !loadingRegion) loadRegion(state.currentScene);
         titleScreen.setVisible(false);
@@ -1417,7 +1419,7 @@ export class React {
         
         
         setCameraPreset(cameraConfig.gameplay);
-        playMusic("../../files/songs/neodevol-ov.mp3");
+        playMusic("./files/songs/neodevol-ov.mp3");
       } else {
         titleScreen.setVisible(false);
         preludeScreen.style.display = "none";

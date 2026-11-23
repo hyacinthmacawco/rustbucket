@@ -13,7 +13,7 @@ export class SolarSystem {
   const sun = new THREE.Mesh(new THREE.SphereGeometry(sunConfig.radius, 64, 48), sunMaterial);
   sun.position.set(...sunConfig.position);
   parent.add(sun);
-  new THREE.TextureLoader().load("./omniverse/sun.jpg", texture => {
+  new THREE.TextureLoader().load("./files/textures/sun.jpg", texture => {
     texture.colorSpace = THREE.SRGBColorSpace;
     sunMaterial.map = texture;
     sunMaterial.needsUpdate = true;
@@ -39,7 +39,7 @@ export class SolarSystem {
   const earth = new THREE.Mesh(new THREE.SphereGeometry(earthConfig.radius, 64, 48), earthMaterial);
   earth.position.set(...earthConfig.position);
   parent.add(earth);
-  new THREE.TextureLoader().load("./omniverse/earth.jpg", texture => {
+  new THREE.TextureLoader().load("./files/textures/earth.jpg", texture => {
     texture.colorSpace = THREE.SRGBColorSpace;
     earthMaterial.map = texture;
     earthMaterial.needsUpdate = true;
