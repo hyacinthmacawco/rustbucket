@@ -4,6 +4,7 @@ export class Camera {
     this.camera = new THREE.PerspectiveCamera(preset.fov, aspect, preset.near, preset.far);
     this.setPreset(preset, aspect);
     this.pointer = null;
+    this.sensitivity = 0.004;
   }
 
   setPreset(preset, aspect = this.camera.aspect) {
@@ -23,12 +24,17 @@ export class Camera {
     return this.camera;
   }
 
+  setSensitivity(value) {
+    this.sensitivity = Math.max(0.001, Math.min(0.02, Number(value) || 0.004));
+  }
+
   attach(canvas, { getStage = () => "gameplay", getTarget = () => new this.THREE.Vector3() } = {}) {
     this.canvas = canvas;
     this.getStage = getStage;
     this.getTarget = getTarget;
     this.onPointerDown = event => {
       if (event.button !== 0 || this.getStage() === "title") return;
+      if (event.target !== this.canvas) return;
       this.pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
       this.canvas.setPointerCapture?.(event.pointerId);
     };
@@ -38,9 +44,19 @@ export class Camera {
       const dy = event.clientY - this.pointer.y;
       this.pointer.x = event.clientX;
       this.pointer.y = event.clientY;
-      this.camera.position.x -= dx * 2;
-      this.camera.position.y += dy * 2;
-      this.camera.lookAt(this.getTarget());
+
+      const target = this.getTarget();
+      const offset = this.camera.position.clone().sub(target);
+      const spherical = new this.THREE.Spherical().setFromVector3(offset);
+      spherical.theta -= dx * this.sensitivity;
+      spherical.phi = this.THREE.MathUtils.clamp(
+        spherical.phi + dy * this.sensitivity,
+        0.12,
+        Math.PI - 0.12
+      );
+      offset.setFromSpherical(spherical);
+      this.camera.position.copy(target).add(offset);
+      this.camera.lookAt(target);
     };
     this.onPointerUp = event => {
       if (!this.pointer || (event && event.pointerId !== this.pointer.id)) return;
@@ -48,10 +64,14 @@ export class Camera {
     };
     this.onWheel = event => {
       if (this.getStage() === "title") return;
-      const direction = this.camera.position.clone().normalize();
-      this.camera.position.addScaledVector(direction, event.deltaY * 0.45);
+      const target = this.getTarget();
+      const offset = this.camera.position.clone().sub(target);
+      const distance = offset.length();
+      const nextDistance = this.THREE.MathUtils.clamp(distance * (1 + event.deltaY * 0.001), 4, 250);
+      offset.setLength(nextDistance);
+      this.camera.position.copy(target).add(offset);
+      this.camera.lookAt(target);
     };
-
     canvas.addEventListener("pointerdown", this.onPointerDown);
     canvas.addEventListener("pointermove", this.onPointerMove);
     canvas.addEventListener("pointerup", this.onPointerUp);

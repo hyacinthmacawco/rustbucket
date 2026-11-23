@@ -227,10 +227,10 @@ export class Joystick {
     this.knob.textContent = mode === "switch" ? "↔" : "";
   }
 
-  setVisible(visible) {
-    this.element.style.display = visible ? "block" : "none";
+  setVisible(visible, showJoystick = true) {
+    this.element.style.display = visible && showJoystick ? "block" : "none";
     this.buttons.style.display = visible ? "flex" : "none";
-    this.liftElement.style.display = visible && this.vehicleMode ? "block" : "none";
+    this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
     if (!visible) {
       this.resetBase();
       this.resetLift();

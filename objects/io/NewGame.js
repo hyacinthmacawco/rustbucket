@@ -9,6 +9,7 @@ import { GwenBag } from "../team/GwenBag.js";
 import { KevinBag } from "../team/KevinBag.js";
 import { RookBag } from "../team/RookBag.js";
 import { Earth } from "../celestials/Earth.js";
+import { Joystick } from "../team/Joystick.js";
 
 export class NewGame {
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
@@ -85,6 +86,32 @@ export class NewGame {
       new KevinBag(omniverse.celestial, [2.5, 0.45, 2]),
       new RookBag(omniverse.celestial, [7, 0.45, 2])
     ];
+
+    omniverse.joystick?.destroy();
+    omniverse.joystick = new Joystick();
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const entities = {
+      ben: omniverse.crew[0].group,
+      gwen: omniverse.crew[1].group,
+      kevin: omniverse.crew[2].group,
+      rook: omniverse.crew[3].group,
+      rustbucket: omniverse.vehicle.ship
+    };
+    omniverse.joystick.createKeyboard({
+      entities,
+      camera: omniverse.camera,
+      updateCamera: () => omniverse.updateCamera(),
+      isMobile,
+      onSelect: selected => {
+        omniverse.selectedMember = selected;
+        omniverse.updateCamera();
+      },
+      onJump: () => omniverse.vehicle?.toggleRamp(),
+      onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
+      initialSelected: "ben"
+    });
+    omniverse.joystick.setVisible(true, isMobile);
+    omniverse.pause.setVisible(false);
 
     return true;
   }
