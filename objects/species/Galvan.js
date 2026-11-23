@@ -12,8 +12,8 @@ export class Galvan {
     Human: 56
   };
 
-  constructor(parent = null, options = {
-    this.leader = false;}) {
+  constructor(parent = null, options = {}) {
+    this.leader = false;
     this.group = new THREE.Group();
     this.group.name = "Galvan";
     this.homeworld = "galvan";
