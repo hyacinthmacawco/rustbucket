@@ -1026,10 +1026,12 @@ export class React {
 
       if (state.stage === "gameplay") {
         extranet.setLocation(state.currentScene === "space" ? (activeSystem === "solar" ? "space" : activeSystem) : state.currentScene);
-        for (const entity of Object.values(entities || {})) {
-          entity.userData.statusOwner?.updateStatus(delta);
+        if (!state.paused) {
+          for (const entity of Object.values(entities || {})) {
+            entity.userData.statusOwner?.updateStatus(delta);
+          }
+          regionGroup?.userData.interior?.update(delta);
         }
-        regionGroup?.userData.interior?.update(delta);
         const selectedName = keyboardController?.selected || "ben";
         const selectedEntity = entities?.[selectedName];
         const status = selectedEntity?.userData.statusOwner;
