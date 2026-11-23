@@ -343,4 +343,30 @@ export class Human {
 
   Object.assign(this, rig);
   }
+
+  updateStatus(delta) {
+    this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
+    this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
+    if (this.healthRecoveryDelay === 0 && this.health < 100) this.health = Math.min(100, this.health + delta * 0.32);
+    if (this.energyRecoveryDelay === 0 && this.energy < 100) this.energy = Math.min(100, this.energy + delta * 0.48);
+  }
+
+  takeDamage(amount) {
+    this.health = Math.max(0, this.health - Math.max(0, amount));
+    this.healthRecoveryDelay = 4;
+    return this.health;
+  }
+
+  useEnergy(amount) {
+    if (this.energy < amount) return false;
+    this.energy = Math.max(0, this.energy - amount);
+    this.energyRecoveryDelay = 4;
+    return true;
+  }
+
+  restoreEnergy(amount) {
+    this.energy = Math.min(100, this.energy + Math.max(0, amount));
+    return this.energy;
+  }
+
 }
