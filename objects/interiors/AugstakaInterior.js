@@ -17,7 +17,11 @@ export class AugstakaInterior {
     treasury: 920000,
     revenue: 12500,
     expenses: 14500,
-    resources: [{"id":"bio-sample","name":"Bio samples","quantity":800},{"id":"agri-goods","name":"Agricultural goods","quantity":1200},{"id":"bio-tech","name":"Bio-tech","quantity":260}],
+    resources: [
+      { id: "bio-sample", name: "Bio samples", quantity: 800 },
+      { id: "agri-goods", name: "Agricultural goods", quantity: 1200 },
+      { id: "bio-tech", name: "Bio-tech", quantity: 260 }
+    ],
     wars: [],
     events: []
   };
@@ -174,7 +178,12 @@ export class AugstakaInterior {
       const angle = index * Math.PI * 2 / 28;
       const radius = 105 + (index % 4) * 12;
       const height = 12 + (index % 7) * 7;
-      const hill = new THREE.Mesh(new THREE.ConeGeometry(12 + (index % 5) * 3, height, 7), new THREE.MeshStandardMaterial({ color: index % 2 ? this.world.ground : this.world.accent }));
+      const hill = new THREE.Mesh(
+        new THREE.ConeGeometry(12 + (index % 5) * 3, height, 7),
+        new THREE.MeshStandardMaterial({
+          color: index % 2 ? this.world.ground : this.world.accent
+        })
+      );
       hill.position.set(Math.cos(angle) * radius, height / 2 - 1, Math.sin(angle) * radius);
       this.root.add(hill);
     }
