@@ -1,5 +1,8 @@
 import * as THREE from "three";
 export class Rustbucket {
+  static health = 100;
+  static energy = 100;
+  static taydenite = 0;
   static relationships = {};
 
   constructor(parent) {
@@ -83,24 +86,33 @@ export class Rustbucket {
   };
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(7.2,32),new THREE.MeshBasicMaterial({color:0x080a0e,transparent:true,opacity:.25,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.set(0,.025,0);shadow.scale.set(1.25,.62,1);shadow.userData.noPhysics=true;parent.add(shadow);
-  this.health = 100;
-  this.energy = 100;
+  this.health = this.constructor.health;
+  this.energy = this.constructor.energy;
   this.energyLabel = "FUEL";
   this.maxHealth = 100;
   this.maxEnergy = 100;
   this.healthRecoveryDelay = 0;
   this.energyRecoveryDelay = 0;
-  this.taydenite = 0;
+  this.taydenite = this.constructor.taydenite;
+  try {
+    this.taydenite = Number(localStorage.getItem("rustbucket.taydenite") || this.taydenite);
+  } catch (error) {
+    this.taydenite = this.constructor.taydenite;
+  }
+  this.constructor.taydenite = this.taydenite;
   ship.userData.statusOwner = this;
   ship.userData.taydenite = this.taydenite;
   Object.assign(this, { ship, shadow });
   }
+
 
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
     if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
     if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
+    this.constructor.health = this.health;
+    this.constructor.energy = this.energy;
     this.ship.userData.health = this.health;
     this.ship.userData.energy = this.energy;
   }
@@ -108,6 +120,7 @@ export class Rustbucket {
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
     this.healthRecoveryDelay = 4;
+    this.constructor.health = this.health;
     this.ship.userData.health = this.health;
     return this.health;
   }
@@ -116,20 +129,35 @@ export class Rustbucket {
     if (this.energy < amount) return false;
     this.energy = Math.max(0, this.energy - amount);
     this.energyRecoveryDelay = 4;
+    this.constructor.energy = this.energy;
     this.ship.userData.energy = this.energy;
     return true;
   }
 
   restoreEnergy(amount) {
     this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount));
+    this.constructor.energy = this.energy;
     this.ship.userData.energy = this.energy;
     return this.energy;
   }
 
   restoreHealth(amount) {
     this.health = Math.min(this.maxHealth, this.health + Math.max(0, amount));
+    this.constructor.health = this.health;
     this.ship.userData.health = this.health;
     return this.health;
+  }
+
+  receiveTaydenite(amount) {
+    this.taydenite += Math.max(0, amount);
+    this.constructor.taydenite = this.taydenite;
+    this.ship.userData.taydenite = this.taydenite;
+    try {
+      localStorage.setItem("rustbucket.taydenite", String(this.taydenite));
+    } catch (error) {
+      console.warn("Taydenite balance could not be saved.", error);
+    }
+    return this.taydenite;
   }
 
 }
