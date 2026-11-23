@@ -1,6 +1,21 @@
 import * as THREE from "three";
+import { Human } from "../species/Human.js";
 
 export class EarthInterior {
+  static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x78b9f5, ground: 0x64734f, accent: 0x9b9b91 };
+  static DEFAULT_STATE = {
+    population: 810,
+    treasury: 1800000,
+    revenue: 22000,
+    expenses: 19000,
+    resources: [
+      { id: "food", name: "Food supplies", quantity: 2400 },
+      { id: "fuel", name: "Fuel", quantity: 1600 },
+      { id: "medicine", name: "Medicine", quantity: 850 }
+    ],
+    wars: [],
+    events: []
+  };
   mat(color, roughness = 0.9) {
     return new THREE.MeshStandardMaterial({ color, roughness });
   }
@@ -15,6 +30,13 @@ export class EarthInterior {
   }
 
   constructor(scene, parent = scene) {
+  this.world = this.constructor.WORLD;
+  this.key = "earth";
+  this.species = "Human";
+  this.relationships = { ...Human.relationships };
+  this.elapsed = 0;
+  this.stateKey = "rustbucket.planet.earth";
+  Object.assign(this, this.loadState());
   scene.background = new THREE.Color(0x78b9f5);
   scene.fog = new THREE.Fog(0xa6cbed, 75, 260);
 
@@ -123,8 +145,97 @@ export class EarthInterior {
     }
   }
 
-  Object.assign(this, { bellwood: root, sunlight });
+  Object.assign(this, { bellwood: root, root, sunlight });
   }
+
+  loadState() {
+    const defaults = structuredClone(this.constructor.DEFAULT_STATE);
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.stateKey) || "null");
+      if (!saved) return defaults;
+      return {
+        ...defaults,
+        ...saved,
+        resources: Array.isArray(saved.resources) ? saved.resources : defaults.resources,
+        wars: Array.isArray(saved.wars) ? saved.wars : [],
+        events: Array.isArray(saved.events) ? saved.events : []
+      };
+    } catch (error) {
+      console.warn("Earth data could not be loaded:", error);
+      return defaults;
+    }
+  }
+
+  saveState() {
+    const state = {
+      population: this.population,
+      treasury: this.treasury,
+      revenue: this.revenue,
+      expenses: this.expenses,
+      resources: this.resources,
+      wars: this.wars,
+      events: this.events
+    };
+    try {
+      localStorage.setItem(this.stateKey, JSON.stringify(state));
+    } catch (error) {
+      console.warn("Earth data could not be saved:", error);
+    }
+  }
+
+  update(delta) {
+    this.elapsed += delta;
+    if (this.elapsed < 30) return;
+    this.elapsed = 0;
+    const activeWars = this.wars.filter(war => war.status === "active");
+    const growth = this.population * 0.00002;
+    const losses = activeWars.length ? this.population * 0.00001 * activeWars.length : 0;
+    this.population = Math.max(0, Math.min(999, Math.round(this.population + growth - losses)));
+    this.treasury = Math.max(0, this.treasury + this.revenue - this.expenses);
+    for (const war of activeWars) {
+      if (Date.now() - Date.parse(war.startedAt) > 90000) {
+        war.status = "ended";
+        war.endedAt = new Date().toISOString();
+      }
+    }
+    this.saveState();
+  }
+
+  declareWar(targetInterior) {
+    if (!targetInterior || targetInterior === this || targetInterior.species === this.species) return null;
+    this.relationships[targetInterior.species] = -55;
+    const loot = Math.min(targetInterior.treasury, Math.max(100, Math.round(targetInterior.treasury * 0.025)));
+    targetInterior.treasury = Math.max(0, targetInterior.treasury - loot);
+    this.treasury += loot;
+    const stock = targetInterior.resources.find(resource => resource.quantity > 0);
+    let seized = null;
+    if (stock) {
+      const quantity = Math.min(stock.quantity, Math.max(1, Math.floor(stock.quantity * 0.01)));
+      stock.quantity -= quantity;
+      const matching = this.resources.find(resource => resource.id === stock.id);
+      if (matching) matching.quantity += quantity;
+      else this.resources.push({ ...stock, quantity });
+      seized = { resource: stock.name, quantity };
+    }
+    const event = {
+      type: "war",
+      attacker: this.species,
+      defender: targetInterior.species,
+      loot,
+      seized,
+      description: this.species + " declared war on " + targetInterior.species + ".",
+      at: new Date().toISOString(),
+      status: "active"
+    };
+    this.wars.push({ target: targetInterior.species, status: "active", startedAt: event.at });
+    targetInterior.wars.push({ target: this.species, status: "active", startedAt: event.at });
+    this.events.unshift(event);
+    targetInterior.events.unshift(event);
+    this.saveState();
+    targetInterior.saveState();
+    return event;
+  }
+
 }
 
 
