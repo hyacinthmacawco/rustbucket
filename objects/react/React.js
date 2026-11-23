@@ -68,6 +68,7 @@ export class React {
       galvan: GalvanPrime,
       incursia: Incursia
     };
+    this.addSystemPlanets("solar");
 
     this.createPrelude();
     this.titleScreen = new Title({ onNewGame: () => this.setStage("prelude") });
@@ -168,6 +169,7 @@ export class React {
   loadTitleWorld() {
     this.clearWorld();
     this.titleWorld = new SolarSystem(this.activeWorld);
+    this.addSystemPlanets("solar");
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
     this.state.currentScene = "space";
@@ -178,7 +180,8 @@ export class React {
     this.scene.background = new THREE.Color(Earth.WORLD.sky);
     this.scene.fog = new THREE.Fog(Earth.WORLD.sky, 180, 700);
 
-    this.earth = new Earth(this.activeWorld);
+    this.earth = new Earth();
+    this.activeWorld.add(this.earth.interior());
     this.vehicle = new Rustbucket(this.activeWorld);
     this.vehicle.ship.position.set(0, 2, 34);
 
@@ -208,13 +211,39 @@ export class React {
     this.extranet.setLocation("earth");
   }
 
+  addSystemPlanets(systemKey) {
+    const placements = {
+      solar: [
+        { key: "earth", position: [0, 0, 0] },
+        { key: "moon", position: [1547, 0, 0] }
+      ],
+      augstaka: [{ key: "augstaka", position: [274300, 0, 0] }],
+      anodyne: [{ key: "anodyne", position: [274300, 0, 0] }],
+      galvan: [{ key: "galvan", position: [274300, 0, 0] }],
+      incursia: [{ key: "incursia", position: [274300, 0, 0] }]
+    };
+
+    this.systemPlanets = [];
+    for (const placement of placements[systemKey] || []) {
+      const PlanetClass = this.planetClasses[placement.key];
+      if (!PlanetClass) continue;
+
+      const planet = new PlanetClass();
+      const exterior = planet.exterior();
+      exterior.position.set(...placement.position);
+      this.activeWorld.add(exterior);
+      this.systemPlanets.push({ planet, exterior });
+    }
+  }
+
   enterPlanet(key) {
     const PlanetClass = this.planetClasses[key];
     if (!PlanetClass) return false;
 
     this.clearWorld();
-    this.currentPlanet = new PlanetClass(this.activeWorld);
-    const world = PlanetClass.WORLD;
+    this.currentPlanet = new PlanetClass();
+    this.activeWorld.add(this.currentPlanet.interior());
+    const world = this.currentPlanet.world;
     this.scene.background = new THREE.Color(world.sky);
     this.scene.fog = new THREE.Fog(world.sky, 180, 700);
     this.camera.position.set(0, 8, 23);
@@ -238,6 +267,7 @@ export class React {
 
     this.clearWorld();
     this.systemWorld = new SystemClass(this.activeWorld);
+    this.addSystemPlanets(systemKey);
     this.currentPlanet = null;
     this.scene.background = new THREE.Color(0x02040a);
     this.scene.fog = null;
@@ -259,6 +289,7 @@ export class React {
     this.scene.fog = null;
     this.earth = null;
     this.currentPlanet = null;
+    this.systemPlanets = [];
     this.systemWorld = null;
     this.vehicle = null;
     this.crew = [];
@@ -270,11 +301,12 @@ export class React {
     const elapsed = this.clock.elapsedTime;
 
     if (this.state.stage === "title" && this.titleWorld) {
-      this.titleWorld.earth.rotation.y += delta * 0.07;
-      this.titleWorld.moon.rotation.y += delta * 0.04;
+      for (const entry of this.systemPlanets || []) {
+        entry.exterior.rotation.y += delta * 0.04;
+      }
       this.titleWorld.sunAura.material.opacity = 0.11 + Math.sin(elapsed * 0.7) * 0.025;
       this.titleWorld.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
-      this.titleWorld.stars.rotation.y += delta * 0.0008;
+      this.titleWorld.stars.dome.rotation.y += delta * 0.0008;
     }
 
     this.renderer.render(this.scene, this.camera);
