@@ -96,7 +96,7 @@ export class GalvanPrime {
 
   enter(react) {
     react.clearWorld();
-    react.omniverse.celestial = this.interior();
+    react.celestial = this.interior();
     react.scene.background = new THREE.Color(this.world.sky);
     react.scene.fog = new THREE.Fog(this.world.sky, 180, 700);
     react.camera.position.set(0, 8, 23);
@@ -117,7 +117,7 @@ export class GalvanPrime {
     react.clearWorld();
     const system = new THREE.Group();
     react.systemWorld = new GalvanSystem(system);
-    react.omniverse.celestial = system;
+    react.celestial = system;
     react.addSystemPlanets(this.system);
     react.scene.background = new THREE.Color(0x02040a);
     react.scene.fog = null;
