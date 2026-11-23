@@ -4,6 +4,12 @@ export class Human {
   static relationships = {"Ben":96,"Gwen":80,"Kevin":50,"Rook":28,"Highbreed":-56,"Incursean":-36,"Anodite":40,"Galvan":56};
 
   constructor(options = {}) {
+  this.health = 100;
+  this.energy = 100;
+  this.maxHealth = 100;
+  this.maxEnergy = 100;
+  this.healthRecoveryDelay = 0;
+  this.energyRecoveryDelay = 0;
   const {
     boneColor = 0x8bb8e8,
     jointColor = 0xf0bd72,
@@ -342,6 +348,7 @@ export class Human {
   };
 
   Object.assign(this, rig);
+  root.userData.statusOwner = this;
   }
 
   updateStatus(delta) {
