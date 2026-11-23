@@ -227,9 +227,7 @@ export class Galvan {
 
     const payment = this.taydenite;
     this.taydenite = 0;
-    const shipStatus = ship.userData.statusOwner;
-    shipStatus.taydenite += payment;
-    ship.userData.taydenite = shipStatus.taydenite;
+    ship.userData.statusOwner.receiveTaydenite(payment);
     this.boardedShip = null;
     this.currentWorld = worldKey;
     this.group.userData.boarded = false;
