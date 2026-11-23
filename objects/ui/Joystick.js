@@ -310,3 +310,10 @@ export function createKeyboard({ entities, camera, joystick, updateCamera, isMob
     }
   };
 }
+
+
+export class Joystick {
+  constructor(options = {}) { this.controls = createJoystick(options); }
+  setVisible(value) { this.controls?.setVisible?.(value); }
+  destroy() { this.controls?.destroy?.(); }
+}

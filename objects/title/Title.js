@@ -52,3 +52,10 @@ export function createTitleScreen({ onNewGame = () => {} } = {}) {
     }
   };
 }
+
+
+export class Title {
+  constructor(options = {}) { this.screen = createTitleScreen(options); }
+  setVisible(value) { this.screen?.setVisible?.(value); }
+  destroy() { this.screen?.destroy?.(); }
+}

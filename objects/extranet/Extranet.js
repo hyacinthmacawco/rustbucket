@@ -179,3 +179,11 @@ export function createExtranet({ onContinue = () => {}, onComplete = () => {}, s
   home();
   return { open, openOmnidata, close, addRelationship, updateTask, setLocation, get completed(){return completed;}, get relationships(){return simulation?.data?.relationships || {};} };
 }
+
+
+export class Extranet {
+  constructor(options = {}) { this.view = createExtranet(options); }
+  open() { this.view?.open?.(); }
+  close() { this.view?.close?.(); }
+  destroy() { this.view?.destroy?.(); }
+}

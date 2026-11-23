@@ -76,3 +76,10 @@ export function createSimulationCloud(simulation) {
 
   return { render };
 }
+
+
+export class ExtranetBrowser {
+  constructor(options = {}) { this.browser = createSimulationCloud(options); }
+  render(view, host) { return this.browser?.render?.(view, host); }
+  destroy() { this.browser?.destroy?.(); }
+}
