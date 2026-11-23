@@ -7,13 +7,15 @@ import * as THREE from "three";
  */
 
 export class Ben {
+  static health = 100;
+  static energy = 100;
   static relationships = {"Highbreed":70,"Incursean":-60,"Anodite":20,"Galvan":80,"Human":96,"Gwen":84,"Kevin":90,"Rook":80};
 
   constructor({ HumanRig }) {
     this.startPosition = [-3,-0.5,5];
     this.startScale = [0.5,0.5,0.5];
-    this.health = 100;
-    this.energy = 100;
+    this.health = this.constructor.health;
+    this.energy = this.constructor.energy;
     this.energyLabel = "OMNITRIX";
     this.maxHealth = 100;
     this.maxEnergy = 100;
@@ -241,11 +243,14 @@ export class Ben {
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
     if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
     if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
+    this.constructor.health = this.health;
+    this.constructor.energy = this.energy;
   }
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
     this.healthRecoveryDelay = 4;
+    this.constructor.health = this.health;
     return this.health;
   }
 
@@ -253,16 +258,19 @@ export class Ben {
     if (this.energy < amount) return false;
     this.energy = Math.max(0, this.energy - amount);
     this.energyRecoveryDelay = 4;
+    this.constructor.energy = this.energy;
     return true;
   }
 
   restoreEnergy(amount) {
     this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount));
+    this.constructor.energy = this.energy;
     return this.energy;
   }
 
   restoreHealth(amount) {
     this.health = Math.min(this.maxHealth, this.health + Math.max(0, amount));
+    this.constructor.health = this.health;
     return this.health;
   }
 
