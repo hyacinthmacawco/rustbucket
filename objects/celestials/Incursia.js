@@ -59,17 +59,6 @@ export class Incursia {
     ground.position.y = -0.6;
     interior.add(ground);
 
-    for (let index = 0; index < 34; index++) {
-      const angle = index * Math.PI * 2 / 34;
-      const radius = 38 + (index % 5) * 15;
-      const formation = new THREE.Mesh(
-        new THREE.OctahedronGeometry(2 + (index % 4) * 0.7),
-        new THREE.MeshStandardMaterial({ color: index % 2 ? 0xd39b45 : 0x8e5d36, emissive: 0x38200d, emissiveIntensity: 0.18 })
-      );
-      formation.position.set(Math.cos(angle) * radius, 5 + (index % 6) * 5, Math.sin(angle) * radius);
-      formation.scale.y = 1.8;
-      interior.add(formation);
-    }
 
     const hub = new THREE.Group();
     hub.name = "IncursiaCivicHub";
