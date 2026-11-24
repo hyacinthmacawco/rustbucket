@@ -14,6 +14,7 @@ import { Incursia } from "./Incursia.js";
 import { Earth } from "./Earth.js";
 import { Extranet } from "../extranet/Extranet.js";
 import { Pause } from "../io/Pause.js";
+import { PlanetaryResident } from "../species/PlanetaryResident.js";
 
 export class Omniverse {
   static state = { stage: "title", currentScene: "space" };
@@ -238,6 +239,27 @@ export class Omniverse {
     this.animationFrame = requestAnimationFrame(this.animate);
   }
 
+  selectTeamMember(selected) {
+    if (selected === "rustbucket") {
+      const ship = this.vehicle?.ship;
+      if (!ship) return;
+      if (!ship.parent) {
+        this.loadSystemScene(this.vehicleSystem || "solar", ship, []);
+      }
+      this.updateCamera();
+      return;
+    }
+
+    const index = ["ben", "gwen", "kevin", "rook"].indexOf(selected);
+    const member = this.crew?.[index];
+    if (!member) return;
+    const home = this.crewHomePlanet || this.earth || new Earth();
+    if (this.state.currentScene !== home.world.key || member.group.parent !== this.celestial) {
+      this.enterPlanetScene(home, null, [...(this.crew || [])]);
+    }
+    this.updateCamera();
+  }
+
   updateCamera() {
     const selected = this.joystick?.currentSelection;
     const entity = selected === "rustbucket"
@@ -339,6 +361,7 @@ export class Omniverse {
     this.scene.fog = null;
     this.state.stage = "gameplay";
     this.state.currentScene = systemKey === "solar" ? "space" : "system-" + systemKey;
+    this.vehicleSystem = systemKey;
     this.extranet?.setLocation(systemKey === "solar" ? "space" : systemKey);
     if (ship) this.resetCameraToShip(ship);
     else {
@@ -362,16 +385,12 @@ export class Omniverse {
     this.scene.fog = new THREE.Fog(planet.world.sky, 180, 700);
 
     this.vehicle = vehicle || (ship ? { ship } : null);
+    this.crew = crew || [];
     if (ship) {
       this.vehicle.ship = ship;
-      this.crew = crew;
       ship.position.set(0, 2, 34);
       ship.rotation.set(0, 0, 0);
       this.celestial.add(ship);
-      crew.forEach((member, index) => {
-        member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
-        ship.add(member.group);
-      });
       this.resetCameraToShip(ship);
     } else {
       this.camera.position.set(0, 8, 23);
@@ -385,7 +404,27 @@ export class Omniverse {
     this.titleScreen.newGame.setPreludeVisible(false);
     this.extranetButton.style.display = "block";
     this.extranet?.setLocation(planet.world.key);
+    this.populatePlanet(planet);
     return this.celestial;
+  }
+
+  populatePlanet(planet) {
+    this.residents = [];
+    for (let index = 0; index < 5; index++) {
+      const resident = new PlanetaryResident(planet.world.species, index);
+      const angle = index * Math.PI * 2 / 5;
+      const radius = 24 + (index % 2) * 12;
+      resident.group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 18);
+      resident.group.rotation.y = angle + Math.PI;
+      this.celestial.add(resident.group);
+      this.residents.push(resident);
+    }
+  }
+
+  updateResidents(delta, elapsed) {
+    for (const resident of this.residents || []) {
+      resident.update(delta, elapsed);
+    }
   }
 
   jumpToSystem(systemKey) {
@@ -410,6 +449,7 @@ export class Omniverse {
     if (this.state.stage === "gameplay") {
       this.joystick?.update(delta);
       this.updateCamera();
+      this.updateResidents(delta, elapsed);
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
@@ -495,6 +535,7 @@ export class Omniverse {
     this.vehicle = null;
     this.crew = [];
     this.bags = [];
+    this.residents = [];
   }
 
   destroy() {
