@@ -344,17 +344,13 @@ export class Omniverse {
       || this.systemPlanets[0];
     const center = destination?.model.position || new THREE.Vector3();
 
+    this.vehicle = vehicle || (ship ? { ship } : null);
+    this.crew = crew || [];
     if (ship) {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
       this.celestial.add(ship);
-      this.vehicle = vehicle || { ship };
       this.vehicle.ship = ship;
-      this.crew = crew;
-      crew.forEach((member, index) => {
-        member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
-        ship.add(member.group);
-      });
     }
 
     this.scene.background = new THREE.Color(0x02040a);
@@ -392,7 +388,14 @@ export class Omniverse {
       ship.rotation.set(0, 0, 0);
       this.celestial.add(ship);
       this.resetCameraToShip(ship);
-    } else {
+    }
+    if (planet === this.crewHomePlanet) {
+      this.crew.forEach((member, index) => {
+        member.group.position.set(-4 + index * 2.6, 0, 8);
+        this.celestial.add(member.group);
+      });
+    }
+    if (!ship) {
       this.camera.position.set(0, 8, 23);
       this.camera.lookAt(0, 1.5, 0);
       this.cameraTarget.set(0, 1.5, 0);
