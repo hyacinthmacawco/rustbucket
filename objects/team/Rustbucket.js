@@ -202,18 +202,19 @@ export class Rustbucket {
 
   createSeats() {
     this.seats = [
-      { name: "Front Left", position: new THREE.Vector3(-0.72, -0.92, 1.25), rotation: 0 },
-      { name: "Front Right", position: new THREE.Vector3(0.72, -0.92, 1.25), rotation: 0 },
-      { name: "Left Side", position: new THREE.Vector3(-0.92, -0.92, -1.15), rotation: Math.PI / 2 },
-      { name: "Right Side", position: new THREE.Vector3(0.92, -0.92, -1.15), rotation: -Math.PI / 2 }
+      { name: "Front Left", position: new THREE.Vector3(-0.72, -0.78, 1.25), rotation: 0 },
+      { name: "Front Right", position: new THREE.Vector3(0.72, -0.78, 1.25), rotation: 0 },
+      { name: "Left Side", position: new THREE.Vector3(-0.92, -0.78, -1.15), rotation: Math.PI / 2 },
+      { name: "Right Side", position: new THREE.Vector3(0.92, -0.78, -1.15), rotation: -Math.PI / 2 }
     ];
     const cushionMaterial = new THREE.MeshStandardMaterial({ color: 0x303b38, roughness: 0.9 });
     const backMaterial = new THREE.MeshStandardMaterial({ color: 0x252f2d, roughness: 0.88 });
     this.seats.forEach((seat, index) => {
       const group = new THREE.Group();
       group.name = "RustbucketSeat" + (index + 1);
-      group.position.copy(seat.position);
+      group.position.set(seat.position.x, -0.94, seat.position.z);
       group.rotation.y = seat.rotation;
+      group.scale.setScalar(1 / 3);
       const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.18, 0.9), cushionMaterial);
       cushion.position.y = 0.82;
       cushion.castShadow = true;
