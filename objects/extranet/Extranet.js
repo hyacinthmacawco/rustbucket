@@ -206,7 +206,7 @@ export class Extranet {
     if (event.key !== "Enter") return;
     const url = this.address.value.trim().toLowerCase();
     if (url.includes("bgkr.omnicloud.com")) {
-      if (url.endsWith("/tasks")) this.tasks();
+      if (url.endsWith("/tasks")) this.tasks();\n      else if (url.endsWith("/accounts")) this.accounts();
       else if (url.endsWith("/relationships")) this.showRelationships();
       else if (url.endsWith("/memories")) this.memories();
       else this.privateCloud();
