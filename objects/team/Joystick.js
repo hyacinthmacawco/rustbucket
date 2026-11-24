@@ -20,7 +20,8 @@ export class Joystick {
       pointerId: null,
       x: 0,
       y: 0,
-       liftY: 0,
+       liftX: 0,
+      liftY: 0,
       jumpRequested: false,
       pickRequested: false,
       attackHeld: false
@@ -146,12 +147,14 @@ export class Joystick {
     const factor = distance > max ? max / distance : 1;
     const x = dx * factor;
     const y = dy * factor;
+    this.input.liftX = x / max;
     this.input.liftY = -y / max;
     this.liftKnob.style.transform = `translate(${x}px,${y}px)`;
   }
 
   resetLift() {
     this.liftPointerId = null;
+    this.input.liftX = 0;
     this.input.liftY = 0;
     this.liftKnob.style.transform = "translate(0px,0px)";
   }
@@ -296,7 +299,7 @@ export class Joystick {
       const lift = Math.abs(joy.liftY) < 0.08 ? 0 : THREE.MathUtils.clamp(joy.liftY, -1, 1);
       const fuelDemand = magnitude > 0.08 || Math.abs(lift) > 0.05;
       const hasFuel = !fuelDemand || object.userData.onFuelUse?.((magnitude + Math.abs(lift)) * dt) !== false;
-      if (hasFuel) object.userData.moveVehicle(mx, mz, lift, dt, right, Math.atan2(fx, fz));
+      if (hasFuel) object.userData.moveVehicle(mx, mz, lift, dt, joy.liftX, Math.atan2(fx, fz));
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
