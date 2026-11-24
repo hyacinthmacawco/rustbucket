@@ -12,7 +12,7 @@ export class Joystick {
       lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
-      teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "1px solid rgba(126,255,168,.28)", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" }
+      teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" }
     };
 
     this.input = {
@@ -48,12 +48,14 @@ export class Joystick {
     Object.assign(this.teamPanel.style, this.styles.teamPanel);
     this.teamButtons = new Map();
     for (const name of Joystick.TEAM_MEMBERS) {
-      const button = document.createElement("button");
-      button.type = "button";
+      const button = document.createElement("div");
+      button.setAttribute("role", "button");
+      button.tabIndex = 0;
       button.textContent = Joystick.TEAM_NAMES[name];
       button.dataset.member = name;
       Object.assign(button.style, this.styles.teamButton);
       button.addEventListener("click", () => this.selectMember(name));
+      button.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this.selectMember(name); } });
       this.teamPanel.append(button);
       this.teamButtons.set(name, button);
     }
