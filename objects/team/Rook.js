@@ -9,6 +9,8 @@ export class Rook {
     this.startPosition = [7,-0.5,-7];
     this.startScale = [0.52,0.52,0.52];
     this.health = this.constructor.health;
+    this.damage = 1;
+    this.dead = false;
     this.energy = this.constructor.energy;
     this.energyLabel = "PROTO-TOOL";
     this.maxHealth = 100;
@@ -100,6 +102,7 @@ export class Rook {
   attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Rook ?? target.constructor?.relationships?.Rook ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(2); return true; }
 
   updateStatus(delta) {
+    if (this.dead || this.health <= 0) { this.health = 0; this.dead = true; this.group.visible = false; return; }
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
     if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
@@ -110,6 +113,7 @@ export class Rook {
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
+    if (this.health === 0) { this.dead = true; this.group.visible = false; }
     this.healthRecoveryDelay = 4;
     this.constructor.health = this.health;
     return this.health;
