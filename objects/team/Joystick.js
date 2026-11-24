@@ -283,9 +283,8 @@ export class Joystick {
       localForward.copy(new THREE.Vector3(fx, 0, fz).applyMatrix4(inverseParent).sub(origin)).normalize();
       localMovement.copy(new THREE.Vector3(mx, 0, mz).applyMatrix4(inverseParent).sub(origin));
     }
-    if (this.selected !== "rustbucket") {
-      object.rotation.y = Math.atan2(localForward.x, localForward.z);
-    }
+    // Every controllable entity, including the Rustbucket, faces the camera heading.
+    object.rotation.y = Math.atan2(localForward.x, localForward.z);
 
     if (joy.jumpRequested) {
       if (this.selected === "rustbucket") this.onJump();
