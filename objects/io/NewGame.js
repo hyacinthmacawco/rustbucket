@@ -29,8 +29,8 @@ export class NewGame {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.type = "div";
     this.element.className = "rb-title-action";
     this.element.textContent = "NEW GAME";
     Object.assign(this.element.style, this.styles.button);
@@ -42,8 +42,8 @@ export class NewGame {
     this.heading = document.createElement("div");
     this.heading.textContent = "A NEW DAWN";
     Object.assign(this.heading.style, this.styles.heading);
-    this.skip = document.createElement("button");
-    this.skip.type = "button";
+    this.skip = document.createElement("div");
+    this.skip.type = "div";
     this.skip.textContent = "SKIP";
     Object.assign(this.skip.style, this.styles.skip);
     this.skip.addEventListener("click", this.onSkip);
