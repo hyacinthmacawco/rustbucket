@@ -33,7 +33,8 @@ export class SolarSystem {
     this.sunlight = new THREE.PointLight(0xffb65c, 1800000000, 800000, 1.5);
     this.sunlight.position.copy(this.sun.position);
     this.root.add(this.sunlight);
-    this.stars = new Starfield(this.root);
+    this.stars = new Starfield();
+    this.root.add(this.stars.model());
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
   animate(delta, elapsed) {
