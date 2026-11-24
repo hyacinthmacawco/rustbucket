@@ -5,8 +5,9 @@ export class Pick {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.setAttribute("role", "button");
+    this.element.tabIndex = 0;
     this.element.textContent = "PICK";
     this.element.setAttribute("aria-label", "Pick up");
     Object.assign(this.element.style, this.styles);
