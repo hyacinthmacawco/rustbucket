@@ -264,6 +264,7 @@ export class Omniverse {
     this.extranetButton.style.display = stage === "gameplay" ? "block" : "none";
     this.pauseButton.style.display = stage === "gameplay" ? "block" : "none";
 
+    this.titleScreen.newGame.setControlsVisible(stage === "gameplay");
     if (stage === "gameplay") {
       this.titleScreen.newGame.initialize(this);
     } else if (stage === "title") {
