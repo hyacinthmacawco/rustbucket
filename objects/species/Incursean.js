@@ -1,12 +1,14 @@
 import * as THREE from "three";
+import { initializeResident } from "./Human.js";
 
 export class Incursean {
+  static homeworld = "incursia";
   static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: 3, Galvan: 10, Human: -36 };
 
   constructor(parent = null, options = {}) {
     this.name = options.name || "Incursean";
     this.leader = false;
-    this.homeworld = "incursia";
+    this.homeworld = Incursean.homeworld;
     this.health = 100;
     this.energy = 100;
     this.maxHealth = 100;
@@ -41,6 +43,7 @@ export class Incursean {
     if (parent) parent.add(this.group);
     this.mesh = this.group;
     this.group.userData.statusOwner = this;
+    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Incursean", homeworld: Incursean.homeworld, style: { boneColor: 0xc88b61, jointColor: 0xe7a04f } });
   }
 
   addPart(geometry, material, position, rotation = [0, 0, 0]) {
@@ -51,5 +54,7 @@ export class Incursean {
     return mesh;
   }
 
+
+  awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
 
 }
