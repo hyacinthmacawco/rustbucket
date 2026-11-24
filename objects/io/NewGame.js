@@ -13,6 +13,7 @@ import { Joystick } from "../team/Joystick.js";
 import { Jump } from "../team/Jump.js";
 import { Attack } from "../team/Attack.js";
 import { Interact } from "../team/Interact.js";
+import { POV } from "../team/POV.js";
 
 export class NewGame {
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
@@ -99,11 +100,18 @@ export class NewGame {
       new KevinBag(omniverse.celestial, [2.5, 0.45, 2]),
       new RookBag(omniverse.celestial, [7, 0.45, 2])
     ];
+    omniverse.crew.forEach((member, index) => {
+      member.automation = { bag: omniverse.bags[index], seatIndex: index, phase: "toBag", elapsed: 0 };
+      member.carryingBag = null;
+      member.seated = false;
+    });
+    omniverse.vehicle.setRamp(true);
 
     omniverse.joystick?.destroy();
     this.jumpControl?.destroy();
     this.interactControl?.destroy();
     this.attackControl?.destroy();
+    this.povControl?.destroy();
     omniverse.joystick = new Joystick();
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const entities = {
@@ -126,10 +134,12 @@ export class NewGame {
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       onTransformationChange: form => omniverse.crew[0]?.setTransformation(form),
+      onInteract: selected => omniverse.handleTeamInteraction(selected),
       initialSelected: "ben"
     });
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
     this.interactControl = new Interact({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
+    this.povControl = new POV({ onToggle: enabled => omniverse.setPOV(enabled) });
     this.attackControl = new Attack({
       onStart: () => { omniverse.joystick.input.attackHeld = true; },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
@@ -137,7 +147,8 @@ export class NewGame {
     this.jumpControl.create();
     this.interactControl.create();
     this.attackControl.create();
-    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element]);
+    this.povControl.create();
+    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element, this.povControl.element]);
     this.setControlsVisible(true);
     omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
@@ -149,6 +160,7 @@ export class NewGame {
     this.jumpControl?.setVisible(visible);
     this.interactControl?.setVisible(visible);
     this.attackControl?.setVisible(visible);
+    this.povControl?.setVisible(visible);
   }
 
   setPreludeVisible(visible) {
@@ -163,5 +175,6 @@ export class NewGame {
     this.jumpControl?.destroy();
     this.interactControl?.destroy();
     this.attackControl?.destroy();
+    this.povControl?.destroy();
   }
 }
