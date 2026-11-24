@@ -101,6 +101,8 @@ export class Kevin {
   group.userData.statusOwner = this;
   }
 
+  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Kevin ?? target.constructor?.relationships?.Kevin ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(2); return true; }
+
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
