@@ -42,6 +42,12 @@ export class Title {
     this.menu.append(this.heading, this.buttons, this.loadGame.panel);
     this.element.append(this.menu);
     document.body.append(this.element);
+
+    this.deathScreen = document.createElement("section");
+    this.deathScreen.id = "death-screen";
+    Object.assign(this.deathScreen.style, { position: "fixed", inset: "0", display: "none", placeItems: "center", background: "#000", color: "#fff", zIndex: "100", fontSize: "clamp(2rem, 8vw, 5rem)", letterSpacing: ".18em" });
+    this.deathScreen.textContent = "YOU ARE DEAD";
+    document.body.append(this.deathScreen);
   }
 
   setVisible(visible) {
@@ -49,9 +55,14 @@ export class Title {
     this.element.style.display = visible ? "grid" : "none";
   }
 
+  setDeathVisible(visible) {
+    this.deathScreen.style.display = visible ? "grid" : "none";
+  }
+
   destroy() {
     this.newGame.destroy();
     this.loadGame.destroy();
     this.element.remove();
+    this.deathScreen.remove();
   }
 }
