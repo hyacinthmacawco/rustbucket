@@ -2,7 +2,7 @@ export class LoadGame {
   constructor() {
     this.expanded = false;
     this.styles = {
-      button: { padding: "14px 24px", border: "1px solid rgba(119,255,164,.35)", borderRadius: "4px", background: "rgba(5,22,14,.58)", color: "#d4ffe0", font: "inherit", letterSpacing: ".16em", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" },
+      button: { padding: "14px 24px", background: "rgba(5,22,14,.58)", color: "#d4ffe0", font: "inherit", letterSpacing: ".16em", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" },
       panel: { margin: "0", color: "#a9e9bd", letterSpacing: ".12em", fontSize: "1rem" }
     };
   }
