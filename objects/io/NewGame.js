@@ -12,7 +12,7 @@ import { Earth } from "../celestials/Earth.js";
 import { Joystick } from "../team/Joystick.js";
 import { Jump } from "../team/Jump.js";
 import { Attack } from "../team/Attack.js";
-import { Pick } from "../team/Pick.js";
+import { Interact } from "../team/Pick.js";
 
 export class NewGame {
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
@@ -100,7 +100,7 @@ export class NewGame {
 
     omniverse.joystick?.destroy();
     this.jumpControl?.destroy();
-    this.pickControl?.destroy();
+    this.interactControl?.destroy();
     this.attackControl?.destroy();
     omniverse.joystick = new Joystick();
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 0 || "ontouchstart" in window;
@@ -127,14 +127,15 @@ export class NewGame {
       initialSelected: "ben"
     });
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
-    this.pickControl = new Pick({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
+    this.interactControl = new Interact({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
     this.attackControl = new Attack({
       onStart: () => { omniverse.joystick.input.attackHeld = true; },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
     });
     this.jumpControl.create();
-    this.pickControl.create();
+    this.interactControl.create();
     this.attackControl.create();
+    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element]);
     this.setControlsVisible(true);
     omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
@@ -144,7 +145,7 @@ export class NewGame {
 
   setControlsVisible(visible) {
     this.jumpControl?.setVisible(visible);
-    this.pickControl?.setVisible(visible);
+    this.interactControl?.setVisible(visible);
     this.attackControl?.setVisible(visible);
   }
 
@@ -158,7 +159,7 @@ export class NewGame {
     this.element?.remove();
     this.prelude?.remove();
     this.jumpControl?.destroy();
-    this.pickControl?.destroy();
+    this.interactControl?.destroy();
     this.attackControl?.destroy();
   }
 }
