@@ -413,7 +413,7 @@ export class Omniverse {
     ship.attach(bag.group);
     const index = Math.max(0, this.crew.indexOf(member));
     bag.group.position.set(-1.05 + index * 0.7, -0.95, -3.65);
-    bag.group.rotation.set(0, 0, Math.PI / 2);
+    bag.group.rotation.set(0, 0, 0);
     bag.stored = true;
     bag.pickable = false;
     bag.group.userData.pickable = false;
