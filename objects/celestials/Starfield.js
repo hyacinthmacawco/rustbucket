@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export class Starfield {
-  constructor(parent, name = "StarfieldTexture") {
+  constructor(name = "StarfieldTexture") {
     const canvas = document.createElement("canvas");
     canvas.width = 2048;
     canvas.height = 1024;
@@ -44,7 +44,11 @@ export class Starfield {
     );
     this.dome.name = name;
     this.dome.userData.noPhysics = true;
-    parent.add(this.dome);
+
+  }
+
+  model() {
     return this.dome;
   }
+
 }
