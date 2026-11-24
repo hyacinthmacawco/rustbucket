@@ -22,6 +22,7 @@ export class Omniverse {
 
   constructor() {
     this.state = Omniverse.state;
+    this.firstPerson = false;
     this.installStyles();
     this.account = new Account();
     this.audioPlayer = new AudioPlayer();
@@ -279,9 +280,14 @@ export class Omniverse {
     const member = this.crew?.[index];
     if (!member) return;
     const home = this.crewHomePlanet || this.earth || new Earth();
-    if (this.state.currentScene !== home.world.key || member.group.parent !== this.celestial) {
+    if (this.state.currentScene !== home.world.key) {
       this.enterPlanetScene(home, null, [...(this.crew || [])]);
     }
+    this.updateCamera();
+  }
+
+  setPOV(firstPerson) {
+    this.firstPerson = Boolean(firstPerson);
     this.updateCamera();
   }
 
@@ -292,6 +298,28 @@ export class Omniverse {
       : this.crew?.[["ben", "gwen", "kevin", "rook"].indexOf(selected)]?.group;
     if (!entity) return;
 
+    if (this.firstPerson) {
+      entity.updateWorldMatrix(true, false);
+      const rotation = entity.getWorldQuaternion(new THREE.Quaternion());
+      const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(rotation).normalize();
+      const position = new THREE.Vector3();
+      if (selected === "rustbucket") {
+        position.set(0, 0.55, 3.65).applyMatrix4(entity.matrixWorld);
+      } else {
+        const head = entity.userData.statusOwner?.rig?.joints?.head;
+        if (head) {
+          head.getWorldPosition(position);
+          position.add(new THREE.Vector3(0, 0.06, 0.2).applyQuaternion(rotation));
+        } else {
+          position.set(0, 1.55, 0).applyMatrix4(entity.matrixWorld);
+        }
+      }
+      this.camera.position.copy(position);
+      this.camera.lookAt(position.clone().add(forward.multiplyScalar(12)));
+      this.cameraTarget.copy(position);
+      return;
+    }
+
     const target = entity.getWorldPosition(new THREE.Vector3());
     target.y += selected === "rustbucket" ? 1.5 : 1.15;
     if (!this.cameraTarget) this.cameraTarget = target.clone();
@@ -299,6 +327,220 @@ export class Omniverse {
     this.camera.position.add(shift);
     this.cameraTarget.copy(target);
     this.camera.lookAt(this.cameraTarget);
+  }
+
+  getTeamMember(selected) {
+    const index = ["ben", "gwen", "kevin", "rook"].indexOf(selected);
+    return index < 0 ? null : this.crew?.[index] || null;
+  }
+
+  findNearbyBag(member, range = 1.8) {
+    if (!member?.group) return null;
+    const position = member.group.getWorldPosition(new THREE.Vector3());
+    let nearest = null;
+    let nearestDistance = range;
+    for (const bag of this.bags || []) {
+      if (!bag.pickable || bag.stored || bag.group.parent !== this.celestial) continue;
+      const distance = position.distanceTo(bag.group.getWorldPosition(new THREE.Vector3()));
+      if (distance < nearestDistance) {
+        nearest = bag;
+        nearestDistance = distance;
+      }
+    }
+    return nearest;
+  }
+
+  findNearbySeat(member, range = 2.6) {
+    const seats = this.vehicle?.seats || [];
+    if (!member?.group || !seats.length) return -1;
+    const position = member.group.getWorldPosition(new THREE.Vector3());
+    let nearestIndex = -1;
+    let nearestDistance = range;
+    for (let index = 0; index < seats.length; index++) {
+      const seatPosition = seats[index].group.getWorldPosition(new THREE.Vector3());
+      const distance = position.distanceTo(seatPosition);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    }
+    return nearestIndex;
+  }
+
+  pickTeamBag(member, bag) {
+    if (!member || !bag || !bag.pickable) return false;
+    member.group.updateWorldMatrix(true, false);
+    const hand = member.rig?.joints?.rightWrist;
+    if (!hand) return false;
+    hand.attach(bag.group);
+    bag.group.position.set(0.08, -0.04, 0.1);
+    bag.group.rotation.set(0, 0, Math.PI / 2);
+    bag.pickable = false;
+    bag.group.userData.pickable = false;
+    member.carryingBag = bag;
+    member.rig.pick?.();
+    return true;
+  }
+
+  storeTeamBag(member) {
+    const bag = member?.carryingBag;
+    const ship = this.vehicle?.ship;
+    if (!bag || !ship) return false;
+    ship.attach(bag.group);
+    const index = Math.max(0, this.crew.indexOf(member));
+    bag.group.position.set(-1.05 + index * 0.7, -0.68, -3.65);
+    bag.group.rotation.set(0, 0, Math.PI / 2);
+    bag.stored = true;
+    bag.pickable = false;
+    bag.group.userData.pickable = false;
+    member.carryingBag = null;
+    return true;
+  }
+
+  sitTeamMember(member, seatIndex = -1) {
+    const ship = this.vehicle?.ship;
+    if (!member || !ship || member.seated) return false;
+    if (seatIndex < 0) seatIndex = this.findNearbySeat(member);
+    const seat = ship.seats?.[seatIndex];
+    if (!seat) return false;
+    ship.attach(member.group);
+    member.group.position.copy(seat.position);
+    member.group.rotation.set(0, seat.rotation, 0);
+    member.rig?.sit?.();
+    member.seated = true;
+    member.seatIndex = seatIndex;
+    member.group.userData.seated = true;
+    return true;
+  }
+
+  standTeamMember(member) {
+    const ship = this.vehicle?.ship;
+    if (!member?.seated || !ship) return false;
+    ship.updateWorldMatrix(true, false);
+    const exit = ship.localToWorld(new THREE.Vector3(0, -0.65, -6.3));
+    this.celestial.attach(member.group);
+    member.group.position.copy(exit);
+    member.group.rotation.y = ship.rotation.y;
+    member.rig?.stand?.();
+    member.seated = false;
+    member.group.userData.seated = false;
+    if (member.automation) member.automation.phase = "manual";
+    return true;
+  }
+
+  handleTeamInteraction(selected) {
+    if (selected === "rustbucket") {
+      this.vehicle?.performRescueAction();
+      return;
+    }
+    const member = this.getTeamMember(selected);
+    if (!member) return;
+    if (member.seated) {
+      this.standTeamMember(member);
+      return;
+    }
+    if (member.carryingBag) {
+      const shipPosition = this.vehicle?.ship?.getWorldPosition(new THREE.Vector3());
+      const memberPosition = member.group.getWorldPosition(new THREE.Vector3());
+      if (shipPosition && memberPosition.distanceTo(shipPosition) < 12) {
+        this.storeTeamBag(member);
+      } else {
+        const bag = member.carryingBag;
+        this.celestial.attach(bag.group);
+        bag.group.position.copy(memberPosition).add(new THREE.Vector3(0.6, 0, 0));
+        bag.pickable = true;
+        bag.group.userData.pickable = true;
+        member.carryingBag = null;
+      }
+      return;
+    }
+    const bag = this.findNearbyBag(member);
+    if (bag) {
+      this.pickTeamBag(member, bag);
+      return;
+    }
+    const seatIndex = this.findNearbySeat(member);
+    if (seatIndex >= 0) this.sitTeamMember(member, seatIndex);
+  }
+
+  updateTeamInteractionMode() {
+    const selected = this.joystick?.currentSelection;
+    const control = this.titleScreen?.newGame?.interactControl;
+    if (!control) return;
+    if (selected === "rustbucket") {
+      this.vehicle?.updateRescueInteraction({ selected, interactControl: control });
+      return;
+    }
+    const member = this.getTeamMember(selected);
+    if (!member) return;
+    if (member.seated) control.setMode("Stand");
+    else if (member.carryingBag) control.setMode("Drop");
+    else if (this.findNearbyBag(member)) control.setMode("Pick");
+    else if (this.findNearbySeat(member) >= 0) control.setMode("Sit");
+    else control.setMode("Pick");
+  }
+
+  moveCrewMember(member, target, delta, elapsed, local = false) {
+    const position = member.group.position;
+    const dx = target.x - position.x;
+    const dz = target.z - position.z;
+    const distance = Math.hypot(dx, dz);
+    if (distance > 0.08) {
+      const step = Math.min(distance, 2.5 * delta);
+      position.x += dx / distance * step;
+      position.z += dz / distance * step;
+      member.group.rotation.y = Math.atan2(dx, dz);
+      member.rig?._rig?.setWalking(true);
+    } else {
+      member.rig?._rig?.setWalking(false);
+    }
+    member.rig?._rig?.updateWalk(elapsed);
+    return distance;
+  }
+
+  updateCrewAutomation(delta, elapsed) {
+    if (!this.vehicle?.ship?.parent || this.currentPlanet !== this.crewHomePlanet || this.state.currentScene !== this.crewHomePlanet?.world?.key) return;
+    const ship = this.vehicle.ship;
+    for (const member of this.crew || []) {
+      const task = member.automation;
+      if (!task || task.phase === "done" || task.phase === "manual" || member.seated) continue;
+      const selected = this.joystick?.currentSelection === ["ben", "gwen", "kevin", "rook"][this.crew.indexOf(member)];
+      const input = this.joystick?.input;
+      if (selected && input && (Math.hypot(input.x, input.y) > 0.08 || this.joystick.keys?.size > 0)) {
+        task.phase = "manual";
+        continue;
+      }
+      if (task.phase === "toBag") {
+        if (!task.bag?.pickable || task.bag.stored) {
+          task.phase = "toRamp";
+        } else {
+          const target = task.bag.group.getWorldPosition(new THREE.Vector3());
+          const distance = this.moveCrewMember(member, target, delta, elapsed);
+          if (distance < 0.85 && this.pickTeamBag(member, task.bag)) task.phase = "toRamp";
+        }
+      } else if (task.phase === "toRamp") {
+        const target = ship.localToWorld(new THREE.Vector3(0, 0, -6.15));
+        const distance = this.moveCrewMember(member, target, delta, elapsed);
+        if (distance < 1.0) {
+          this.storeTeamBag(member);
+          ship.attach(member.group);
+          task.phase = "toSeat";
+        }
+      } else if (task.phase === "toSeat") {
+        const seat = ship.seats?.[task.seatIndex];
+        if (!seat) continue;
+        const distance = this.moveCrewMember(member, seat.position, delta, elapsed, true);
+        if (distance < 0.14) {
+          member.group.position.copy(seat.position);
+          member.group.rotation.set(0, seat.rotation, 0);
+          member.rig?.sit?.();
+          member.seated = true;
+          member.seatIndex = task.seatIndex;
+          member.group.userData.seated = true;
+          task.phase = "done";
+        }
+      }
+    }
   }
 
   checkAtmosphereTransition() {
@@ -475,7 +717,8 @@ export class Omniverse {
       this.updateCamera();
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
-      this.vehicle?.updateRescueInteraction({ selected: this.joystick?.currentSelection, interactControl: this.titleScreen?.newGame?.interactControl });
+      this.updateCrewAutomation(delta, elapsed);
+      this.updateTeamInteractionMode();
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
