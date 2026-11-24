@@ -287,7 +287,26 @@ export class Omniverse {
   }
 
   setPOV(firstPerson) {
-    this.firstPerson = Boolean(firstPerson);
+    const enabling = Boolean(firstPerson);
+    if (enabling && !this.firstPerson) {
+      this.thirdPersonOffset = this.camera.position.clone().sub(this.cameraTarget || new THREE.Vector3());
+    }
+    this.firstPerson = enabling;
+    if (!enabling) {
+      const selected = this.joystick?.currentSelection;
+      const entity = selected === "rustbucket"
+        ? this.vehicle?.ship
+        : this.getTeamMember(selected)?.group;
+      if (entity) {
+        const target = entity.getWorldPosition(new THREE.Vector3());
+        target.y += selected === "rustbucket" ? 1.5 : 1.15;
+        const offset = this.thirdPersonOffset || new THREE.Vector3(0, 4, 42);
+        this.camera.position.copy(target).add(offset);
+        this.cameraTarget.copy(target);
+        this.camera.lookAt(target);
+        return;
+      }
+    }
     this.updateCamera();
   }
 
@@ -335,7 +354,7 @@ export class Omniverse {
   }
 
   findNearbyBag(member, range = 1.8) {
-    if (!member?.group) return null;
+    if (!member?.group || member.carryingBag) return null;
     const position = member.group.getWorldPosition(new THREE.Vector3());
     let nearest = null;
     let nearestDistance = range;
@@ -357,6 +376,7 @@ export class Omniverse {
     let nearestIndex = -1;
     let nearestDistance = range;
     for (let index = 0; index < seats.length; index++) {
+      if (seats[index].occupiedBy && seats[index].occupiedBy !== member) continue;
       const seatPosition = seats[index].group.getWorldPosition(new THREE.Vector3());
       const distance = position.distanceTo(seatPosition);
       if (distance < nearestDistance) {
@@ -368,7 +388,7 @@ export class Omniverse {
   }
 
   pickTeamBag(member, bag) {
-    if (!member || !bag || !bag.pickable) return false;
+    if (!member || member.carryingBag || !bag || !bag.pickable) return false;
     member.group.updateWorldMatrix(true, false);
     const hand = member.rig?.joints?.rightWrist;
     if (!hand) return false;
@@ -409,6 +429,7 @@ export class Omniverse {
     member.rig?.sit?.();
     member.seated = true;
     member.seatIndex = seatIndex;
+    seat.occupiedBy = member;
     member.group.userData.seated = true;
     return true;
   }
@@ -422,6 +443,8 @@ export class Omniverse {
     member.group.position.copy(exit);
     member.group.rotation.y = ship.rotation.y;
     member.rig?.stand?.();
+    const seat = ship.seats?.[member.seatIndex];
+    if (seat?.occupiedBy === member) seat.occupiedBy = null;
     member.seated = false;
     member.group.userData.seated = false;
     if (member.automation) member.automation.phase = "manual";
@@ -511,7 +534,7 @@ export class Omniverse {
         continue;
       }
       if (task.phase === "toBag") {
-        if (!task.bag?.pickable || task.bag.stored) {
+        if (member.carryingBag || !task.bag?.pickable || task.bag.stored) {
           task.phase = "toRamp";
         } else {
           const target = task.bag.group.getWorldPosition(new THREE.Vector3());
@@ -536,6 +559,7 @@ export class Omniverse {
           member.rig?.sit?.();
           member.seated = true;
           member.seatIndex = task.seatIndex;
+          seat.occupiedBy = member;
           member.group.userData.seated = true;
           task.phase = "done";
         }
