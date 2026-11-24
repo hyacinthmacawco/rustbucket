@@ -7,6 +7,7 @@ import { Highbreed } from "../species/Highbreed.js";
 import { Incursean } from "../species/Incursean.js";
 
 export class Earth {
+  static relationships = { Ben: 96, Gwen: 80, Kevin: 50, Rook: 28, Highbreed: -56, Incursean: -36, Anodite: 40, Galvan: 56 };
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
 
   constructor() {
