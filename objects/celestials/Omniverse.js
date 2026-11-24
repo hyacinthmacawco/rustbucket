@@ -54,7 +54,7 @@ export class Omniverse {
       margin: "0",
       overflow: "hidden",
       background: "#02040a",
-      fontFamily: "Industry, sans-serif"
+      fontFamily: "Industry Light, sans-serif"
     });
 
     document.body.appendChild(this.canvas);
