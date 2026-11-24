@@ -58,6 +58,7 @@ export class Relationships {
         // Keep the in-memory character relationship when storage is unavailable.
       }
     }
+    return relationships[to];
   }
 
   render(host) {
