@@ -370,7 +370,8 @@ export class Omniverse {
 
   enterPlanetScene(planet, ship, crew) {
     const vehicle = this.vehicle;
-    ship?.removeFromParent();
+    const activeShip = ship || vehicle?.ship;
+    activeShip?.removeFromParent();
     crew.forEach(member => member.group?.removeFromParent());
 
     this.clearWorld();
