@@ -5,8 +5,9 @@ export class Resume {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.setAttribute("role", "button");
+    this.element.tabIndex = 0;
     this.element.textContent = "RESUME";
     Object.assign(this.element.style, this.styles);
     this.element.addEventListener("click", this.onResume);
