@@ -30,7 +30,7 @@ export class GalvanSystem {
       group.add(hull);
       group.position.set(24000 + index * 9000, 6000 + index * 1800, -18000 - index * 5000);
       this.root.add(group);
-      const ship = { group, homePlanet: "galvan", relationships: {"Human":56,"Highbreed":16,"Incursean":10,"Anodite":3}, damage: 5, attack: target => {
+      const ship = { group, homePlanet: "galvan", relationships: {"Human":56,"Highbreed":16,"Incursean":10,"Anodite":3}, damage: 5, health: 50, destroyed: false, takeDamage: amount => { ship.health = Math.max(0, ship.health - Math.max(0, amount)); if (ship.health === 0 && !ship.destroyed) { ship.destroyed = true; group.visible = false; for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) ship.relationships[name] = Math.max(-100, Number(ship.relationships[name] ?? 0) - 0.5); } return ship.health; }, attack: target => {
         const species = target?.species || target?.constructor?.name;
         if (!target || target.health <= 0 || Number(ship.relationships[species] ?? 0) >= 0) return false;
         const start = group.getWorldPosition(new THREE.Vector3());
