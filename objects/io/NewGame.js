@@ -89,7 +89,7 @@ export class NewGame {
 
     omniverse.joystick?.destroy();
     omniverse.joystick = new Joystick();
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const entities = {
       ben: omniverse.crew[0].group,
       gwen: omniverse.crew[1].group,
@@ -110,7 +110,7 @@ export class NewGame {
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       initialSelected: "ben"
     });
-    omniverse.joystick.setVisible(true, isMobile);
+    omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
 
     return true;
