@@ -75,7 +75,7 @@ export class Camera {
       this.camera.lookAt(target);
     };
     this.onPointerUp = event => {
-      if (!this.pointer || (event && event.pointerId !== this.pointer.id)) return;
+      if (!event || !this.pointers.has(event.pointerId)) return;
       this.pointers.delete(event.pointerId);
       this.pointer = null;
       if (this.pointers.size === 1) {
