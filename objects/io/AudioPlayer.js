@@ -96,11 +96,16 @@ export class AudioPlayer {
 
   handleSfxEnded(track, onEnded) {
     this.sfxTracks.delete(track);
+    const nodes = this.trackNodes.get(track);
+    nodes?.source.disconnect(); nodes?.output.disconnect();
+    this.trackNodes.delete(track);
     if (onEnded) onEnded();
   }
 
   handleTrackError(track, type) {
     this.sfxTracks.delete(track);
+    this.trackNodes.get(track)?.source.disconnect();
+    this.trackNodes.delete(track);
     console.error("Could not load " + type + ":", track.src);
   }
 
@@ -111,6 +116,9 @@ export class AudioPlayer {
       item.pause();
       item.currentTime = 0;
       item.src = "";
+      this.trackNodes.get(item)?.source.disconnect();
+      this.trackNodes.get(item)?.output.disconnect();
+      this.trackNodes.delete(item);
       this.sfxTracks.delete(item);
     }
   }
