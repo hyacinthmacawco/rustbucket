@@ -12,7 +12,7 @@ import { Earth } from "../celestials/Earth.js";
 import { Joystick } from "../team/Joystick.js";
 import { Jump } from "../team/Jump.js";
 import { Attack } from "../team/Attack.js";
-import { Interact } from "../team/Pick.js";
+import { Interact } from "../team/Interact.js";
 
 export class NewGame {
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
