@@ -147,7 +147,6 @@ export class Rustbucket {
     this.addMesh(new THREE.BoxGeometry(0.22, 0.16, 10.5), hull, [1.22, 1.22, 0]);
     this.addMesh(new THREE.BoxGeometry(2.7, 2.5, 0.16), hull, [0, 0, -5.18]);
     this.addMesh(new THREE.BoxGeometry(2.82, 0.18, 10.7), hull, [0, 1.38, 0]);
-    this.addMesh(new THREE.ConeGeometry(1.52, 2.6, 12), hull, [0, 0, 6.45], [Math.PI / 2, 0, 0]);
     this.addMesh(new THREE.BoxGeometry(2.78, 0.18, 0.24), orange, [0, 0, 5.12]);
 
     for (let index = 0; index < 3; index++) {
