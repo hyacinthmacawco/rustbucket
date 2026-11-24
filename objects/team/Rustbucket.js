@@ -43,9 +43,7 @@ export class Rustbucket {
     this.ship.position.x += moveX * horizontalSpeed * delta;
     this.ship.position.z += moveZ * horizontalSpeed * delta;
     this.ship.position.y += lift * verticalSpeed * delta;
-    if (Math.abs(moveX) + Math.abs(moveZ) > 0.001) {
-      this.ship.rotation.y = heading;
-    }
+    this.ship.rotation.y = heading;
   }
 
   addMesh(geometry, material, position, rotation = [0, 0, 0], parent = this.ship) {
