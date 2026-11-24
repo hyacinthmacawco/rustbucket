@@ -398,7 +398,7 @@ export class Omniverse {
     if (!hand) return false;
     hand.attach(bag.group);
     bag.group.position.set(0.08, -0.04, 0.1);
-    bag.group.rotation.set(0, 0, Math.PI / 2);
+    bag.group.rotation.set(0, 0, 0);
     bag.pickable = false;
     bag.group.userData.pickable = false;
     member.carryingBag = bag;
@@ -475,6 +475,7 @@ export class Omniverse {
         const bag = member.carryingBag;
         this.celestial.attach(bag.group);
         bag.group.position.copy(memberPosition).add(new THREE.Vector3(0.6, 0, 0));
+        bag.group.rotation.set(0, 0, 0);
         bag.pickable = true;
         bag.group.userData.pickable = true;
         member.carryingBag = null;
