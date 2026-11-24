@@ -181,8 +181,8 @@ export class HumanRig {
     const shoulder = joints[side + "Shoulder"];
     const elbow = joints[side + "Elbow"];
     const wrist = joints[side + "Wrist"];
-    bodyBox(shoulder, side + "HumanSleeve", [0.20, 0.38, 0.22], [shoulder.position.x * 0.72, -0.17, 0], bodyMaterials.shirt);
-    bodyBox(elbow, side + "HumanForearm", [0.15, 0.34, 0.17], [wrist.position.x * 0.5, -0.12, 0], bodyMaterials.skin);
+    bodyBox(shoulder, side + "HumanSleeve", [Math.abs(elbow.position.x) + 0.04, 0.20, 0.22], [elbow.position.x * 0.5, elbow.position.y * 0.5, 0], bodyMaterials.shirt);
+    bodyBox(elbow, side + "HumanForearm", [Math.abs(wrist.position.x) + 0.04, 0.15, 0.17], [wrist.position.x * 0.5, wrist.position.y * 0.5, 0], bodyMaterials.skin);
     bodyBox(wrist, side + "HumanHand", [0.15, 0.14, 0.16], [side === "left" ? -0.06 : 0.06, -0.015, 0], bodyMaterials.skin);
     const thigh = joints[side + "Thigh"];
     const knee = joints[side + "Knee"];
