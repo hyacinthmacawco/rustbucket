@@ -222,7 +222,7 @@ export class Omniverse {
       html, body, button, input {
         font-family: "Industry Light", sans-serif;
       }
-      h1, h2, h3, .rb-title, .rb-heading {
+      h1, h2, h3, h4, h5, h6, .rb-title, .rb-heading {
         font-family: "Industry Light", sans-serif !important;
         font-weight: 300 !important;
       }
