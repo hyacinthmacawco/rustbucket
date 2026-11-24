@@ -16,6 +16,7 @@ export class GalvanPrime {
   constructor() {
     this.world = GalvanPrime.WORLD;
     this.system = "galvan";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
