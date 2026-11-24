@@ -14,7 +14,7 @@ export class Tasks {
     const task = {
       id: this.nextId++,
       resident,
-      title: "Return " + (resident.species || "rescued individual") + " to " + resident.homeworld,
+      title: "Return " + (resident.species || resident.group?.userData?.species || "rescued individual") + " to " + resident.homeworld,
       completed: false
     };
     this.items.push(task);
