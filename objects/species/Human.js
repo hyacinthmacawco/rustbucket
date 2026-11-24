@@ -390,24 +390,26 @@ export class HumanRig {
       root.position.y = 0;
     },
     sit() {
+      const rootY = root.position.y;
       activeAction = null;
       sitting = true;
       walking = false;
       rig.resetPose();
+      root.position.y = rootY;
       joints.leftThigh.rotation.x = -1.15;
       joints.rightThigh.rotation.x = -1.15;
       joints.leftKnee.rotation.x = 1.25;
       joints.rightKnee.rotation.x = 1.25;
       joints.spine.rotation.x = 0.08;
-      root.position.y = -0.12;
       return true;
     },
     stand() {
+      const rootY = root.position.y;
       sitting = false;
       activeAction = null;
       rig.resetPose();
+      root.position.y = rootY;
       walking = true;
-      root.position.y = 0;
       return true;
     },
     get sitting() { return sitting; },
