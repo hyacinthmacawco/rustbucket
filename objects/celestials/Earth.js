@@ -11,6 +11,7 @@ export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
 
   constructor() {
+    this.songs = ["./files/songs/neodevol-ov.mp3"];
     this.world = Earth.WORLD;
     this.system = "solar";
     this.atmosphereHeight = 90;
