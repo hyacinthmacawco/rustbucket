@@ -26,11 +26,6 @@ export class Omniverse {
     this.installStyles();
     this.account = new Account();
     this.audioPlayer = new AudioPlayer();
-    this.deathScreen = document.createElement("section");
-    this.deathScreen.id = "death-screen";
-    Object.assign(this.deathScreen.style, { position: "fixed", inset: "0", display: "none", placeItems: "center", background: "#000", color: "#fff", zIndex: "100", fontSize: "clamp(2rem, 8vw, 5rem)", letterSpacing: ".18em" });
-    this.deathScreen.textContent = "YOU ARE DEAD";
-    document.body.append(this.deathScreen);
     this.dead = false;
 
     this.canvas = document.createElement("canvas");
@@ -805,7 +800,7 @@ export class Omniverse {
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
       for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
-      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.style.display = "grid"; this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
+      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.titleScreen.setDeathVisible(true); this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
       this.updateCrewAutomation(delta, elapsed);
       this.updateTeamInteractionMode();
     }
@@ -907,7 +902,6 @@ export class Omniverse {
     this.titleScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
-    this.deathScreen?.remove();
     this.marketDialog?.remove();
     this.fontStyle.remove();
     if (this.joystick) this.joystick.destroy();
