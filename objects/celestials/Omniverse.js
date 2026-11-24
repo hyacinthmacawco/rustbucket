@@ -775,7 +775,7 @@ export class Omniverse {
     const origin = attacker.group.getWorldPosition(new THREE.Vector3());
     let target = null, nearest = 3.2;
     for (const resident of this.residents || []) {
-      if (resident.health <= 0 || resident.isAboard) continue;
+      if (resident.health <= 0 || resident.isAboard || Number(resident.relationships?.[attacker.constructor.name] ?? 0) >= 0) continue;
       const distance = origin.distanceTo(resident.group.getWorldPosition(new THREE.Vector3()));
       if (distance < nearest) { nearest = distance; target = resident; }
     }
