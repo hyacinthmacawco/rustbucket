@@ -263,6 +263,7 @@ export class Rustbucket {
       bolt.position.copy(muzzle);
       bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
       bolt.userData.velocity = direction.clone().multiplyScalar(260);
+      bolt.userData.damage = 10;
       bolt.userData.remaining = 2.4;
       parent.add(bolt);
       this.projectiles.push(bolt);
