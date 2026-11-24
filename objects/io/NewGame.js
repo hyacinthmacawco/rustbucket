@@ -69,7 +69,9 @@ export class NewGame {
       getCurrentPlanet: () => omniverse.currentPlanet,
       getResidents: () => omniverse.residents || [],
       account: omniverse.account,
-      onUpdate: () => omniverse.updateAccountHUD()
+      onUpdate: () => omniverse.updateAccountHUD(),
+      onPickup: resident => omniverse.handleRescuePickup(resident),
+      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => omniverse.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease)
     });
 
     omniverse.crew = [
@@ -120,7 +122,7 @@ export class NewGame {
         omniverse.selectedMember = selected;
         omniverse.selectTeamMember(selected);
       },
-      onJump: () => omniverse.extranet.openOmnidata(),
+      onJump: () => omniverse.helix.openOmnidata(),
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       onTransformationChange: form => omniverse.crew[0]?.setTransformation(form),
