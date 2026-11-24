@@ -98,6 +98,10 @@ export class Earth {
     for (let z = -14; z <= 10; z += 6) addBox([33, 0.22, 0.22], [0, 11.3, z], metal);
   }
 
+  model(mode = "exterior") {
+    return mode === "interior" ? this.interior() : this.exterior();
+  }
+
   enter(react) {
     react.clearWorld();
     react.celestial = this.interior();
