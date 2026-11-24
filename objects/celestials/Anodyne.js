@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Starfield } from "./Starfield.js";
 import { Human } from "../species/Human.js";
 import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
@@ -43,6 +44,7 @@ export class Anodyne {
   interior() {
     const interior = new THREE.Group();
     interior.name = "AnodyneInterior";
+    interior.add(Starfield.createAtmosphere(this.world.sky));
     interior.add(new THREE.HemisphereLight(0x542b45, 0x321d35, 1.8));
     const sunlight = new THREE.DirectionalLight(0xffe0c0, 2.1);
     sunlight.position.set(-35, 70, 25);
