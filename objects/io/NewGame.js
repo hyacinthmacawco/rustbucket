@@ -21,8 +21,8 @@ export class NewGame {
     this.onSkip = onSkip;
     this.initialized = false;
     this.styles = {
-      button: { padding: "14px 24px", border: "1px solid rgba(119,255,164,.55)", borderRadius: "4px", background: "rgba(5,22,14,.76)", color: "#eaffef", font: "inherit", letterSpacing: ".16em", cursor: "pointer", boxShadow: "0 0 20px rgba(69,255,131,.12)" },
-      prelude: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "28px", background: "#000", color: "#fff", zIndex: "50", fontFamily: "monospace", letterSpacing: ".18em" },
+      button: { padding: "14px 24px", background: "rgba(5,22,14,.76)", color: "#eaffef", font: "inherit", letterSpacing: ".16em", cursor: "pointer" },
+      prelude: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "28px", background: "#000", color: "#fff", zIndex: "50", font: "inherit", letterSpacing: ".18em" },
       heading: { fontSize: "clamp(20px, 5vw, 42px)" },
       skip: { padding: "10px 28px", border: "1px solid #79e99a", background: "transparent", color: "#dffff0", font: "inherit", cursor: "pointer" }
     };
