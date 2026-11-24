@@ -3,19 +3,11 @@ import { initializeResident } from "./Human.js";
 
 export class Galvan {
   static homeworld = "galvan";
-  static relationships = {
-    Ben: 80,
-    Gwen: 70,
-    Kevin: 76,
-    Rook: 84,
-    Highbreed: 16,
-    Incursean: 10,
-    Anodite: 3,
-    Human: 56
-  };
 
   constructor(parent = null, options = {}) {
     this.leader = false;
+    this.species = this.constructor.name;
+    this.relationships = options.relationships || {};
     this.group = new THREE.Group();
     this.group.name = "Galvan";
     this.homeworld = Galvan.homeworld;
@@ -178,7 +170,7 @@ export class Galvan {
 
   attack(target) {
     if (!target || target.health <= 0) return false;
-    const relationships = this.constructor.relationships || {};
+    const relationships = this.relationships || {};
     const relation = Number(relationships[target.species || target.constructor?.name] ?? relationships[target.name] ?? 0);
     if (relation >= 0) return false;
     this.rig?._rig?.playAnimation("punch");
