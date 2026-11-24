@@ -50,7 +50,7 @@ export class Camera {
       const spherical = new this.THREE.Spherical().setFromVector3(offset);
       spherical.theta -= dx * this.sensitivity;
       spherical.phi = this.THREE.MathUtils.clamp(
-        spherical.phi + dy * this.sensitivity,
+        spherical.phi - dy * this.sensitivity,
         0.12,
         Math.PI - 0.12
       );
