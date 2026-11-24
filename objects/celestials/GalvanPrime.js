@@ -8,6 +8,7 @@ import { Incursean } from "../species/Incursean.js";
 import { GalvanSystem } from "./GalvanSystem.js";
 
 export class GalvanPrime {
+  static relationships = { Ben: 80, Gwen: 70, Kevin: 76, Rook: 84, Highbreed: 16, Incursean: 10, Anodite: 3, Human: 56 };
   static WORLD = {
     key: "galvan",
     name: "Galvan Prime",
@@ -66,8 +67,10 @@ export class GalvanPrime {
 
 
     const hub = new THREE.Group();
-    hub.name = "Galvan PrimeCivicHub";
+    hub.name = "Galvan PrimeMarket";
     hub.position.set(0, 0, -24);
+    hub.userData.market = true;
+    hub.userData.resources = { "Grape Smoothie": 1 + Math.floor(Math.random() * 10) };
     interior.add(hub);
     const dark = new THREE.MeshStandardMaterial({ color: 0x17231c, roughness: 0.9 });
     const accent = new THREE.MeshStandardMaterial({ color: 0x77d6a2, roughness: 0.55 });
