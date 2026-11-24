@@ -19,7 +19,8 @@ export class IncursiaSystem {
     this.root.add(this.starGlow);
     this.starlight = new THREE.PointLight(0xffc17b, 1800000000, 520000, 1.8);
     this.root.add(this.starlight);
-    this.stars = new Starfield(this.root, "IncursiaStarfield");
+    this.stars = new Starfield("IncursiaStarfield");
+    this.root.add(this.stars.model());
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
 
