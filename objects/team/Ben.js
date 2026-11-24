@@ -275,7 +275,6 @@ export class Ben {
   };
   this.update = delta => {
     this.chromastone.update(delta);
-    this.chromastone.checkLaserCollisions(this.projectiles || []);
   };
   group.userData.statusOwner = this;
   }
