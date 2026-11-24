@@ -286,13 +286,14 @@ export class Joystick {
     }
   }
 
-  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, onTransformationChange = () => {}, initialSelected = "ben" }) {
+  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, onTransformationChange = () => {}, onInteract = null, initialSelected = "ben" }) {
     this.keys = new Set();
     this.entities = entities;
     this.camera = camera;
     this.updateCamera = updateCamera;
      this.onSelect = onSelect;
     this.onTransformationChange = onTransformationChange;
+    this.onInteract = onInteract;
     this.onJump = onJump;
     this.onToggleRamp = onToggleRamp;
     this.onAtmosphereCheck = onAtmosphereCheck;
@@ -391,7 +392,8 @@ export class Joystick {
     }
 
     if (joy.pickRequested) {
-      if (this.selected === "rustbucket") object.userData.performPickup?.();
+      if (this.onInteract) this.onInteract(this.selected, object);
+      else if (this.selected === "rustbucket") object.userData.performPickup?.();
       else object.userData.statusOwner?.rig?.pick();
       joy.pickRequested = false;
     }
