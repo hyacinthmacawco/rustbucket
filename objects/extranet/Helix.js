@@ -210,6 +210,7 @@ export class Helix {
   navigate(rawUrl, { record = true, allowSystemJump = false } = {}) {
     let url = String(rawUrl || "").trim().toLowerCase();
     if (!url) return false;
+    if (url.endsWith("/") && url !== "extranet://home") url = url.slice(0, -1);
     if (url.startsWith("bgkr.omnicloud.com")) url = "ottps://" + url;
     if (url.startsWith("en.omnidata.org")) url = "ottps://" + url;
     const valid = url === "extranet://home" ||
