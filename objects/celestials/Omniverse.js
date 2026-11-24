@@ -176,7 +176,7 @@ export class Omniverse {
 
   handleRescueDrop(resident, relationshipIncrease = 5, taydeniteIncrease = 10) {
     this.helix?.completeTask(resident?.taskId);
-    const species = resident?.species;
+    const species = resident?.species || resident?.group?.userData?.species;
     if (species) this.helix?.pages.relationships.addRelationship(species, "Ben", relationshipIncrease);
     this.helix?.showTaskCompleted({ resident, relationshipIncrease, taydeniteIncrease });
   }
