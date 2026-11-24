@@ -203,7 +203,6 @@ export class Joystick {
 
   setVisible(visible, showJoystick = true) {
     this.element.style.display = visible && showJoystick ? "block" : "none";
-    this.buttons.style.display = visible ? "flex" : "none";
     this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
     if (!visible) {
       this.resetBase();
