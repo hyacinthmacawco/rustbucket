@@ -481,13 +481,13 @@ export class Omniverse {
       }
       return;
     }
-    const bag = this.findNearbyBag(member);
-    if (bag) {
-      this.pickTeamBag(member, bag);
+    const seatIndex = this.findNearbySeat(member);
+    if (seatIndex >= 0) {
+      this.sitTeamMember(member, seatIndex);
       return;
     }
-    const seatIndex = this.findNearbySeat(member);
-    if (seatIndex >= 0) this.sitTeamMember(member, seatIndex);
+    const bag = this.findNearbyBag(member);
+    if (bag) this.pickTeamBag(member, bag);
   }
 
   updateTeamInteractionMode() {
@@ -502,8 +502,8 @@ export class Omniverse {
     if (!member) return;
     if (member.seated) control.setMode("Stand");
     else if (member.carryingBag) control.setMode("Drop");
-    else if (this.findNearbyBag(member)) control.setMode("Pick");
     else if (this.findNearbySeat(member) >= 0) control.setMode("Sit");
+    else if (this.findNearbyBag(member)) control.setMode("Pick");
     else control.setMode("Pick");
   }
 
