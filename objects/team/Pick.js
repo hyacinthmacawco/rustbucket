@@ -21,6 +21,12 @@ export class Pick {
     this.onPress();
   };
 
+  setLabel(label) {
+    if (!this.element) return;
+    this.element.textContent = label;
+    this.element.setAttribute("aria-label", label === "PICK" ? "Pick up rescued individual" : "Drop off rescued individual");
+  }
+
   setVisible(visible) {
     if (this.element) this.element.style.display = visible ? "grid" : "none";
   }
