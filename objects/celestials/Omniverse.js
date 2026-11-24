@@ -706,8 +706,8 @@ export class Omniverse {
         member.seated = false;
         member.group.userData.seated = false;
         this.getActiveRig(member)?.stand?.();
+        this.celestial.attach(member.group);
         member.group.position.set(-4 + index * 2.6, 0, 8);
-        this.celestial.add(member.group);
       });
     }
     if (!ship) {
