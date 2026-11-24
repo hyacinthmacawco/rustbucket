@@ -110,7 +110,7 @@ export class GalvanPrime {
         : new SpeciesClass(null, { residentIndex: index });
       resident.relationships = this.constructor.relationships || {};
       resident.species = SpeciesClass.name;
-      resident.onDeath = () => { for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) this.constructor.relationships[name] = Math.max(-100, Number(this.constructor.relationships[name] ?? 0) - 0.5); };
+      resident.onDeath = () => { for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) this.constructor.relationships[name] = Math.max(-100, Number(this.constructor.relationships[name] ?? 0) - 0.5); try { const key = "rustbucket.planet." + this.world.key; const saved = JSON.parse(localStorage.getItem(key) || "null") || {}; saved.relationships = { ...(saved.relationships || {}), ...this.constructor.relationships }; localStorage.setItem(key, JSON.stringify(saved)); } catch (error) {} };
       if (isVisitor) resident.group.userData.isRescueTarget = true;
       const angle = index * Math.PI * 2 / 7;
       const radius = 20 + (index % 3) * 10;
