@@ -260,6 +260,8 @@ export class Ben {
     this.maxHealth = useChromastone ? this.chromastone.maxHealth : this.baseMaxHealth;
     this.energy = useChromastone ? this.chromastone.energy : this.baseEnergy;
     this.maxEnergy = useChromastone ? this.chromastone.maxEnergy : this.baseMaxEnergy;
+    this.constructor.health = this.health;
+    this.constructor.energy = this.energy;
     const activeRig = useChromastone ? this.chromastone.rig : rig;
     group.userData.rig = activeRig;
     group.userData.updateRigAnimation = (moving, time) => {
