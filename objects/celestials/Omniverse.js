@@ -275,6 +275,8 @@ export class Omniverse {
         ship.add(member.group);
       });
       this.joystick?.setVehicleMode(true);
+      this.camera.position.set(ship.position.x, ship.position.y + 4, ship.position.z + 42);
+      this.cameraTarget.copy(ship.position);
       this.updateCamera();
       return;
     }
@@ -315,6 +317,8 @@ export class Omniverse {
       ship.add(member.group);
     });
     this.joystick?.setVehicleMode(true);
+    this.camera.position.set(ship.position.x, ship.position.y + 4, ship.position.z + 42);
+    this.cameraTarget.copy(ship.position);
     this.updateCamera();
   }
 
