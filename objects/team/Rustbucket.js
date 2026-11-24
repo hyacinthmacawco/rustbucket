@@ -273,6 +273,7 @@ export class Rustbucket {
   update(delta) {
     for (let index = this.projectiles.length - 1; index >= 0; index--) {
       const bolt = this.projectiles[index];
+      bolt.userData.previousPosition = bolt.position.clone();
       bolt.position.addScaledVector(bolt.userData.velocity, delta);
       bolt.userData.remaining -= delta;
       if (bolt.userData.remaining <= 0) {
