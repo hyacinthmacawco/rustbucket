@@ -402,7 +402,7 @@ export class Omniverse {
     bag.pickable = false;
     bag.group.userData.pickable = false;
     member.carryingBag = bag;
-    member.rig.pick?.();
+    this.getActiveRig(member)?.pick?.();
     return true;
   }
 
@@ -687,6 +687,13 @@ export class Omniverse {
     }
     if (planet === this.crewHomePlanet) {
       this.crew.forEach((member, index) => {
+        if (member.seated) {
+          const seat = vehicle?.seats?.[member.seatIndex];
+          if (seat?.occupiedBy === member) seat.occupiedBy = null;
+        }
+        member.seated = false;
+        member.group.userData.seated = false;
+        this.getActiveRig(member)?.stand?.();
         member.group.position.set(-4 + index * 2.6, 0, 8);
         this.celestial.add(member.group);
       });
