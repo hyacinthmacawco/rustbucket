@@ -9,12 +9,12 @@ export class Joystick {
 
   constructor() {
     this.styles = {
-      joystick: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "132px", height: "132px", zIndex: "10001", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
-      base: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
+      joystick: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "132px", height: "132px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
+      base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
       knob: { position: "absolute", left: "50%", top: "50%", width: "48px", height: "48px", margin: "-24px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
-      lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "10001", touchAction: "none", pointerEvents: "auto" },
+      lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
-      actionGroup: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", display: "flex", gap: "10px", zIndex: "10001", pointerEvents: "auto" },
+      actionGroup: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", display: "flex", gap: "10px", zIndex: "2147483647", pointerEvents: "auto" },
       label: { position: "absolute", width: "34px", height: "28px", display: "grid", placeItems: "center", padding: "0", color: "#c8ffd7", fontSize: "11px", fontFamily: "Industry, sans-serif", textShadow: "0 0 8px #0a3", textAlign: "center", border: "1px solid rgba(126,255,168,.85)", borderRadius: "4px", background: "rgba(2,24,12,.96)", pointerEvents: "auto", cursor: "pointer", zIndex: "3", boxSizing: "border-box" }
     };
 
@@ -54,10 +54,6 @@ export class Joystick {
       label.style.left = index % 2 ? "78%" : "22%";
       label.style.top = index < 2 ? "22%" : "78%";
       label.addEventListener("pointerdown", event => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      label.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
         const member = label.dataset.member;
@@ -158,7 +154,8 @@ export class Joystick {
     event.preventDefault();
     this.input.active = true;
     this.input.pointerId = event.pointerId;
-    this.base.setPointerCapture(event.pointerId);
+    try { this.base.setPointerCapture(event.pointerId); } catch {}
+
     this.updateBase(event);
   }
 
@@ -216,7 +213,7 @@ export class Joystick {
     event.preventDefault();
     event.stopPropagation();
     this.liftPointerId = event.pointerId;
-    this.liftBase.setPointerCapture(event.pointerId);
+    try { this.liftBase.setPointerCapture(event.pointerId); } catch {}
     this.updateLift(event);
   }
 
@@ -356,8 +353,8 @@ export class Joystick {
 
     const object = this.entities[this.selected];
     if (!object) return;
-    const forward = (this.keys.has("w") ? 1 : 0) - (this.keys.has("s") ? 1 : 0) + (this.isMobile ? joy.y : 0);
-    const right = (this.keys.has("d") ? 1 : 0) - (this.keys.has("a") ? 1 : 0) + (this.isMobile ? joy.x : 0);
+    const forward = (this.keys.has("w") ? 1 : 0) - (this.keys.has("s") ? 1 : 0) + joy.y;
+    const right = (this.keys.has("d") ? 1 : 0) - (this.keys.has("a") ? 1 : 0) + joy.x;
     const magnitude = Math.hypot(forward, right);
     const direction = this.camera.getWorldDirection(new THREE.Vector3());
     const length = Math.hypot(direction.x, direction.z) || 1;
