@@ -23,7 +23,6 @@ export class Omniverse {
     this.state = Omniverse.state;
     this.installStyles();
     this.account = new Account();
-    this.rescuePassengers = [];
     this.createAccountHUD();
 
     this.canvas = document.createElement("canvas");
