@@ -2,10 +2,9 @@ import * as THREE from "three";
 import { Starfield } from "./Starfield.js";
 
 export class AugstakaSystem {
-  constructor(parent) {
+  constructor() {
     this.root = new THREE.Group();
     this.root.name = "AugstakaSystem";
-    parent.add(this.root);
     this.root.add(new THREE.AmbientLight(0x8794a8, 0.8));
     this.star = new THREE.Mesh(
       new THREE.SphereGeometry(13000, 48, 32),
@@ -23,4 +22,9 @@ export class AugstakaSystem {
     this.stars = new Starfield(this.root, "AugstakaStarfield");
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
+
+  model() {
+    return this.root;
+  }
+
 }
