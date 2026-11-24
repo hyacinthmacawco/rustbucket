@@ -1,16 +1,9 @@
 import * as THREE from "three";
 
-export class Human {
+export class HumanRig extends Human {
   static relationships = {"Ben":96,"Gwen":80,"Kevin":50,"Rook":28,"Highbreed":-56,"Incursean":-36,"Anodite":40,"Galvan":56};
 
   constructor(options = {}) {
-    this.leader = false;
-  this.health = 100;
-  this.energy = 100;
-  this.maxHealth = 100;
-  this.maxEnergy = 100;
-  this.healthRecoveryDelay = 0;
-  this.energyRecoveryDelay = 0;
   const {
     boneColor = 0x8bb8e8,
     jointColor = 0xf0bd72,
@@ -348,33 +341,42 @@ export class Human {
     }
   };
 
-  Object.assign(this, rig);
-  root.userData.statusOwner = this;
+  this.group = root;
+  this.skeleton = skeleton;
+  this.bones = bones;
+  this.joints = joints;
+  this._rig = rig;
+  root.userData.fitToTorso = rig.fitToTorso;
+  root.userData.fitHeadToTorso = rig.fitHeadToTorso;
+  root.userData.updateRigAnimation = (moving, timeSeconds) => {
+    rig.setWalking(moving);
+    rig.updateWalk(timeSeconds);
+  };
+  root.userData.playRigAction = name => rig.playAnimation(name);
   }
 
+  jump() { this.group.userData.playRigAction("jump"); }
+  attack() { this.group.userData.playRigAction("punch"); }
+  pick() { this.group.userData.playRigAction("pickup"); }
+}
+
+export class Human {
+  constructor() {
+    this.leader = false;
+    this.health = 100;
+    this.energy = 100;
+    this.maxHealth = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
+  }
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
-    if (this.healthRecoveryDelay === 0 && this.health < 100) this.health = Math.min(100, this.health + delta * 0.32);
-    if (this.energyRecoveryDelay === 0 && this.energy < 100) this.energy = Math.min(100, this.energy + delta * 0.48);
+    if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
+    if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
   }
-
-  takeDamage(amount) {
-    this.health = Math.max(0, this.health - Math.max(0, amount));
-    this.healthRecoveryDelay = 4;
-    return this.health;
-  }
-
-  useEnergy(amount) {
-    if (this.energy < amount) return false;
-    this.energy = Math.max(0, this.energy - amount);
-    this.energyRecoveryDelay = 4;
-    return true;
-  }
-
-  restoreEnergy(amount) {
-    this.energy = Math.min(100, this.energy + Math.max(0, amount));
-    return this.energy;
-  }
-
+  takeDamage(amount) { this.health = Math.max(0, this.health - Math.max(0, amount)); this.healthRecoveryDelay = 4; return this.health; }
+  useEnergy(amount) { if (this.energy < amount) return false; this.energy = Math.max(0, this.energy - amount); this.energyRecoveryDelay = 4; return true; }
+  restoreEnergy(amount) { this.energy = Math.min(this.maxEnergy, this.energy + Math.max(0, amount)); return this.energy; }
 }
