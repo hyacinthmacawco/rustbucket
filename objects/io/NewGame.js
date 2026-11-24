@@ -57,6 +57,8 @@ export class NewGame {
     if (!omniverse || (this.initialized && omniverse.state.currentScene === "earth")) return false;
     this.omniverse = omniverse;
     this.initialized = true;
+    omniverse.firstPerson = false;
+    omniverse.thirdPersonOffset = null;
 
     omniverse.clearWorld();
     omniverse.earth = new Earth();
