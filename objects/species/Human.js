@@ -106,46 +106,6 @@ export class HumanRig {
   const skeleton = new THREE.Skeleton(bones);
   root.updateMatrixWorld(true);
 
-  const boneMaterial = new THREE.MeshStandardMaterial({
-    color: boneColor, roughness: 0.62, metalness: 0.08
-  });
-  const jointMaterial = new THREE.MeshStandardMaterial({
-    color: jointColor, roughness: 0.42, metalness: 0.12
-  });
-  const jointGeometry = new THREE.SphereGeometry(jointRadius, 18, 14);
-  const segmentGeometry = new THREE.CylinderGeometry(boneRadius * 0.82, boneRadius, 1, 12);
-
-  for (const bone of bones) {
-    if (bone.name !== "shoulderBridge" && bone.name !== "HandEnd") {
-      const marker = new THREE.Mesh(jointGeometry, jointMaterial);
-      marker.name = bone.name + "Marker";
-      bone.add(marker);
-    }
-
-    for (const child of bone.children) {
-      if (!child.isBone) continue;
-      const direction = child.position.clone();
-      const length = direction.length();
-      if (length < 0.0001) continue;
-
-      const segment = new THREE.Mesh(segmentGeometry, boneMaterial);
-      segment.name = bone.name + "To" + child.name;
-      segment.position.copy(direction).multiplyScalar(0.5);
-      segment.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction.clone().normalize()
-      );
-      segment.scale.y = length;
-      bone.add(segment);
-    }
-  }
-
-  const headMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.14, 22, 18),
-    new THREE.MeshStandardMaterial({ color: 0xd5dfeb, roughness: 0.7 })
-  );
-  headMesh.position.y = 0.09;
-  head.add(headMesh);
 
   if (options.body !== false) {
   // Replace the diagnostic skeleton display with a complete articulated,
@@ -224,7 +184,7 @@ export class HumanRig {
       loop: false,
       frames: [
         { at: 0, pose: {} },
-        { at: 0.18, pose: { rootY: 0.22, leftThigh: { x: -0.35 }, rightThigh: { x: -0.35 }, leftShoulder: { x: 0.35 }, rightShoulder: { x: -0.35 } } },
+        { at: 0.18, pose: { rootY: 0.72, leftThigh: { x: -0.35 }, rightThigh: { x: -0.35 }, leftShoulder: { x: 0.35 }, rightShoulder: { x: -0.35 } } },
         { at: 0.42, pose: { rootY: 0.22, leftThigh: { x: 0.25 }, rightThigh: { x: 0.25 }, leftShoulder: { x: 0.2 }, rightShoulder: { x: -0.2 } } },
         { at: 1, pose: {} }
       ]
