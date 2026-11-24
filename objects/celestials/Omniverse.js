@@ -213,6 +213,7 @@ export class Omniverse {
         box-sizing: border-box;
       }
       #title-screen * { box-sizing: border-box; }
+      button { border: 0 !important; outline-offset: 3px; }
     `;
     document.head.append(this.fontStyle);
   }
