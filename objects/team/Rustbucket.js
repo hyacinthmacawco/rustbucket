@@ -5,7 +5,7 @@ export class Rustbucket {
     this.ship = new THREE.Group();
     this.ship.name = "Rustbucket";
     this.ship.position.set(0, 2, 0);
-    this.ship.scale.setScalar(2);
+    this.ship.scale.setScalar(3);
     parent.add(this.ship);
 
     this.materials = {
@@ -26,6 +26,7 @@ export class Rustbucket {
     };
 
     this.createHull();
+    this.createSeats();
     this.createLighting();
     this.createRamp();
     this.createShadow(parent);
@@ -180,7 +181,51 @@ export class Rustbucket {
       );
     }
 
-    this.addMesh(new THREE.BoxGeometry(1.8, 0.1, 0.8), glass, [0, 0.75, 2.7]);
+    const windshield = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.25, 1.25),
+      new THREE.MeshStandardMaterial({
+        color: 0x6eabbc, emissive: 0x17333d, transparent: true,
+        opacity: 0.48, roughness: 0.2, metalness: 0.22,
+        side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    windshield.name = "FrontWindow";
+    windshield.position.set(0, 0.58, 4.82);
+    windshield.rotation.x = -0.12;
+    windshield.userData.noPhysics = true;
+    this.ship.add(windshield);
+    this.addMesh(new THREE.BoxGeometry(0.12, 1.42, 0.16), hull, [-1.18, 0.58, 4.78]);
+    this.addMesh(new THREE.BoxGeometry(0.12, 1.42, 0.16), hull, [1.18, 0.58, 4.78]);
+    this.addMesh(new THREE.BoxGeometry(2.42, 0.12, 0.16), hull, [0, 1.27, 4.78]);
+    this.addMesh(new THREE.BoxGeometry(2.42, 0.12, 0.16), hull, [0, -0.10, 4.78]);
+  }
+
+  createSeats() {
+    this.seats = [
+      { name: "Front Left", position: new THREE.Vector3(-0.72, -0.92, 1.25), rotation: 0 },
+      { name: "Front Right", position: new THREE.Vector3(0.72, -0.92, 1.25), rotation: 0 },
+      { name: "Left Side", position: new THREE.Vector3(-0.92, -0.92, -1.15), rotation: Math.PI / 2 },
+      { name: "Right Side", position: new THREE.Vector3(0.92, -0.92, -1.15), rotation: -Math.PI / 2 }
+    ];
+    const cushionMaterial = new THREE.MeshStandardMaterial({ color: 0x303b38, roughness: 0.9 });
+    const backMaterial = new THREE.MeshStandardMaterial({ color: 0x252f2d, roughness: 0.88 });
+    this.seats.forEach((seat, index) => {
+      const group = new THREE.Group();
+      group.name = "RustbucketSeat" + (index + 1);
+      group.position.copy(seat.position);
+      group.rotation.y = seat.rotation;
+      const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.18, 0.9), cushionMaterial);
+      cushion.position.y = 0.82;
+      cushion.castShadow = true;
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.92, 1.0, 0.16), backMaterial);
+      back.position.set(0, 1.31, -0.36);
+      back.castShadow = true;
+      group.add(cushion, back);
+      group.userData.seatIndex = index;
+      group.userData.noPhysics = true;
+      this.ship.add(group);
+      seat.group = group;
+    });
   }
 
   createLighting() {
