@@ -16,6 +16,8 @@ import { Interact } from "../team/Interact.js";
 import { POV } from "../team/POV.js";
 
 export class NewGame {
+  static helpText = "WASD / joystick: move. Drag / swipe: rotate camera. Mouse wheel / pinch: zoom. F / joystick centre: switch team member. Space / JUMP: open the system map when Rustbucket is selected. E / INTERACT: pick up, drop off, sit, stand or shop. Q / ATTACK: attack hostile characters. R: open or close the Rustbucket ramp. 1P / 3P: toggle first-person and third-person view. PAUSE: open settings, help and credits. EXTRANET: open the Private Cloud browser.";
+
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
     this.omniverse = omniverse;
     this.onSelect = onSelect;
@@ -24,7 +26,7 @@ export class NewGame {
     this.styles = {
       button: { padding: "14px 24px", background: "rgba(5,22,14,.76)", color: "#eaffef", font: "inherit", letterSpacing: ".16em", cursor: "pointer" },
       prelude: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "28px", background: "#000", color: "#fff", zIndex: "50", font: "inherit", letterSpacing: ".18em" },
-      heading: { fontSize: "clamp(20px, 5vw, 42px)" },
+      heading: { maxWidth: "min(88vw, 760px)", padding: "0 22px", fontSize: "clamp(14px, 2.2vw, 19px)", lineHeight: "1.8", letterSpacing: ".06em", textAlign: "center", fontFamily: "\"Industry Light\", sans-serif", fontWeight: "300" },
       skip: { padding: "10px 28px", border: "1px solid #79e99a", background: "transparent", color: "#dffff0", font: "inherit", cursor: "pointer" }
     };
   }
@@ -41,7 +43,7 @@ export class NewGame {
     this.prelude.id = "prelude-screen";
     Object.assign(this.prelude.style, this.styles.prelude);
     this.heading = document.createElement("div");
-    this.heading.textContent = "A NEW DAWN";
+    this.heading.textContent = NewGame.helpText;
     Object.assign(this.heading.style, this.styles.heading);
     this.skip = document.createElement("div");
     this.skip.type = "div";
