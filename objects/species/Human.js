@@ -314,20 +314,30 @@ export class HumanRig extends Human {
       // rest pose, so their pendulum motion must rotate around the body's
       // lateral (world X) axis. Rotating around the old Y axis made them
       // sweep sideways, which looked unlike a natural walk.
-      const worldX = new THREE.Vector3(1, 0, 0);
+      const bodyLateralAxis = new THREE.Vector3(1, 0, 0);
+      const bodyWorldRotation = new THREE.Quaternion();
       const worldSwing = new THREE.Quaternion();
       const parentWorldInverse = new THREE.Quaternion();
+      const parentWorldRotation = new THREE.Quaternion();
       const localDelta = new THREE.Quaternion();
 
-      this.applyWorldXSwing = (bone, restRotation, angle) => {
+      this.applyBodyRelativeSwing = (bone, restRotation, angle) => {
+        // The swing hinge follows the character's own shoulder line. Using a
+        // fixed world X axis made the arms swing sideways whenever the
+        // character turned away from the world's default heading.
+        root.updateWorldMatrix(true, false);
+        root.getWorldQuaternion(bodyWorldRotation);
+        bodyLateralAxis.set(1, 0, 0).applyQuaternion(bodyWorldRotation).normalize();
+
         bone.parent.updateWorldMatrix(true, false);
-        bone.parent.getWorldQuaternion(parentWorldInverse).invert();
-        worldSwing.setFromAxisAngle(worldX, angle);
-        // Convert the desired world-space hinge rotation into the bone's
-        // parent-local space, preserving its authored resting orientation.
+        bone.parent.getWorldQuaternion(parentWorldRotation);
+        parentWorldInverse.copy(parentWorldRotation).invert();
+        worldSwing.setFromAxisAngle(bodyLateralAxis, angle);
+
+        // Convert the body-relative world hinge into the bone's parent space.
         localDelta.copy(parentWorldInverse)
           .multiply(worldSwing)
-          .multiply(bone.parent.getWorldQuaternion(new THREE.Quaternion()));
+          .multiply(parentWorldRotation);
         const restQuaternion = new THREE.Quaternion().setFromEuler(restRotation);
         bone.quaternion.copy(localDelta).multiply(restQuaternion);
       };
@@ -341,7 +351,7 @@ export class HumanRig extends Human {
         const elbowRest = initialRotations.get(elbow);
 
         // Shoulder controls the whole arm's forward/backward pendulum.
-        this.applyWorldXSwing(shoulder, shoulderRest, armSwing * 0.48 * amplitude);
+        this.applyBodyRelativeSwing(shoulder, shoulderRest, armSwing * 0.48 * amplitude);
 
         // The elbow hinges in the same forward-swing phase. Its flex changes
         // gradually through the cycle, so the forearm follows the upper arm
@@ -349,7 +359,7 @@ export class HumanRig extends Human {
         const elbowFlex = (0.12 + (0.5 + 0.5 * armSwing) * 0.34) * amplitude;
         // Negative X rotation bends the forearm toward the character's
         // front (+Z); positive rotation was folding it behind the body.
-        this.applyWorldXSwing(elbow, elbowRest, -elbowFlex);
+        this.applyBodyRelativeSwing(elbow, elbowRest, -elbowFlex);
       }
 
       // Subtle torso counter-rotation; keep the body at a constant height.
