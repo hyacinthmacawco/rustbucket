@@ -8,6 +8,7 @@ import { Incursean } from "../species/Incursean.js";
 import { AugstakaSystem } from "./AugstakaSystem.js";
 
 export class Augstaka {
+  static relationships = { Ben: 40, Gwen: 30, Kevin: 20, Rook: 10, Incursean: -64, Anodite: 3, Galvan: 16, Human: -56 };
   static WORLD = {
     key: "augstaka",
     name: "Augstaka",
@@ -68,8 +69,10 @@ export class Augstaka {
 
 
     const hub = new THREE.Group();
-    hub.name = "AugstakaCivicHub";
+    hub.name = "AugstakaMarket";
     hub.position.set(0, 0, -24);
+    hub.userData.market = true;
+    hub.userData.resources = { "Grape Smoothie": 1 + Math.floor(Math.random() * 10) };
     interior.add(hub);
     const dark = new THREE.MeshStandardMaterial({ color: 0x17231c, roughness: 0.9 });
     const accent = new THREE.MeshStandardMaterial({ color: 0xb8d69a, roughness: 0.55 });
