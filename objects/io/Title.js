@@ -1,5 +1,6 @@
 import { NewGame } from "./NewGame.js";
 import { LoadGame } from "./LoadGame.js";
+import { Death } from "../team/Death.js";
 
 export class Title {
   constructor({ onNewGame = () => {}, onSkipPrelude = () => {} } = {}) {
@@ -8,13 +9,18 @@ export class Title {
     this.styles = {
       screen: { position: "fixed", inset: "0", display: "grid", placeItems: "center", zIndex: "20", pointerEvents: "none" },
       menu: { width: "min(88vw, 560px)", display: "grid", justifyItems: "center", gap: "22px", pointerEvents: "auto", textAlign: "center" },
-      heading: { margin: "0", color: "#f5fff7", fontFamily: "Industry, sans-serif", fontSize: "clamp(2.2rem, 8vw, 5.5rem)", fontWeight: "700", letterSpacing: ".08em", textShadow: "0 0 28px rgba(83,255,151,.32)" },
+      heading: { margin: "0", color: "#f5fff7", fontFamily: "Industry Light, sans-serif", fontSize: "clamp(2.2rem, 8vw, 5.5rem)", fontWeight: "300", letterSpacing: ".08em", textShadow: "0 0 28px rgba(83,255,151,.32)" },
       buttons: { display: "grid", width: "min(78vw, 320px)", gap: "12px" },
       panel: { color: "#a9e9bd", letterSpacing: ".12em", fontSize: "1rem" }
     };
 
     this.element = document.createElement("main");
     this.element.id = "title-screen";
+    this.song = "./files/songs/senji-v2-ov.mp3";
+    this.element.style.backgroundImage = 'url("./files/images/ov-final-shot.jpg")';
+    this.element.style.backgroundSize = "cover";
+    this.element.style.backgroundPosition = "center";
+    this.element.style.backgroundRepeat = "no-repeat";
     this.element.style.position = this.styles.screen.position;
     this.element.style.inset = this.styles.screen.inset;
     this.element.style.display = this.styles.screen.display;
@@ -43,11 +49,7 @@ export class Title {
     this.element.append(this.menu);
     document.body.append(this.element);
 
-    this.deathScreen = document.createElement("section");
-    this.deathScreen.id = "death-screen";
-    Object.assign(this.deathScreen.style, { position: "fixed", inset: "0", display: "none", placeItems: "center", background: "#000", color: "#fff", zIndex: "100", fontSize: "clamp(2rem, 8vw, 5rem)", letterSpacing: ".18em" });
-    this.deathScreen.textContent = "YOU ARE DEAD";
-    document.body.append(this.deathScreen);
+    this.deathScreen = new Death();
   }
 
   setVisible(visible) {
@@ -56,13 +58,13 @@ export class Title {
   }
 
   setDeathVisible(visible) {
-    this.deathScreen.style.display = visible ? "grid" : "none";
+    this.deathScreen.setVisible(visible);
   }
 
   destroy() {
     this.newGame.destroy();
     this.loadGame.destroy();
     this.element.remove();
-    this.deathScreen.remove();
+    this.deathScreen.destroy();
   }
 }
