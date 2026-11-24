@@ -9,9 +9,9 @@ export class Incursean {
     this.name = options.name || "Incursean";
     this.leader = false;
     this.homeworld = Incursean.homeworld;
-    this.health = 100;
+    this.health = 30;
     this.energy = 100;
-    this.maxHealth = 100;
+    this.maxHealth = 30;
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
