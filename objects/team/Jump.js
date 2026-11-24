@@ -2,7 +2,7 @@ export class Jump {
   constructor({ onPress = () => {} } = {}) {
     this.onPress = onPress;
     this.onAction = () => {};
-    this.styles = { padding: "12px 18px", border: "1px solid rgba(119,255,164,.5)", borderRadius: "50%", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
+    this.styles = { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", width: "64px", height: "64px", padding: "8px", zIndex: "2147483647", border: "1px solid rgba(119,255,164,.5)", borderRadius: "8px", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
   }
 
   setAction(action = () => {}) {
@@ -20,6 +20,7 @@ export class Jump {
     this.element.setAttribute("aria-label", "Jump");
     Object.assign(this.element.style, this.styles);
     this.element.addEventListener("pointerdown", this.handlePress);
+    document.body.append(this.element);
     return this.element;
   }
 
@@ -27,6 +28,10 @@ export class Jump {
     event.preventDefault();
     this.onPress();
   };
+
+  setVisible(visible) {
+    if (this.element) this.element.style.display = visible ? "grid" : "none";
+  }
 
   destroy() {
     this.element?.removeEventListener("pointerdown", this.handlePress);
