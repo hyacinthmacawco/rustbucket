@@ -58,14 +58,14 @@ export class Rook {
 
   // Broad black undersuit with blue chest and shoulder armour.
   const torso = this.box(joints.spine, "RookBlackUndersuit", [0.53, 0.98, 0.32], [0, 0.035, 0], mat.black);
-  rig.fitToTorso(torso);
+  group.userData.fitToTorso(torso);
   this.box(joints.spine, "RookBlueChestPlate", [0.47, 0.43, 0.075], [0, 0.24, 0.19], mat.armor);
   this.box(joints.spine, "RookChestInset", [0.28, 0.20, 0.025], [0, 0.12, 0.235], mat.trim);
   this.box(joints.spine, "RookNeckArmour", [0.34, 0.13, 0.33], [0, 0.49, 0], mat.armorLight);
   // Front fringe, side length and rear hair are all textures on the head mesh.
   const headMesh = this.box(joints.head, "RookHead", [0.39, 0.46, 0.34], [0, 0.055, 0],
     [sideHairMat, sideHairMat, mat.black, faceMaterial, frontHairMat, sideHairMat]);
-  rig.fitHeadToTorso(torso, headMesh);
+  group.userData.fitHeadToTorso(torso, headMesh);
 
   for (const side of ["left", "right"]) {
     const sign = side === "left" ? -1 : 1;
