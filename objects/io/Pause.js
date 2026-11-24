@@ -2,6 +2,7 @@ import { PauseTab } from "./PauseTab.js";
 import { Resume } from "./Resume.js";
 import { VolumeSlider } from "./VolumeSlider.js";
 import { CameraSensitivitySlider } from "./CameraSensitivitySlider.js";
+import { NewGame } from "./NewGame.js";
 
 export class Pause {
   constructor({ onResume = () => {}, audioPlayer = null, onCameraSensitivity = () => {} } = {}) {
@@ -12,10 +13,10 @@ export class Pause {
     this.styles = {
       overlay: { position: "fixed", inset: "0", zIndex: "90", display: "none", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0, 5, 2, .76)" },
       panel: { width: "min(92vw, 620px)", maxHeight: "88vh", overflow: "auto", padding: "24px", border: "1px solid rgba(126,255,168,.5)", borderRadius: "10px", background: "rgba(3, 19, 10, .97)", color: "#eaffef", boxShadow: "0 0 42px rgba(61,255,131,.15)" },
-      title: { margin: "0 0 20px", color: "#a6ffbd", fontFamily: "Nulshock, sans-serif", letterSpacing: ".14em", fontSize: "1.4rem" },
+      title: { margin: "0 0 20px", color: "#a6ffbd", fontFamily: "Industry Light, sans-serif", letterSpacing: ".14em", fontSize: "1.4rem", fontWeight: "300" },
       tabs: { display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" },
       content: { minHeight: "120px", lineHeight: "1.6", color: "#d8ffe2" },
-      heading: { color: "#a6ffbd", letterSpacing: ".1em" }
+      heading: { color: "#a6ffbd", letterSpacing: ".1em", fontFamily: "Industry Light, sans-serif", fontWeight: "300" }
     };
     this.tabs = new Map();
   }
@@ -67,9 +68,29 @@ export class Pause {
       const heading = document.createElement("h3");
       heading.textContent = "CONTROLS";
       Object.assign(heading.style, this.styles.heading);
-      const text = document.createElement("p");
-      text.textContent = "WASD / joystick: move. Drag: camera. Pinch / wheel: zoom. F / double-tap joystick: switch team member. Space / jump: system map when Rustbucket is selected. E / interact: pick up or drop off. Q / attack: use weapon. R: open or close Rustbucket ramp.";
-      this.content.append(heading, text);
+      const controls = [
+        ["WASD / joystick", "Move the selected character or Rustbucket."],
+        ["Mouse drag / touch swipe", "Rotate the camera."],
+        ["Mouse wheel / pinch", "Zoom the camera."],
+        ["F / joystick centre", "Switch the selected team member."],
+        ["Space / JUMP", "Open the system map when Rustbucket is selected."],
+        ["E / INTERACT", "Pick up, drop off, sit, stand or shop."],
+        ["Q / ATTACK", "Attack nearby hostile characters."],
+        ["R", "Open or close the Rustbucket ramp."],
+        ["1P / 3P", "Toggle first-person and third-person view."],
+        ["PAUSE", "Open settings, help and credits."],
+        ["EXTRANET", "Open the Private Cloud browser."]
+      ];
+      const list = document.createElement("ul");
+      Object.assign(list.style, { paddingLeft: "22px", margin: "8px 0", lineHeight: "1.8" });
+      for (const [control, description] of controls) {
+        const item = document.createElement("li");
+        const label = document.createElement("strong");
+        label.textContent = control + ": ";
+        item.append(label, document.createTextNode(description));
+        list.append(item);
+      }
+      this.content.append(heading, list);
     } else {
       const heading = document.createElement("h3");
       heading.textContent = "CREDITS";
