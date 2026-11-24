@@ -202,7 +202,7 @@ export class Joystick {
     }
   }
 
-  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, initialSelected = "ben" }) {
+  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, initialSelected = "ben" }) {
     this.keys = new Set();
     this.entities = entities;
     this.camera = camera;
@@ -210,6 +210,7 @@ export class Joystick {
      this.onSelect = onSelect;
     this.onJump = onJump;
     this.onToggleRamp = onToggleRamp;
+    this.onAtmosphereCheck = onAtmosphereCheck;
     this.selected = initialSelected;
     this.lastAttackAt = 0;
     this.selectableMembers = Joystick.TEAM_MEMBERS.filter(name => entities[name]);
@@ -320,6 +321,7 @@ export class Joystick {
 
     object.userData.updateRigAnimation?.(magnitude > 0.08, performance.now() / 1000);
     object.update?.(dt);
+    if (this.selected === "rustbucket") this.onAtmosphereCheck();
     this.updateCamera();
   }
 
