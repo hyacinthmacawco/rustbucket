@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Starfield } from "./Starfield.js";
 
 export class Moon {
   static WORLD = { key: "moon", name: "The Moon", species: "Human", sky: 0x343943, ground: 0x777b82 };
@@ -24,6 +25,7 @@ export class Moon {
   interior() {
     const interior = new THREE.Group();
     interior.name = "MoonInterior";
+    interior.add(Starfield.createAtmosphere(this.world.sky));
     interior.add(new THREE.HemisphereLight(0xc4d0e0, 0x33343a, 1.1));
     const sunlight = new THREE.DirectionalLight(0xfff1d6, 2.2);
     sunlight.position.set(-30, 60, 20);
