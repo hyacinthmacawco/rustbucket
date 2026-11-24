@@ -16,6 +16,7 @@ export class Incursia {
   constructor() {
     this.world = Incursia.WORLD;
     this.system = "incursia";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
