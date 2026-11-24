@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 export class Human {
+  static homeworld = "earth";
   constructor() {
     this.leader = false;
     this.health = 100;
@@ -10,6 +11,7 @@ export class Human {
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
   }
+  awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
@@ -27,6 +29,8 @@ export class HumanRig extends Human {
 
   constructor(options = {}) {
     super();
+    this.species = "Human";
+    this.homeworld = Human.homeworld;
   const {
     boneColor = 0x8bb8e8,
     jointColor = 0xf0bd72,
@@ -396,6 +400,7 @@ export class HumanRig extends Human {
     rig.updateWalk(timeSeconds);
   };
   root.userData.playRigAction = name => rig.playAnimation(name);
+    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this });
   }
 
   jump() { this.group.userData.playRigAction("jump"); }
@@ -403,3 +408,57 @@ export class HumanRig extends Human {
   pick() { this.group.userData.playRigAction("pickup"); }
 }
 
+
+export function initializeResident(instance, index, { species, homeworld, style = {}, rig = null } = {}) {
+  const residentRig = rig || new HumanRig(style);
+  if (!rig) {
+    residentRig.group.traverse(object => {
+      if (object.isMesh) object.visible = false;
+    });
+    instance.group.add(residentRig.group);
+    instance.group.scale.setScalar(0.78);
+  }
+  instance.rig = residentRig;
+  instance.index = index;
+  instance.homeworld = homeworld;
+  instance.isAboard = false;
+  instance.group.name = species + "Resident" + (index + 1);
+  instance.group.userData.species = species;
+  instance.group.userData.homeWorldKey = homeworld;
+  instance.group.userData.statusOwner = instance;
+  instance.group.userData.speciesInstance = instance;
+  instance.group.userData.rig = residentRig;
+  instance.group.userData.updateRigAnimation = (moving, time) => residentRig._rig.updateWalk(time);
+  instance.chooseTarget = () => {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 12 + Math.random() * 42;
+    instance.target = { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius - 18 };
+    instance.wait = 1 + Math.random() * 2.5;
+  };
+  instance.update = (delta, elapsed) => {
+    if (instance.wait > 0) {
+      instance.wait -= delta;
+      residentRig._rig.setWalking(false);
+      residentRig._rig.updateWalk(elapsed);
+      return;
+    }
+    const dx = instance.target.x - instance.group.position.x;
+    const dz = instance.target.z - instance.group.position.z;
+    const distance = Math.hypot(dx, dz);
+    if (distance < 0.65) {
+      instance.chooseTarget();
+      residentRig._rig.setWalking(false);
+      return;
+    }
+    const step = Math.min(distance, instance.speed * delta);
+    instance.group.position.x += dx / distance * step;
+    instance.group.position.z += dz / distance * step;
+    instance.group.rotation.y = Math.atan2(dx, dz);
+    residentRig._rig.setWalking(true);
+    residentRig._rig.updateWalk(elapsed);
+  };
+  instance.speed = 1.1 + Math.random() * 0.45;
+  residentRig._rig.setWalking(false);
+  instance.chooseTarget();
+  return instance;
+}
