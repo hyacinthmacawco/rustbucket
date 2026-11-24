@@ -10,6 +10,17 @@ export class Human {
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
+    this.rig = new HumanRig();
+    this.group = this.rig.group;
+    this.group.userData.statusOwner = this;
+    this.group.userData.rig = this.rig;
+    this.group.userData.updateRigAnimation = (moving, time) => {
+      this.rig._rig.setWalking(moving);
+      this.rig._rig.updateWalk(time);
+    };
+    if (arguments[0]?.residentIndex !== undefined) {
+      initializeResident(this, arguments[0].residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this.rig });
+    }
   }
   awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
   updateStatus(delta) {
@@ -24,11 +35,10 @@ export class Human {
 }
 
 
-export class HumanRig extends Human {
+export class HumanRig {
   static relationships = {"Ben":96,"Gwen":80,"Kevin":50,"Rook":28,"Highbreed":-56,"Incursean":-36,"Anodite":40,"Galvan":56};
 
   constructor(options = {}) {
-    super();
     this.species = "Human";
     this.homeworld = Human.homeworld;
   const {
@@ -135,6 +145,51 @@ export class HumanRig extends Human {
   );
   headMesh.position.y = 0.09;
   head.add(headMesh);
+
+  // Replace the diagnostic skeleton display with a complete articulated,
+  // Ben-proportioned cuboid human body. Each garment segment is parented to
+  // its corresponding joint so the walk cycle deforms the visible character.
+  root.traverse(object => { if (object.isMesh) object.visible = false; });
+  const palette = {
+    shirt: [0x3977a8, 0x9b493c, 0x4b8b62, 0x72539b, 0xc18a3d, 0x3b6570],
+    pants: [0x34465c, 0x5b493d, 0x414b42, 0x5d4263, 0x77715a, 0x30343c],
+    hair: [0x241b18, 0x493024, 0x8a5832, 0xb68a50, 0x292d32, 0x6d3f35]
+  };
+  const pick = values => values[Math.floor(Math.random() * values.length)];
+  const bodyMaterials = {
+    skin: new THREE.MeshStandardMaterial({ color: 0xc98d78, roughness: 0.92 }),
+    shirt: new THREE.MeshStandardMaterial({ color: pick(palette.shirt), roughness: 0.9 }),
+    pants: new THREE.MeshStandardMaterial({ color: pick(palette.pants), roughness: 0.96 }),
+    hair: new THREE.MeshStandardMaterial({ color: pick(palette.hair), roughness: 0.96 }),
+    shoes: new THREE.MeshStandardMaterial({ color: 0x30343a, roughness: 0.92 })
+  };
+  const bodyBox = (parent, name, size, position, material) => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
+    mesh.name = name;
+    mesh.position.set(...position);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  };
+  bodyBox(spine, "HumanTorso", [0.45, 0.78, 0.28], [0, 0.02, 0], bodyMaterials.shirt);
+  bodyBox(head, "HumanHead", [0.36, 0.42, 0.32], [0, 0.055, 0], bodyMaterials.skin);
+  bodyBox(head, "HumanHair", [0.38, 0.14, 0.34], [0, 0.25, -0.005], bodyMaterials.hair);
+  for (const side of ["left", "right"]) {
+    const shoulder = joints[side + "Shoulder"];
+    const elbow = joints[side + "Elbow"];
+    const wrist = joints[side + "Wrist"];
+    bodyBox(shoulder, side + "HumanSleeve", [0.20, 0.38, 0.22], [shoulder.position.x * 0.72, -0.17, 0], bodyMaterials.shirt);
+    bodyBox(elbow, side + "HumanForearm", [0.15, 0.34, 0.17], [wrist.position.x * 0.5, -0.12, 0], bodyMaterials.skin);
+    bodyBox(wrist, side + "HumanHand", [0.15, 0.14, 0.16], [side === "left" ? -0.06 : 0.06, -0.015, 0], bodyMaterials.skin);
+    const thigh = joints[side + "Thigh"];
+    const knee = joints[side + "Knee"];
+    const ankle = joints[side + "Ankle"];
+    bodyBox(thigh, side + "HumanPantsUpper", [0.20, 0.48, 0.21], [0, -0.23, 0], bodyMaterials.pants);
+    bodyBox(knee, side + "HumanPantsLower", [0.17, 0.43, 0.19], [0, -0.21, 0], bodyMaterials.pants);
+    bodyBox(ankle, side + "HumanShoe", [0.20, 0.14, 0.29], [0, -0.06, 0.07], bodyMaterials.shoes);
+  }
+  root.userData.collisionCapsule = { type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 };
 
   const initialRotations = new Map(
     bones.map(bone => [bone, bone.rotation.clone()])
@@ -400,7 +455,6 @@ export class HumanRig extends Human {
     rig.updateWalk(timeSeconds);
   };
   root.userData.playRigAction = name => rig.playAnimation(name);
-    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this });
   }
 
   jump() { this.group.userData.playRigAction("jump"); }
@@ -412,9 +466,6 @@ export class HumanRig extends Human {
 export function initializeResident(instance, index, { species, homeworld, style = {}, rig = null } = {}) {
   const residentRig = rig || new HumanRig(style);
   if (!rig) {
-    residentRig.group.traverse(object => {
-      if (object.isMesh) object.visible = false;
-    });
     instance.group.add(residentRig.group);
     instance.group.scale.setScalar(0.78);
   }
@@ -428,6 +479,7 @@ export function initializeResident(instance, index, { species, homeworld, style 
   instance.group.userData.statusOwner = instance;
   instance.group.userData.speciesInstance = instance;
   instance.group.userData.rig = residentRig;
+  instance.group.userData.collisionCapsule = { type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 };
   instance.group.userData.updateRigAnimation = (moving, time) => residentRig._rig.updateWalk(time);
   instance.chooseTarget = () => {
     const angle = Math.random() * Math.PI * 2;
