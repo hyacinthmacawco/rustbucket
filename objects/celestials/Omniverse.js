@@ -15,6 +15,7 @@ import { Earth } from "./Earth.js";
 import { Extranet } from "../extranet/Extranet.js";
 import { Pause } from "../io/Pause.js";
 import { PlanetaryResident } from "../species/PlanetaryResident.js";
+import { Account } from "../io/Account.js";
 
 export class Omniverse {
   static state = { stage: "title", currentScene: "space" };
@@ -22,6 +23,9 @@ export class Omniverse {
   constructor() {
     this.state = Omniverse.state;
     this.installStyles();
+    this.account = new Account();
+    this.rescuePassengers = [];
+    this.createAccountHUD();
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "omniverse";
@@ -161,6 +165,18 @@ export class Omniverse {
 
     this.loadTitleWorld();
     this.start();
+  }
+
+  createAccountHUD() {
+    this.accountElement = document.createElement("div");
+    this.accountElement.id = "taydenite-account";
+    Object.assign(this.accountElement.style, { position: "fixed", top: "max(14px, env(safe-area-inset-top))", left: "max(14px, env(safe-area-inset-left))", zIndex: "30", padding: "9px 13px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "18px", background: "rgba(5,30,18,.84)", color: "#eaffef", font: "inherit", letterSpacing: ".06em", pointerEvents: "none" });
+    document.body.append(this.accountElement);
+    this.updateAccountHUD();
+  }
+
+  updateAccountHUD() {
+    if (this.accountElement) this.accountElement.textContent = `TAYDENITE  ${this.account.balance}`;
   }
 
   installStyles() {
@@ -414,20 +430,83 @@ export class Omniverse {
 
   populatePlanet(planet) {
     this.residents = [];
+    const homeKeys = { Human: "earth", Highbreed: "augstaka", Anodite: "anodyne", Galvan: "galvan", Incursean: "incursia" };
+    const allSpecies = Object.entries(homeKeys).filter(([species]) => species !== planet.world.species);
     for (let index = 0; index < 5; index++) {
-      const resident = new PlanetaryResident(planet.world.species, index);
-      const angle = index * Math.PI * 2 / 5;
-      const radius = 24 + (index % 2) * 12;
-      resident.group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 18);
-      resident.group.rotation.y = angle + Math.PI;
-      this.celestial.add(resident.group);
-      this.residents.push(resident);
+      const resident = new PlanetaryResident(planet.world.species, index, planet.world.key);
+      this.placeResident(resident, index);
     }
+    const visitors = allSpecies.sort(() => Math.random() - 0.5).slice(0, 2);
+    visitors.forEach(([species, homeKey], index) => {
+      const resident = new PlanetaryResident(species, index + 5, homeKey);
+      resident.group.userData.isRescueTarget = true;
+      this.placeResident(resident, index + 5);
+    });
+  }
+
+  placeResident(resident, index) {
+    const angle = index * Math.PI * 2 / 7;
+    const radius = 20 + (index % 3) * 10;
+    resident.group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 18);
+    resident.group.rotation.y = angle + Math.PI;
+    this.celestial.add(resident.group);
+    this.residents.push(resident);
+  }
+
+  performRescueAction() {
+    if (this.joystick?.currentSelection !== "rustbucket" || !this.vehicle?.ship) return;
+    const ship = this.vehicle.ship;
+    const nearby = (this.residents || []).find(resident =>
+      !resident.isAboard && resident.group.parent === this.celestial &&
+      resident.homeWorldKey !== this.currentPlanet?.world.key &&
+      resident.group.position.distanceTo(ship.position) < 12
+    );
+    if (nearby) {
+      nearby.isAboard = true;
+      nearby.group.removeFromParent();
+      ship.add(nearby.group);
+      nearby.group.position.set(-0.65 + (this.rescuePassengers.length % 3) * 0.65, -0.25, -1.1 - Math.floor(this.rescuePassengers.length / 3) * 0.7);
+      nearby.group.rotation.set(0, Math.PI, 0);
+      this.rescuePassengers.push(nearby);
+      this.updateRescueInteraction();
+      return;
+    }
+
+    const deliverable = this.rescuePassengers.find(resident =>
+      this.currentPlanet && resident.homeWorldKey === this.currentPlanet.world.key
+    );
+    if (!deliverable) return;
+    deliverable.group.removeFromParent();
+    deliverable.isAboard = false;
+    deliverable.group.position.set(ship.position.x + 4 + Math.random() * 2, 0, ship.position.z + 3 + Math.random() * 2);
+    deliverable.group.rotation.set(0, Math.random() * Math.PI * 2, 0);
+    this.celestial.add(deliverable.group);
+    this.rescuePassengers = this.rescuePassengers.filter(resident => resident !== deliverable);
+    this.residents.push(deliverable);
+    this.account.addTaydenite(10);
+    this.updateAccountHUD();
+    this.updateRescueInteraction();
+  }
+
+  updateRescueInteraction() {
+    const pick = this.titleScreen?.newGame?.pickControl;
+    if (!pick) return;
+    if (this.joystick?.currentSelection !== "rustbucket") {
+      pick.setLabel("PICK");
+      return;
+    }
+    const ship = this.vehicle?.ship;
+    const nearby = ship && (this.residents || []).some(resident =>
+      !resident.isAboard && resident.group.parent === this.celestial &&
+      resident.homeWorldKey !== this.currentPlanet?.world.key &&
+      resident.group.position.distanceTo(ship.position) < 12
+    );
+    pick.setLabel(nearby ? "PICK" : "DROP");
   }
 
   updateResidents(delta, elapsed) {
     for (const resident of this.residents || []) {
-      resident.update(delta, elapsed);
+      if (!resident.isAboard) resident.update(delta, elapsed);
     }
   }
 
@@ -454,6 +533,7 @@ export class Omniverse {
       this.joystick?.update(delta);
       this.updateCamera();
       this.updateResidents(delta, elapsed);
+      this.updateRescueInteraction();
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
@@ -550,6 +630,7 @@ export class Omniverse {
     this.titleScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
+    this.accountElement?.remove();
     this.fontStyle.remove();
     if (this.joystick) this.joystick.destroy();
     if (this.animationFrame !== null) cancelAnimationFrame(this.animationFrame);
