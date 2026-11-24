@@ -11,9 +11,10 @@ export class Omnipedia {
       title: {
         margin: "0 0 20px",
         color: "#9effb6",
-        fontFamily: "Nulshock, sans-serif",
+        fontFamily: "Industry, sans-serif",
         letterSpacing: ".12em",
-        fontSize: "1.25rem"
+        fontSize: "1.25rem",
+        fontWeight: "700"
       },
       grid: {
         display: "grid",
