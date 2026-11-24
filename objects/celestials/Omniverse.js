@@ -281,7 +281,7 @@ export class Omniverse {
     if (!member) return;
     const home = this.crewHomePlanet || this.earth || new Earth();
     if (this.state.currentScene !== home.world.key) {
-      this.enterPlanetScene(home, null, [...(this.crew || [])]);
+      this.enterPlanetScene(home, this.vehicle?.ship || null, [...(this.crew || [])]);
     }
     this.updateCamera();
   }
