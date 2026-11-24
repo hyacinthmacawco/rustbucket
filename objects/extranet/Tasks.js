@@ -1,51 +1,71 @@
 export class Tasks {
-  constructor({ onComplete = () => {} } = {}) {
-    this.onComplete = onComplete;
-    this.storedCount = 0;
-    this.completed = false;
+  constructor() {
+    this.items = [];
+    this.nextId = 1;
+    this.host = null;
     this.styles = {
       card: { padding: "18px", border: "1px solid rgba(126,255,168,.28)", borderRadius: "8px", background: "rgba(5,30,16,.72)" },
       title: { margin: "0 0 20px", color: "#9effb6", fontFamily: "Nulshock, sans-serif", letterSpacing: ".12em", fontSize: "1.2rem" },
-      progress: { width: "100%", height: "8px", margin: "14px 0", overflow: "hidden", borderRadius: "8px", background: "rgba(126,255,168,.14)" },
-      fill: { height: "100%", background: "#75f59a", transition: "width .2s ease" },
-      label: { color: "#dfffe8", letterSpacing: ".08em" }
+      label: { color: "#dfffe8", letterSpacing: ".06em", padding: "12px 0", borderBottom: "1px solid rgba(126,255,168,.14)" }
     };
   }
 
+  addTask(resident) {
+    const task = {
+      id: this.nextId++,
+      resident,
+      title: "Return " + (resident.species || "rescued individual") + " to " + resident.homeworld,
+      completed: false
+    };
+    this.items.push(task);
+    this.renderItems();
+    return task.id;
+  }
+
+  completeTask(id) {
+    const task = this.items.find(item => item.id === id);
+    if (!task) return false;
+    task.completed = true;
+    this.renderItems();
+    return true;
+  }
+
   render(host) {
+    this.host = host;
     host.replaceChildren();
-    const card = document.createElement("article");
-    Object.assign(card.style, this.styles.card);
+    this.card = document.createElement("article");
+    Object.assign(this.card.style, this.styles.card);
     const title = document.createElement("h2");
-    title.textContent = "Put bags into Rustbucket";
+    title.textContent = "TASKS";
     Object.assign(title.style, this.styles.title);
-    const progress = document.createElement("div");
-    Object.assign(progress.style, this.styles.progress);
-    this.progressFill = document.createElement("div");
-    Object.assign(this.progressFill.style, this.styles.fill);
-    progress.append(this.progressFill);
-    this.progressLabel = document.createElement("b");
-    Object.assign(this.progressLabel.style, this.styles.label);
-    card.append(title, progress, this.progressLabel);
-    host.append(card);
-    this.updateProgress();
+    this.list = document.createElement("div");
+    this.card.append(title, this.list);
+    host.append(this.card);
+    this.renderItems();
   }
 
-  updateProgress() {
-    if (!this.progressFill || !this.progressLabel) return;
-    this.progressFill.style.width = Math.min(100, this.storedCount * 25) + "%";
-    this.progressLabel.textContent = this.storedCount + "/4 BAGS STORED";
-  }
-
-  update(count = this.storedCount + 1) {
-    this.storedCount = Math.max(this.storedCount, count);
-    this.updateProgress();
-
-    if (this.storedCount >= 4 && !this.completed) {
-      this.completed = true;
-      this.onComplete();
+  renderItems() {
+    if (!this.list) return;
+    this.list.replaceChildren();
+    if (!this.items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "No active tasks.";
+      Object.assign(empty.style, this.styles.label);
+      this.list.append(empty);
+      return;
     }
+    for (const task of this.items) {
+      const row = document.createElement("div");
+      Object.assign(row.style, this.styles.label);
+      row.textContent = (task.completed ? "✓ " : "• ") + task.title + (task.completed ? " — COMPLETED" : "");
+      if (task.completed) row.style.opacity = ".58";
+      this.list.append(row);
+    }
+  }
 
-    return this.completed;
+  destroy() {
+    this.host = null;
+    this.list = null;
+    this.card?.remove();
   }
 }
