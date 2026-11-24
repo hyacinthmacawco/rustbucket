@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import { HumanRig } from "../species/Human.js";
+import { Anodite } from "../species/Anodite.js";
+import { Galvan } from "../species/Galvan.js";
+import { Highbreed } from "../species/Highbreed.js";
+import { Incursean } from "../species/Incursean.js";
 import { IncursiaSystem } from "./IncursiaSystem.js";
 
 export class Incursia {
@@ -84,6 +89,33 @@ export class Incursia {
     beacon.position.set(0, 7, 0);
     hub.add(beacon);
     return interior;
+  }
+
+
+  spawnResidents(parent) {
+    const speciesClasses = [HumanRig, Highbreed, Anodite, Galvan, Incursean];
+    const nativeClass = speciesClasses.find(SpeciesClass => SpeciesClass.homeworld === this.world.key);
+    if (!nativeClass) return [];
+    const visitors = speciesClasses
+      .filter(SpeciesClass => SpeciesClass !== nativeClass)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
+    const residents = [];
+    const spawn = (SpeciesClass, index, isVisitor = false) => {
+      const resident = SpeciesClass === HumanRig
+        ? new HumanRig({ residentIndex: index })
+        : new SpeciesClass(null, { residentIndex: index });
+      if (isVisitor) resident.group.userData.isRescueTarget = true;
+      const angle = index * Math.PI * 2 / 7;
+      const radius = 20 + (index % 3) * 10;
+      resident.group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 18);
+      resident.group.rotation.y = angle + Math.PI;
+      parent.add(resident.group);
+      residents.push(resident);
+    };
+    for (let index = 0; index < 5; index++) spawn(nativeClass, index);
+    visitors.forEach((SpeciesClass, index) => spawn(SpeciesClass, index + 5, true));
+    return residents;
   }
 
   model(mode = "exterior") {
