@@ -27,7 +27,9 @@ export class Omniverse {
       display: "block",
       width: "100%",
       height: "100%",
-      touchAction: "none"
+      touchAction: "none",
+      zIndex: "0",
+      pointerEvents: "auto"
     });
 
     Object.assign(document.documentElement.style, {
