@@ -10,6 +10,9 @@ import { KevinBag } from "../team/KevinBag.js";
 import { RookBag } from "../team/RookBag.js";
 import { Earth } from "../celestials/Earth.js";
 import { Joystick } from "../team/Joystick.js";
+import { Jump } from "../team/Jump.js";
+import { Attack } from "../team/Attack.js";
+import { Pick } from "../team/Pick.js";
 
 export class NewGame {
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
@@ -88,6 +91,9 @@ export class NewGame {
     ];
 
     omniverse.joystick?.destroy();
+    this.jumpControl?.destroy();
+    this.pickControl?.destroy();
+    this.attackControl?.destroy();
     omniverse.joystick = new Joystick();
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const entities = {
@@ -110,10 +116,26 @@ export class NewGame {
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       initialSelected: "ben"
     });
+    this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
+    this.pickControl = new Pick({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
+    this.attackControl = new Attack({
+      onStart: () => { omniverse.joystick.input.attackHeld = true; },
+      onEnd: () => { omniverse.joystick.input.attackHeld = false; }
+    });
+    this.jumpControl.create();
+    this.pickControl.create();
+    this.attackControl.create();
+    this.setControlsVisible(true);
     omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
 
     return true;
+  }
+
+  setControlsVisible(visible) {
+    this.jumpControl?.setVisible(visible);
+    this.pickControl?.setVisible(visible);
+    this.attackControl?.setVisible(visible);
   }
 
   setPreludeVisible(visible) {
@@ -125,5 +147,8 @@ export class NewGame {
     this.skip?.removeEventListener("click", this.onSkip);
     this.element?.remove();
     this.prelude?.remove();
+    this.jumpControl?.destroy();
+    this.pickControl?.destroy();
+    this.attackControl?.destroy();
   }
 }
