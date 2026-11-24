@@ -422,7 +422,7 @@ export class Omniverse {
     this.titleScreen.newGame.setPreludeVisible(false);
     this.extranetButton.style.display = "block";
     this.extranet?.setLocation(planet.world.key);
-    this.residents = planet.spawnResidents(this.celestial);
+    this.residents = planet.spawnResidents?.(this.celestial) || [];
     this.vehicle?.setRescueContext({
       getCurrentPlanet: () => this.currentPlanet,
       getResidents: () => this.residents || [],
