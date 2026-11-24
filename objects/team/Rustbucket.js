@@ -34,7 +34,7 @@ export class Rustbucket {
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
     this.rescuePassengers = [];
-    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {} };
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {} };
     this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
@@ -46,7 +46,9 @@ export class Rustbucket {
       getCurrentPlanet: context.getCurrentPlanet || (() => null),
       getResidents: context.getResidents || (() => []),
       account: context.account || null,
-      onUpdate: context.onUpdate || (() => {})
+      onUpdate: context.onUpdate || (() => {}),
+      onPickup: context.onPickup || (() => null),
+      onDrop: context.onDrop || (() => {})
     };
   }
 
@@ -76,6 +78,7 @@ export class Rustbucket {
       const residentIndex = residents.indexOf(nearby);
       if (residentIndex >= 0) residents.splice(residentIndex, 1);
       this.rescuePassengers.push(nearby);
+      nearby.taskId = context.onPickup(nearby);
       context.onUpdate();
       return;
     }
@@ -94,14 +97,17 @@ export class Rustbucket {
     this.ship.parent.add(deliverable.group);
     this.rescuePassengers = this.rescuePassengers.filter(resident => resident !== deliverable);
     residents.push(deliverable);
+    const balanceBefore = context.account?.balance ?? 0;
     deliverable.awardTaydenite(context.account, 10);
+    const taydeniteIncrease = Math.max(0, (context.account?.balance ?? balanceBefore) - balanceBefore);
+    context.onDrop(deliverable, 5, taydeniteIncrease);
     context.onUpdate();
   }
 
-  updateRescueInteraction({ selected, pickControl } = {}) {
-    if (!pickControl) return;
+  updateRescueInteraction({ selected, interactControl } = {}) {
+    if (!interactControl) return;
     if (selected !== "rustbucket") {
-      pickControl.setLabel("PICK");
+      interactControl.setMode("Pick");
       return;
     }
     const planet = this.rescueContext.getCurrentPlanet();
@@ -112,7 +118,8 @@ export class Rustbucket {
       resident.homeworld !== planet.world.key &&
       resident.group.position.distanceTo(this.ship.position) < 12
     );
-    pickControl.setLabel(nearby ? "PICK" : "DROP");
+    const canDrop = planet && this.rescuePassengers.some(resident => resident.homeworld === planet.world.key);
+    interactControl.setMode(nearby ? "Pick" : canDrop ? "Drop" : "Pick");
   }
 
   moveVehicle(moveX, moveZ, lift, delta, liftX = 0, heading = this.ship.rotation.y) {
