@@ -345,10 +345,16 @@ export class Omniverse {
   }
 
   jumpToSystem(systemKey) {
-    if (!this.planetClasses[systemKey] && systemKey !== "solar") return;
+    const aliases = {
+      highbreed: "augstaka",
+      incursean: "incursia",
+      anodite: "anodyne"
+    };
+    const destination = aliases[systemKey] || systemKey;
+    if (!this.planetClasses[destination] && destination !== "solar") return;
     const ship = this.vehicle?.ship;
     const crew = [...(this.crew || [])];
-    this.loadSystemScene(systemKey, ship, crew);
+    this.loadSystemScene(destination, ship, crew);
     this.extranet?.close();
     this.joystick?.setVehicleMode(true);
   }
@@ -396,6 +402,7 @@ export class Omniverse {
     this.celestial.updateMatrixWorld(true);
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
+    this.camera.updateProjectionMatrix();
     this.cameraTarget.set(-137150, 0, 0);
     this.state.stage = "title";
     this.state.currentScene = "space";
