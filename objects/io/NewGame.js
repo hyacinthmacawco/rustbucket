@@ -113,6 +113,7 @@ export class NewGame {
         omniverse.updateCamera();
       },
       onJump: () => omniverse.vehicle?.toggleRamp(),
+      onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       initialSelected: "ben"
     });
