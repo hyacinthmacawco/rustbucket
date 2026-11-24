@@ -5,6 +5,7 @@ export class Moon {
   static WORLD = { key: "moon", name: "The Moon", species: "Human", sky: 0x343943, ground: 0x777b82 };
 
   constructor() {
+    this.songs = ["./files/songs/neodevol-ov.mp3"];
     this.world = Moon.WORLD;
     this.system = "solar";
     this.atmosphereHeight = 90;
