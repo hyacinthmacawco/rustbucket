@@ -36,13 +36,14 @@ export class Relationships {
 
   getRelationship(from, to) {
     if (from === to) return 0;
+    const homeworld = this.homeworlds[from];
     if (homeworld) {
       try {
         const saved = JSON.parse(localStorage.getItem("rustbucket.planet." + homeworld) || "null");
         const value = saved?.relationships?.[to];
         if (value !== undefined) return Number(value);
       } catch (error) {
-        // Fall back to the relationship stored on the character class.
+        // Use the in-memory planet relationship when storage is unavailable.
       }
     }
     const PlanetClass = this.planetClasses[homeworld];
@@ -53,10 +54,10 @@ export class Relationships {
     if (from === to || (!this.entityClasses[from] && !this.homeworlds[from])) return;
     const homeworld = this.homeworlds[from];
     const source = homeworld ? this.planetClasses[homeworld] : this.entityClasses[from];
+    if (!source) return;
     source.relationships ||= {};
     const relationships = source.relationships;
     relationships[to] = Math.max(-100, Math.min(100, this.getRelationship(from, to) + amount));
-    const homeworld = this.homeworlds[from];
     if (homeworld) {
       try {
         const key = "rustbucket.planet." + homeworld;
@@ -64,7 +65,7 @@ export class Relationships {
         saved.relationships = { ...(saved.relationships || {}), [to]: relationships[to] };
         localStorage.setItem(key, JSON.stringify(saved));
       } catch (error) {
-        // Keep the in-memory character relationship when storage is unavailable.
+        // Keep the in-memory planet relationship when storage is unavailable.
       }
     }
     return relationships[to];
