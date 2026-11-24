@@ -26,6 +26,12 @@ export class Omniverse {
     this.installStyles();
     this.account = new Account();
     this.audioPlayer = new AudioPlayer();
+    this.deathScreen = document.createElement("section");
+    this.deathScreen.id = "death-screen";
+    Object.assign(this.deathScreen.style, { position: "fixed", inset: "0", display: "none", placeItems: "center", background: "#000", color: "#fff", zIndex: "100", fontSize: "clamp(2rem, 8vw, 5rem)", letterSpacing: ".18em" });
+    this.deathScreen.textContent = "YOU ARE DEAD";
+    document.body.append(this.deathScreen);
+    this.dead = false;
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "omniverse";
@@ -175,15 +181,20 @@ export class Omniverse {
     return this.helix?.addTask(resident) ?? null;
   }
 
-  handleRescueDrop(resident, relationshipIncrease = 5, taydeniteIncrease = 10) {
+  handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
     this.helix?.completeTask(resident?.taskId);
     const species = resident?.species || resident?.group?.userData?.species;
     let actualRelationshipIncrease = relationshipIncrease;
     if (species) {
       const relationships = this.helix?.pages.relationships;
-      const before = relationships?.getRelationship(species, "Ben") ?? 0;
-      relationships?.addRelationship(species, "Ben", relationshipIncrease);
-      actualRelationshipIncrease = (relationships?.getRelationship(species, "Ben") ?? before) - before;
+      const home = this.currentPlanet;
+      const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
+      for (const name of teamNames) {
+        const before = Number(home?.constructor?.relationships?.[name] ?? 0);
+        const next = Math.max(-100, Math.min(100, before + 0.5));
+        if (home?.constructor?.relationships) home.constructor.relationships[name] = next;
+        actualRelationshipIncrease = next - before;
+      }
     }
     this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
   }
@@ -455,6 +466,32 @@ export class Omniverse {
     return true;
   }
 
+  findNearbyMarket(member, range = 14) {
+    if (!member?.group || !this.celestial) return null;
+    const point = member.group.getWorldPosition(new THREE.Vector3());
+    let market = null;
+    this.celestial.traverse(object => {
+      if (!object.userData?.market) return;
+      if (point.distanceTo(object.getWorldPosition(new THREE.Vector3())) <= range) market = object;
+    });
+    return market;
+  }
+
+  openMarket(member, market) {
+    if (!market) return;
+    this.marketDialog?.remove();
+    const dialog = document.createElement("section");
+    Object.assign(dialog.style, { position: "fixed", inset: "15% 8%", zIndex: "120", padding: "24px", background: "rgba(3,18,12,.96)", color: "#eaffef", border: "1px solid #79e99a", font: "inherit", display: "grid", alignContent: "start", gap: "14px" });
+    const title = document.createElement("h2"); title.textContent = "MARKET";
+    const stock = document.createElement("p"); const quantity = Number(market.userData.resources?.["Grape Smoothie"] || 0); stock.textContent = `Grape Smoothie — ${quantity}`;
+    const buy = document.createElement("button"); buy.textContent = "BUY";
+    Object.assign(buy.style, { padding: "12px", background: "#174c2c", color: "white", font: "inherit" });
+    buy.disabled = quantity <= 0;
+    buy.onclick = () => { const bag = this.bags?.[this.crew.indexOf(member)]; if (!bag || quantity <= 0) return; bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; market.userData.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
+    const close = document.createElement("button"); close.textContent = "CLOSE"; close.onclick = () => dialog.remove();
+    dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
+  }
+
   handleTeamInteraction(selected) {
     if (selected === "rustbucket") {
       this.vehicle?.performRescueAction();
@@ -462,6 +499,8 @@ export class Omniverse {
     }
     const member = this.getTeamMember(selected);
     if (!member) return;
+    const market = this.findNearbyMarket(member);
+    if (market) { this.openMarket(member, market); return; }
     if (member.seated) {
       this.standTeamMember(member);
       return;
@@ -501,7 +540,8 @@ export class Omniverse {
     }
     const member = this.getTeamMember(selected);
     if (!member) return;
-    if (member.seated) control.setMode("Stand");
+    if (this.findNearbyMarket(member)) control.setMode("Shop");
+    else if (member.seated) control.setMode("Stand");
     else if (member.carryingBag) control.setMode("Drop");
     else if (this.findNearbySeat(member) >= 0) control.setMode("Sit");
     else if (this.findNearbyBag(member)) control.setMode("Pick");
@@ -764,6 +804,8 @@ export class Omniverse {
       this.updateCamera();
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
+      for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
+      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.style.display = "grid"; this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
       this.updateCrewAutomation(delta, elapsed);
       this.updateTeamInteractionMode();
     }
@@ -865,6 +907,8 @@ export class Omniverse {
     this.titleScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
+    this.deathScreen?.remove();
+    this.marketDialog?.remove();
     this.fontStyle.remove();
     if (this.joystick) this.joystick.destroy();
     if (this.animationFrame !== null) cancelAnimationFrame(this.animationFrame);
