@@ -166,6 +166,12 @@ export class Anodite {
   }
 
   createHair() {
+    const hairGroup = new THREE.Group();
+    hairGroup.name = "AnoditeHair";
+    hairGroup.position.y = 2.8;
+    hairGroup.userData.noPhysics = true;
+    this.group.add(hairGroup);
+
     const strands = [
       [[-0.18, 3.05, -0.12], [-0.55, 3.2, -0.2], [-0.8, 2.75, -0.24], [-0.72, 2.15, -0.2], [-0.3, 1.9, -0.15]],
       [[0.12, 3.08, -0.12], [0.55, 3.28, -0.2], [0.88, 2.8, -0.22], [0.95, 2.15, -0.2], [0.56, 1.75, -0.15]],
@@ -175,22 +181,21 @@ export class Anodite {
 
     for (const points of strands) {
       const curve = new THREE.CatmullRomCurve3(
-        points.map(point => new THREE.Vector3(...point))
+        points.map(([x, y, z]) => new THREE.Vector3(x, y - 2.8, z))
       );
-
       const outer = new THREE.Mesh(
         new THREE.TubeGeometry(curve, 32, 0.105, 8, false),
         this.materials.pink
       );
       outer.castShadow = true;
-      this.group.add(outer);
+      hairGroup.add(outer);
 
       const inner = new THREE.Mesh(
         new THREE.TubeGeometry(curve, 32, 0.075, 8, false),
         this.materials.white
       );
       inner.position.z = 0.015;
-      this.group.add(inner);
+      hairGroup.add(inner);
     }
   }
 
