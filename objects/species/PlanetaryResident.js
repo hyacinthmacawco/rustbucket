@@ -20,6 +20,7 @@ export class PlanetaryResident {
     this.group.userData.updateRigAnimation = (moving, time) => this.rig._rig.updateWalk(time);
     this.target = null;
     this.wait = Math.random() * 2;
+    this.rig._rig.setWalking(false);
     this.speed = 1.1 + Math.random() * 0.45;
     this.chooseTarget();
   }
@@ -34,6 +35,7 @@ export class PlanetaryResident {
   update(delta, elapsed) {
     if (this.wait > 0) {
       this.wait -= delta;
+      this.rig._rig.setWalking(false);
       this.rig._rig.updateWalk(elapsed);
       return;
     }
