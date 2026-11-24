@@ -185,9 +185,9 @@ export class Omniverse {
       const home = this.currentPlanet;
       const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
       for (const name of teamNames) {
-        const before = Number(home?.constructor?.relationships?.[name] ?? 0);
-        const next = Math.max(-100, Math.min(100, before + 0.5));
-        if (home?.constructor?.relationships) home.constructor.relationships[name] = next;
+        const before = relationships?.getRelationship(species, name) ?? Number(home?.constructor?.relationships?.[name] ?? 0);
+        relationships?.addRelationship(species, name, 0.5);
+        const next = relationships?.getRelationship(species, name) ?? Number(home?.constructor?.relationships?.[name] ?? before);
         actualRelationshipIncrease = next - before;
       }
     }
