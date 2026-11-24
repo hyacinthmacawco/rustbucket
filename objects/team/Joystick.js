@@ -267,10 +267,24 @@ export class Joystick {
     const fz = direction.z / length;
     const rx = -fz;
     const rz = fx;
-    if (this.selected !== "rustbucket") object.rotation.y = Math.atan2(fx, fz);
     const mx = magnitude > 0.08 ? (fx * forward + rx * right) / Math.max(1, magnitude) : 0;
     const mz = magnitude > 0.08 ? (fz * forward + rz * right) / Math.max(1, magnitude) : 0;
     const speed = this.selected === "rustbucket" ? 18 : 3.5;
+
+    // Convert camera-relative world movement into the selected object's
+    // parent space. This matters for crew members walking inside the ship.
+    const localForward = new THREE.Vector3(fx, 0, fz);
+    const localMovement = new THREE.Vector3(mx, 0, mz);
+    if (object.parent) {
+      object.parent.updateWorldMatrix(true, false);
+      const inverseParent = object.parent.matrixWorld.clone().invert();
+      const origin = new THREE.Vector3(0, 0, 0).applyMatrix4(inverseParent);
+      localForward.copy(new THREE.Vector3(fx, 0, fz).applyMatrix4(inverseParent).sub(origin)).normalize();
+      localMovement.copy(new THREE.Vector3(mx, 0, mz).applyMatrix4(inverseParent).sub(origin));
+    }
+    if (this.selected !== "rustbucket") {
+      object.rotation.y = Math.atan2(localForward.x, localForward.z);
+    }
 
     if (joy.jumpRequested) {
       if (this.selected === "rustbucket") this.onJump();
@@ -286,8 +300,7 @@ export class Joystick {
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
-      object.position.x += mx * speed * dt;
-      object.position.z += mz * speed * dt;
+      object.position.add(localMovement.multiplyScalar(speed * dt));
     }
 
     if (joy.pickRequested) {
