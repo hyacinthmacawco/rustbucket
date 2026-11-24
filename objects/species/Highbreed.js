@@ -1,6 +1,8 @@
 import * as THREE from "three";
+import { initializeResident } from "./Human.js";
 
 export class Highbreed {
+  static homeworld = "augstaka";
   static relationships = {
     Ben: 40,
     Gwen: 30,
@@ -16,7 +18,7 @@ export class Highbreed {
     this.group = new THREE.Group();
     this.group.name = "Highbreed";
     this.leader = false;
-    this.homeworld = "augstaka";
+    this.homeworld = Highbreed.homeworld;
     this.currentWorld = null;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
     this.health = 100;
@@ -53,6 +55,7 @@ export class Highbreed {
     this.model = this.group;
     this.mesh = this.group;
     this.group.userData.statusOwner = this;
+    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Highbreed", homeworld: Highbreed.homeworld, style: { boneColor: 0xe8f2f1, jointColor: 0xb91f26 } });
     this.group.userData.speciesInstance = this;
   }
 
@@ -222,5 +225,7 @@ export class Highbreed {
     // The dorsal purple marking and its smaller violet details are created with the body.
   }
 
+
+  awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
 
 }
