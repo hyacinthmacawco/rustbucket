@@ -123,6 +123,7 @@ export class NewGame {
       rook: omniverse.crew[3].group,
       rustbucket: omniverse.vehicle.ship
     };
+    omniverse.joystick.onAttack = selected => omniverse.handleCombatAttack(selected);
     omniverse.joystick.createKeyboard({
       entities,
       camera: omniverse.camera,
