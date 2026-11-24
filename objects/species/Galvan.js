@@ -20,10 +20,10 @@ export class Galvan {
     this.group.name = "Galvan";
     this.homeworld = Galvan.homeworld;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
-    this.health = 100;
+    this.health = 30;
     this.energy = 100;
     this.energyLabel = "ENERGY";
-    this.maxHealth = 100;
+    this.maxHealth = 30;
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
@@ -181,7 +181,7 @@ export class Galvan {
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
-    if (this.healthRecoveryDelay === 0 && this.health < 100) this.health = Math.min(100, this.health + delta * 0.32);
+    if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
     if (this.energyRecoveryDelay === 0 && this.energy < 100) this.energy = Math.min(100, this.energy + delta * 0.48);
   }
 
