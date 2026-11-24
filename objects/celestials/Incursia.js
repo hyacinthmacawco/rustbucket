@@ -8,6 +8,7 @@ import { Incursean } from "../species/Incursean.js";
 import { IncursiaSystem } from "./IncursiaSystem.js";
 
 export class Incursia {
+  static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: 3, Galvan: 10, Human: -36 };
   static WORLD = {
     key: "incursia",
     name: "Incursia",
@@ -68,8 +69,10 @@ export class Incursia {
 
 
     const hub = new THREE.Group();
-    hub.name = "IncursiaCivicHub";
+    hub.name = "IncursiaMarket";
     hub.position.set(0, 0, -24);
+    hub.userData.market = true;
+    hub.userData.resources = { "Grape Smoothie": 1 + Math.floor(Math.random() * 10) };
     interior.add(hub);
     const dark = new THREE.MeshStandardMaterial({ color: 0x17231c, roughness: 0.9 });
     const accent = new THREE.MeshStandardMaterial({ color: 0xd39b45, roughness: 0.55 });
