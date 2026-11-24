@@ -337,7 +337,7 @@ export class Helix {
     this.root.style.display = "flex";
     this.window.style.display = "none";
     this.taskCompletedPage.style.display = "flex";
-    this.audioPlayer?.playSfx("./files/songs/ov-end-credits.mp3");
+    this.audioPlayer?.playSfx("./files/songs/ov-end-credits.m4a");
   }
 
   continueAfterTask = () => {
