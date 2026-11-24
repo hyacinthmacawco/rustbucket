@@ -24,10 +24,11 @@ export class Interact {
   };
 
   setMode(mode) {
-    this.mode = mode === "Drop" ? "Drop" : "Pick";
+    this.mode = ["Pick", "Drop", "Sit", "Stand"].includes(mode) ? mode : "Pick";
     if (!this.element) return;
-    this.element.textContent = this.mode.toUpperCase();
-    this.element.setAttribute("aria-label", this.mode === "Pick" ? "Pick up rescued individual" : "Drop off rescued individual");
+    this.element.textContent = this.mode;
+    const labels = { Pick: "Pick up", Drop: "Drop", Sit: "Sit", Stand: "Stand" };
+    this.element.setAttribute("aria-label", labels[this.mode]);
   }
 
   setVisible(visible) {
