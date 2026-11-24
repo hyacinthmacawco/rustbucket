@@ -357,6 +357,7 @@ export class Omniverse {
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
     this.currentPlanet = planet;
+    this.earth = planet.world.key === "earth" ? planet : null;
     this.scene.background = new THREE.Color(planet.world.sky);
     this.scene.fog = new THREE.Fog(planet.world.sky, 180, 700);
 
