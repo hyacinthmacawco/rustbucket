@@ -8,8 +8,8 @@ export class LoadGame {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.type = "div";
     this.element.textContent = "LOAD GAME";
     this.element.setAttribute("aria-expanded", "false");
     Object.assign(this.element.style, this.styles.button);
