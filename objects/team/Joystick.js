@@ -379,8 +379,10 @@ export class Joystick {
     }
 
     if (joy.jumpRequested) {
-      if (this.selected === "rustbucket") this.onJump();
-      else object.userData.statusOwner?.rig?.jump();
+      if (!seated) {
+        if (this.selected === "rustbucket") this.onJump();
+        else object.userData.statusOwner?.rig?.jump();
+      }
       joy.jumpRequested = false;
     }
 
@@ -407,7 +409,7 @@ export class Joystick {
     const attackHeld = joy.attackHeld || this.keys.has("q");
     const attackInterval = this.selected === "rustbucket" ? 280 : 720;
     const now = performance.now();
-    if (attackHeld && now - this.lastAttackAt >= attackInterval) {
+    if (!seated && attackHeld && now - this.lastAttackAt >= attackInterval) {
       if (this.selected === "rustbucket") object.userData.performAttack?.();
       else object.userData.statusOwner?.rig?.attack();
       this.lastAttackAt = now;
