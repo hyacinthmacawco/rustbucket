@@ -216,6 +216,7 @@ export class Anodite {
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
+    if (this.health === 0 && !this.dead) { this.dead = true; this.onDeath?.(this); }
     this.healthRecoveryDelay = 4;
     return this.health;
   }
