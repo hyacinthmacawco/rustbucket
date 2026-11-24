@@ -274,7 +274,15 @@ export class Extranet {
     this.pages.memories.render(this.page);
   }
 
-  accounts() {\n    this.current = "accounts";\n    this.address.value = "ottps://bgkr.omnicloud.com/accounts";\n    this.pages.accounts.render(this.page);\n  }\n\n  updateAccount() { this.pages.accounts.update(); }\n\n  omnidata(allowSystemJump = false) {
+  accounts() {
+    this.current = "accounts";
+    this.address.value = "ottps://bgkr.omnicloud.com/accounts";
+    this.pages.accounts.render(this.page);
+  }
+
+  updateAccount() { this.pages.accounts.update(); }
+
+  omnidata(allowSystemJump = false) {
     this.current = "omnidata";
     this.address.value = "ottps://en.omnidata.org";
     this.omnipedia.render(this.page, {
