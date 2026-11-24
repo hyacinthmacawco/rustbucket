@@ -33,8 +33,86 @@ export class Rustbucket {
     // The movement joystick supplies camera-relative horizontal movement and
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
+    this.rescuePassengers = [];
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {} };
+    this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
+  }
+
+
+  setRescueContext(context = {}) {
+    this.rescueContext = {
+      getCurrentPlanet: context.getCurrentPlanet || (() => null),
+      getResidents: context.getResidents || (() => []),
+      account: context.account || null,
+      onUpdate: context.onUpdate || (() => {})
+    };
+  }
+
+  performRescueAction() {
+    const context = this.rescueContext;
+    const planet = context.getCurrentPlanet();
+    const residents = context.getResidents();
+    if (!planet || !this.ship.parent) return;
+
+    const nearby = residents.find(resident =>
+      !resident.isAboard &&
+      resident.group.parent === this.ship.parent &&
+      resident.homeworld !== planet.world.key &&
+      resident.group.position.distanceTo(this.ship.position) < 12
+    );
+
+    if (nearby) {
+      nearby.isAboard = true;
+      nearby.group.removeFromParent();
+      this.ship.add(nearby.group);
+      nearby.group.position.set(
+        -0.65 + (this.rescuePassengers.length % 3) * 0.65,
+        -0.25,
+        -1.1 - Math.floor(this.rescuePassengers.length / 3) * 0.7
+      );
+      nearby.group.rotation.set(0, Math.PI, 0);
+      const residentIndex = residents.indexOf(nearby);
+      if (residentIndex >= 0) residents.splice(residentIndex, 1);
+      this.rescuePassengers.push(nearby);
+      context.onUpdate();
+      return;
+    }
+
+    const deliverable = this.rescuePassengers.find(resident => resident.homeworld === planet.world.key);
+    if (!deliverable) return;
+
+    deliverable.group.removeFromParent();
+    deliverable.isAboard = false;
+    deliverable.group.position.set(
+      this.ship.position.x + 4 + Math.random() * 2,
+      0,
+      this.ship.position.z + 3 + Math.random() * 2
+    );
+    deliverable.group.rotation.set(0, Math.random() * Math.PI * 2, 0);
+    this.ship.parent.add(deliverable.group);
+    this.rescuePassengers = this.rescuePassengers.filter(resident => resident !== deliverable);
+    residents.push(deliverable);
+    deliverable.awardTaydenite(context.account, 10);
+    context.onUpdate();
+  }
+
+  updateRescueInteraction({ selected, pickControl } = {}) {
+    if (!pickControl) return;
+    if (selected !== "rustbucket") {
+      pickControl.setLabel("PICK");
+      return;
+    }
+    const planet = this.rescueContext.getCurrentPlanet();
+    const residents = this.rescueContext.getResidents();
+    const nearby = planet && residents.some(resident =>
+      !resident.isAboard &&
+      resident.group.parent === this.ship.parent &&
+      resident.homeworld !== planet.world.key &&
+      resident.group.position.distanceTo(this.ship.position) < 12
+    );
+    pickControl.setLabel(nearby ? "PICK" : "DROP");
   }
 
   moveVehicle(moveX, moveZ, lift, delta, liftX = 0, heading = this.ship.rotation.y) {
