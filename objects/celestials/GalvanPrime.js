@@ -108,6 +108,8 @@ export class GalvanPrime {
       const resident = SpeciesClass === Human
         ? new Human({ residentIndex: index })
         : new SpeciesClass(null, { residentIndex: index });
+      resident.relationships = this.constructor.relationships || {};
+      resident.species = SpeciesClass.name;
       if (isVisitor) resident.group.userData.isRescueTarget = true;
       const angle = index * Math.PI * 2 / 7;
       const radius = 20 + (index % 3) * 10;
