@@ -159,7 +159,7 @@ export class Omniverse {
       this.resize();
     };
     window.addEventListener("resize", this.onResize);
-    this.onFirstInteraction = () => { this.requestFullscreen(); this.audioPlayer.unlock(this.state.stage); };
+    this.onFirstInteraction = () => { this.requestFullscreen(); this.audioPlayer.unlock(this.state.stage, this.titleScreen.song); };
     document.addEventListener("pointerdown", this.onFirstInteraction, { once: true });
     this.clock = new THREE.Clock();
     this.animationFrame = null;
@@ -199,7 +199,7 @@ export class Omniverse {
     this.fontStyle.id = "rustbucket-fonts";
     this.fontStyle.textContent = `
       @font-face {
-        font-family: "Industry";
+        font-family: "Industry Light";
         src: url("./files/fonts/Industry-Light.woff") format("woff");
         font-weight: 300;
         font-style: normal;
@@ -220,11 +220,11 @@ export class Omniverse {
         font-display: swap;
       }
       html, body, button, input {
-        font-family: "Industry", sans-serif;
+        font-family: "Industry Light", sans-serif;
       }
       h1, h2, h3, .rb-title, .rb-heading {
-        font-family: "Industry", sans-serif !important;
-        font-weight: 700 !important;
+        font-family: "Industry Light", sans-serif !important;
+        font-weight: 300 !important;
       }
       #title-screen, #prelude-screen, #pause-overlay, #helix-overlay {
         box-sizing: border-box;
@@ -676,6 +676,7 @@ export class Omniverse {
     const SystemClass = this.systemClasses[systemKey] || SolarSystem;
     this.systemWorld = new SystemClass();
     this.celestial.add(this.systemWorld.model());
+    this.audioPlayer?.playSongs(this.systemWorld.songs);
 
     this.addSystemPlanets(systemKey);
     this.celestial.updateMatrixWorld(true);
@@ -719,6 +720,7 @@ export class Omniverse {
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
     this.currentPlanet = planet;
+    this.audioPlayer?.playSongs(planet.songs);
     this.earth = planet.world.key === "earth" ? planet : null;
     this.scene.background = new THREE.Color(planet.world.sky);
     this.scene.fog = new THREE.Fog(planet.world.sky, 180, 700);
@@ -854,7 +856,9 @@ export class Omniverse {
     this.pauseButton.style.display = stage === "gameplay" ? "block" : "none";
 
     this.titleScreen.newGame.setControlsVisible(stage === "gameplay");
-    if (stage === "gameplay") {
+    if (stage === "prelude") {
+      this.audioPlayer.playSfx("./files/dialogues/ov-final-dialogues.mp3");
+    } else if (stage === "gameplay") {
       this.titleScreen.newGame.initialize(this);
     } else if (stage === "title") {
       this.joystick?.setVisible(false);
@@ -869,15 +873,13 @@ export class Omniverse {
     this.pause?.setVisible(false);
     this.clearWorld();
 
-    this.systemWorld = new SolarSystem();
-    this.celestial.add(this.systemWorld.model());
-    this.addSystemPlanets("solar");
-    this.celestial.updateMatrixWorld(true);
+    this.systemWorld = null;
+    this.systemPlanets = [];
 
     this.camera.position.set(0, 0, 600000);
-    this.camera.lookAt(-137150, 0, 0);
+    this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();
-    this.cameraTarget.set(-137150, 0, 0);
+    this.cameraTarget.set(0, 0, 0);
     this.scene.background = new THREE.Color(0x02040a);
     this.scene.fog = null;
     this.state.stage = "title";
