@@ -32,7 +32,9 @@ export class Rustbucket {
 
     // The movement joystick supplies camera-relative horizontal movement and
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
+    this.projectiles = [];
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
+    this.ship.userData.performAttack = this.performAttack.bind(this);
   }
 
   moveVehicle(moveX, moveZ, lift, delta, right = 0, heading = this.ship.rotation.y) {
@@ -166,6 +168,42 @@ export class Rustbucket {
     this.shadow.scale.set(1.25, 0.62, 1);
     this.shadow.userData.noPhysics = true;
     parent.add(this.shadow);
+  }
+
+  performAttack() {
+    const parent = this.ship.parent;
+    if (!parent) return;
+    this.ship.updateWorldMatrix(true, false);
+    const shipRotation = this.ship.getWorldQuaternion(new THREE.Quaternion());
+    const direction = new THREE.Vector3(0, 0, 1).applyQuaternion(shipRotation).normalize();
+
+    for (const offset of [-0.62, 0.62]) {
+      const muzzle = new THREE.Vector3(offset, 0.12, 7.75).applyMatrix4(this.ship.matrixWorld);
+      const bolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.055, 0.055, 2.8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x8dff4f, toneMapped: false })
+      );
+      bolt.position.copy(muzzle);
+      bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+      bolt.userData.velocity = direction.clone().multiplyScalar(260);
+      bolt.userData.remaining = 2.4;
+      parent.add(bolt);
+      this.projectiles.push(bolt);
+    }
+  }
+
+  update(delta) {
+    for (let index = this.projectiles.length - 1; index >= 0; index--) {
+      const bolt = this.projectiles[index];
+      bolt.position.addScaledVector(bolt.userData.velocity, delta);
+      bolt.userData.remaining -= delta;
+      if (bolt.userData.remaining <= 0) {
+        bolt.parent?.remove(bolt);
+        bolt.geometry.dispose();
+        bolt.material.dispose();
+        this.projectiles.splice(index, 1);
+      }
+    }
   }
 
   addVehicle(world, RAPIER) {
