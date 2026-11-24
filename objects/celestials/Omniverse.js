@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Title } from "../io/Title.js";
+import { Death } from "../team/Death.js";
 import { Camera } from "../team/Camera.js";
 import { SolarSystem } from "./SolarSystem.js";
 import { AugstakaSystem } from "./AugstakaSystem.js";
@@ -121,6 +122,7 @@ export class Omniverse {
       }
     });
     this.titleScreen.setVisible(true);
+    this.deathScreen = new Death();
 
     this.helix = new Helix({ account: this.account, audioPlayer: this.audioPlayer, onJumpSystem: key => this.jumpToSystem(key) });
     this.helixButton = this.helix.createButton();
@@ -825,7 +827,7 @@ export class Omniverse {
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
       for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
-      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.titleScreen.setDeathVisible(true); this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
+      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.setVisible(true); this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
       this.updateCrewAutomation(delta, elapsed);
       this.updateTeamInteractionMode();
     }
@@ -936,6 +938,7 @@ export class Omniverse {
     this.cameraController.destroy();
     this.helix.destroy();
     this.titleScreen.destroy();
+    this.deathScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
     this.marketDialog?.remove();
