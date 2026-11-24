@@ -260,15 +260,18 @@ export class Ben {
     };
     return this.activeTransformation;
   };
+  const baseAttack = rig.attack.bind(rig);
+  const baseJump = rig.jump.bind(rig);
+  const basePick = rig.pick.bind(rig);
   this.rig.attack = () => this.activeTransformation === "Chromastone"
     ? this.chromastone.attack()
-    : rig.attack();
+    : baseAttack();
   this.rig.jump = () => this.activeTransformation === "Chromastone"
     ? this.chromastone.rig.jump()
-    : rig.jump();
+    : baseJump();
   this.rig.pick = () => this.activeTransformation === "Chromastone"
     ? this.chromastone.rig.pick()
-    : rig.pick();
+    : basePick();
   group.userData.updateRigAnimation = (moving, time) => {
     rig._rig.setWalking(moving);
     rig._rig.updateWalk(time);
