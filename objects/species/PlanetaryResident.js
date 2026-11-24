@@ -1,4 +1,17 @@
+import * as THREE from "three";
 import { HumanRig } from "./Human.js";
+import { Galvan } from "./Galvan.js";
+import { Highbreed } from "./Highbreed.js";
+import { Incursean } from "./Incursean.js";
+import { Anodite } from "./Anodite.js";
+
+const SPECIES_TYPES = {
+  Human: null,
+  Highbreed,
+  Anodite,
+  Galvan,
+  Incursean
+};
 
 const SPECIES_STYLE = {
   Human: { boneColor: 0x8bb8e8, jointColor: 0xf0bd72 },
@@ -13,10 +26,23 @@ export class PlanetaryResident {
     this.species = species;
     this.index = index;
     this.rig = new HumanRig(SPECIES_STYLE[species] || SPECIES_STYLE.Human);
-    this.group = this.rig.group;
+    this.speciesInstance = SPECIES_TYPES[species] ? new SPECIES_TYPES[species]() : null;
+
+    if (this.speciesInstance?.group) {
+      this.group = this.speciesInstance.group;
+      this.rig.group.traverse(object => {
+        if (object.isMesh) object.visible = false;
+      });
+      this.group.add(this.rig.group);
+      this.group.scale.setScalar(0.78);
+    } else {
+      this.group = this.rig.group;
+    }
+
     this.group.name = species + "Resident" + (index + 1);
     this.group.userData.species = species;
-    this.group.userData.statusOwner = this.rig;
+    this.group.userData.statusOwner = this.speciesInstance || this.rig;
+    this.group.userData.rig = this.rig;
     this.group.userData.updateRigAnimation = (moving, time) => this.rig._rig.updateWalk(time);
     this.target = null;
     this.wait = Math.random() * 2;
