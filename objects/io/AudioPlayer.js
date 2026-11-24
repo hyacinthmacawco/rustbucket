@@ -24,6 +24,7 @@ export class AudioPlayer {
     if (!AudioContextClass) { track.volume = volume; return; }
     try {
       this.audioContext ||= new AudioContextClass();
+      if (this.unlocked) this.audioContext.resume().catch(() => {});
       if (!this.reverb) {
         const length = Math.floor(this.audioContext.sampleRate * 2.4);
         const impulse = this.audioContext.createBuffer(2, length, this.audioContext.sampleRate);
@@ -56,6 +57,8 @@ export class AudioPlayer {
     this.musicTrack.pause();
     this.musicTrack.currentTime = 0;
     this.musicTrack.src = "";
+    this.trackNodes.get(this.musicTrack)?.source.disconnect();
+    this.trackNodes.get(this.musicTrack)?.output.disconnect();
     this.trackNodes.delete(this.musicTrack);
     this.musicTrack = null;
   }
