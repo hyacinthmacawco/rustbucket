@@ -2,16 +2,19 @@ import { Tasks } from "./Tasks.js";
 import { Relationships } from "./Relationships.js";
 import { Memories } from "./Memories.js";
 import { Omnipedia } from "./Omnipedia.js";
+import { Accounts } from "./Accounts.js";
 
 export class Extranet {
-  constructor({ onJumpSystem = () => {} } = {}) {
+  constructor({ onJumpSystem = () => {}, account = null } = {}) {
     this.onJumpSystem = onJumpSystem;
+    this.account = account;
     this.current = "home";
     this.currentLocation = "earth";
     this.pages = {
       tasks: new Tasks(),
       relationships: new Relationships(),
-      memories: new Memories()
+      memories: new Memories(),
+      accounts: new Accounts(this.account)
     };
 
     this.systems = {
@@ -237,7 +240,7 @@ export class Extranet {
     this.page.replaceChildren();
     const grid = document.createElement("div");
     Object.assign(grid.style, this.styles.bookmarkGrid);
-    for (const [label, target] of [["Tasks", "tasks"], ["Relationships", "relationships"], ["Memories", "memories"]]) {
+    for (const [label, target] of [["Tasks", "tasks"], ["Relationships", "relationships"], ["Memories", "memories"], ["Accounts", "accounts"]]) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
@@ -245,7 +248,8 @@ export class Extranet {
       button.addEventListener("click", () => {
         if (target === "tasks") this.tasks();
         else if (target === "relationships") this.showRelationships();
-        else this.memories();
+        else if (target === "memories") this.memories();
+        else this.accounts();
       });
       grid.append(button);
     }
@@ -270,7 +274,7 @@ export class Extranet {
     this.pages.memories.render(this.page);
   }
 
-  omnidata(allowSystemJump = false) {
+  accounts() {\n    this.current = "accounts";\n    this.address.value = "ottps://bgkr.omnicloud.com/accounts";\n    this.pages.accounts.render(this.page);\n  }\n\n  updateAccount() { this.pages.accounts.update(); }\n\n  omnidata(allowSystemJump = false) {
     this.current = "omnidata";
     this.address.value = "ottps://en.omnidata.org";
     this.omnipedia.render(this.page, {
@@ -302,6 +306,7 @@ export class Extranet {
     this.pages.tasks.destroy?.();
     this.pages.relationships.destroy?.();
     this.pages.memories.destroy?.();
+    this.pages.accounts.destroy?.();
     this.backButton.removeEventListener("click", this.goBack);
     this.homeButton.removeEventListener("click", this.home);
     this.closeButton.removeEventListener("click", this.close);
