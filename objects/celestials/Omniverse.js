@@ -257,6 +257,8 @@ export class Omniverse {
       const vehicle = this.vehicle;
       const crew = [...(this.crew || [])];
       const planet = this.currentPlanet;
+      ship.removeFromParent();
+      crew.forEach(member => member.group.removeFromParent());
       planet.exit(this);
 
       this.vehicle = vehicle;
@@ -292,11 +294,14 @@ export class Omniverse {
     }
     if (!nearest) return;
 
-    const planetRadius = 1300;
+    const globe = nearest.exterior.children.find(child => child.isMesh);
+    const planetRadius = globe?.geometry?.parameters?.radius || 1300;
     if (nearestDistance >= planetRadius + nearest.planet.atmosphereHeight) return;
 
     const vehicle = this.vehicle;
     const crew = [...(this.crew || [])];
+    ship.removeFromParent();
+    crew.forEach(member => member.group.removeFromParent());
     nearest.planet.enter(this);
     this.vehicle = vehicle;
     this.crew = crew;
