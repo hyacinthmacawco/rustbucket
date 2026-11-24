@@ -829,6 +829,17 @@ export class Omniverse {
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
+    if (this.state.stage === "gameplay") {
+      for (const patrol of this.systemWorld?.ships || []) {
+        patrol.attackCooldown = Math.max(0, (patrol.attackCooldown || 0) - delta);
+        if (patrol.destroyed || patrol.attackCooldown > 0) continue;
+        const patrolPosition = patrol.group.getWorldPosition(new THREE.Vector3());
+        for (const member of this.crew || []) {
+          if (member.health <= 0 || !member.group?.parent) continue;
+          if (patrolPosition.distanceTo(member.group.getWorldPosition(new THREE.Vector3())) < 42000 && patrol.attack(member)) { patrol.attackCooldown = 2.2; break; }
+        }
+      }
+    }
     if (this.state.stage === "gameplay" && this.crew?.[0]?.group?.parent && this.crew[0].activeTransformation === "Chromastone") {
       this.crew[0].chromastone.checkLaserCollisions(this.vehicle?.projectiles || []);
     }
