@@ -3,11 +3,11 @@ import { SolarSystem } from "./SolarSystem.js";
 
 export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
-  static EXIT_ALTITUDE = 90;
 
   constructor() {
     this.world = Earth.WORLD;
     this.system = "solar";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
