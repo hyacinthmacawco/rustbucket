@@ -5,6 +5,7 @@ export class Joystick {
   static TEAM_NAMES = { ben: "Ben", gwen: "Gwen", kevin: "Kevin", rook: "Rook", rustbucket: "Rustbucket" };
 
   constructor() {
+    this.onAttack = null;
     this.styles = {
       joystick: { position: "relative", width: "46px", height: "46px", flex: "0 0 46px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
@@ -411,6 +412,7 @@ export class Joystick {
     const now = performance.now();
     if (!seated && attackHeld && now - this.lastAttackAt >= attackInterval) {
       if (this.selected === "rustbucket") object.userData.performAttack?.();
+      else if (this.onAttack) this.onAttack(this.selected, object);
       else object.userData.statusOwner?.rig?.attack();
       this.lastAttackAt = now;
     }
