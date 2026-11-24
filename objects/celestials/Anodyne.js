@@ -16,6 +16,7 @@ export class Anodyne {
   constructor() {
     this.world = Anodyne.WORLD;
     this.system = "anodyne";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
