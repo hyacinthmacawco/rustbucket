@@ -252,11 +252,27 @@ export class Ben {
     this.baseModelMeshes.forEach(mesh => { mesh.visible = !useChromastone; });
     this.chromastone.group.visible = useChromastone;
     this.activeTransformation = useChromastone ? "Chromastone" : "Ben";
+    const activeRig = useChromastone ? this.chromastone.rig : rig;
+    group.userData.rig = activeRig;
+    group.userData.updateRigAnimation = (moving, time) => {
+      activeRig._rig.setWalking(moving);
+      activeRig._rig.updateWalk(time);
+    };
     return this.activeTransformation;
   };
   this.rig.attack = () => this.activeTransformation === "Chromastone"
     ? this.chromastone.attack()
     : rig.attack();
+  this.rig.jump = () => this.activeTransformation === "Chromastone"
+    ? this.chromastone.rig.jump()
+    : rig.jump();
+  this.rig.pick = () => this.activeTransformation === "Chromastone"
+    ? this.chromastone.rig.pick()
+    : rig.pick();
+  group.userData.updateRigAnimation = (moving, time) => {
+    rig._rig.setWalking(moving);
+    rig._rig.updateWalk(time);
+  };
   this.update = delta => {
     this.chromastone.update(delta);
     this.chromastone.checkLaserCollisions(this.projectiles || []);
