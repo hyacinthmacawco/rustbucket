@@ -1,6 +1,5 @@
 import { NewGame } from "./NewGame.js";
 import { LoadGame } from "./LoadGame.js";
-import { Death } from "../team/Death.js";
 
 export class Title {
   constructor({ onNewGame = () => {}, onSkipPrelude = () => {} } = {}) {
@@ -49,7 +48,6 @@ export class Title {
     this.element.append(this.menu);
     document.body.append(this.element);
 
-    this.deathScreen = new Death();
   }
 
   setVisible(visible) {
@@ -57,14 +55,10 @@ export class Title {
     this.element.style.display = visible ? "grid" : "none";
   }
 
-  setDeathVisible(visible) {
-    this.deathScreen.setVisible(visible);
-  }
 
   destroy() {
     this.newGame.destroy();
     this.loadGame.destroy();
     this.element.remove();
-    this.deathScreen.destroy();
   }
 }
