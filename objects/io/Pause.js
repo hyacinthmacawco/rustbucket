@@ -68,7 +68,7 @@ export class Pause {
       heading.textContent = "CONTROLS";
       Object.assign(heading.style, this.styles.heading);
       const text = document.createElement("p");
-      text.textContent = "WASD / joystick: move. Drag: camera. Pinch / wheel: zoom. F / double-tap joystick: switch team member. Space / jump: system map when Rustbucket is selected. E / pick: interact. Q / attack: use weapon. R: open or close Rustbucket ramp.";
+      text.textContent = "WASD / joystick: move. Drag: camera. Pinch / wheel: zoom. F / double-tap joystick: switch team member. Space / jump: system map when Rustbucket is selected. E / interact: pick up or drop off. Q / attack: use weapon. R: open or close Rustbucket ramp.";
       this.content.append(heading, text);
     } else {
       const heading = document.createElement("h3");
