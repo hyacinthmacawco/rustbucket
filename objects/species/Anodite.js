@@ -3,19 +3,11 @@ import { initializeResident } from "./Human.js";
 
 export class Anodite {
   static homeworld = "anodyne";
-  static relationships = {
-    Ben: 50,
-    Gwen: 70,
-    Kevin: 0,
-    Rook: 40,
-    Highbreed: 3,
-    Incursean: 3,
-    Galvan: 3,
-    Human: 40
-  };
 
   constructor(parent = null, options = {}) {
     this.leader = false;
+    this.species = this.constructor.name;
+    this.relationships = options.relationships || {};
     this.homeworld = Anodite.homeworld;
     this.group = new THREE.Group();
     this.group.name = "Anodite";
@@ -205,7 +197,7 @@ export class Anodite {
 
   attack(target) {
     if (!target || target.health <= 0) return false;
-    const relationships = this.constructor.relationships || {};
+    const relationships = this.relationships || {};
     const relation = Number(relationships[target.species || target.constructor?.name] ?? relationships[target.name] ?? 0);
     if (relation >= 0) return false;
     this.rig?._rig?.playAnimation("punch");
