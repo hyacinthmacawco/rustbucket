@@ -2,9 +2,10 @@ import * as THREE from "three";
 
 export class Human {
   static homeworld = "earth";
-  static relationships = { Ben: 96, Gwen: 80, Kevin: 50, Rook: 28, Highbreed: -56, Incursean: -36, Anodite: 40, Galvan: 56 };
   constructor(options = {}) {
     this.leader = false;
+    this.species = this.constructor.name;
+    this.relationships = options.relationships || {};
     this.health = 30;
     this.energy = 100;
     this.maxHealth = 30;
@@ -23,6 +24,15 @@ export class Human {
       initializeResident(this, options.residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this.rig });
     }
   }
+  attack(target) {
+    if (!target || target.health <= 0) return false;
+    const relation = Number(this.relationships[target.species || target.constructor?.name] ?? 0);
+    if (relation >= 0) return false;
+    this.rig?._rig?.playAnimation("punch");
+    target.takeDamage?.(2);
+    return true;
+  }
+
   awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
@@ -37,7 +47,6 @@ export class Human {
 
 
 export class HumanRig {
-  static relationships = {"Ben":96,"Gwen":80,"Kevin":50,"Rook":28,"Highbreed":-56,"Incursean":-36,"Anodite":40,"Galvan":56};
 
   constructor(options = {}) {
     this.species = "Human";
