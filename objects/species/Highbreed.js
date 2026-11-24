@@ -228,6 +228,8 @@ export class Highbreed {
     return true;
   }
 
+  takeDamage(amount) { this.health = Math.max(0, this.health - Math.max(0, amount)); this.healthRecoveryDelay = 4; if (this.health === 0 && !this.dead) { this.dead = true; this.onDeath?.(this); } return this.health; }
+
   awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
 
 }
