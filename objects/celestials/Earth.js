@@ -3,6 +3,7 @@ import { SolarSystem } from "./SolarSystem.js";
 
 export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
+  static EXIT_ALTITUDE = 90;
 
   constructor() {
     this.world = Earth.WORLD;
@@ -117,17 +118,51 @@ export class Earth {
   }
 
   exit(react) {
+    // Detach active gameplay entities before clearWorld() disposes the old
+    // planet meshes and clears the scene references.
+    const vehicle = react.vehicle;
+    const crew = [...(react.crew || [])];
+    const ship = vehicle?.ship;
+    ship?.removeFromParent();
+    for (const member of crew) member.group.removeFromParent();
+
     react.clearWorld();
     const system = new THREE.Group();
     react.systemWorld = new SolarSystem(system);
     react.celestial = system;
     react.addSystemPlanets(this.system);
+    react.celestial.animate = react.systemWorld.animate.bind(react.systemWorld);
+
+    // Reintroduce the Rustbucket just beyond Earth's atmosphere, with the
+    // crew standing inside its cabin, so flight continues seamlessly.
+    if (ship) {
+      ship.position.set(0, 1500, 0);
+      ship.rotation.set(0, 0, 0);
+      react.celestial.add(ship);
+      react.vehicle = vehicle;
+      react.crew = crew;
+      const crewPositions = [
+        [-1.2, 1497.7, 0.15],
+        [-0.4, 1497.7, 0.15],
+        [0.4, 1497.7, 0.15],
+        [1.2, 1497.7, 0.15]
+      ];
+      crew.forEach((member, index) => {
+        member.group.position.set(...crewPositions[index]);
+        react.celestial.add(member.group);
+      });
+      react.bags = [];
+    }
+
     react.scene.background = new THREE.Color(0x02040a);
     react.scene.fog = null;
-    react.camera.position.set(0, 0, 600000);
-    react.camera.lookAt(0, 0, 0);
+    react.camera.position.set(0, 1504, 42);
+    react.camera.lookAt(0, 1500, 0);
+    react.cameraTarget.set(0, 1500, 0);
     react.state.currentScene = this.system === "solar" ? "space" : "system-" + this.system;
     react.extranet.setLocation(this.system === "solar" ? "space" : this.system);
+    react.joystick?.setVehicleMode(true);
+    react.updateCamera?.();
     return react.systemWorld;
   }
 }
