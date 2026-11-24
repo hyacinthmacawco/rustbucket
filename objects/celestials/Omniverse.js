@@ -555,7 +555,13 @@ export class Omniverse {
           task.phase = "toSeat";
         }
       } else if (task.phase === "toSeat") {
-        const seat = ship.seats?.[task.seatIndex];
+        let seat = ship.seats?.[task.seatIndex];
+        if (seat?.occupiedBy && seat.occupiedBy !== member) {
+          const freeIndex = ship.seats.findIndex(candidate => !candidate.occupiedBy);
+          if (freeIndex < 0) continue;
+          task.seatIndex = freeIndex;
+          seat = ship.seats[freeIndex];
+        }
         if (!seat) continue;
         const distance = this.moveCrewMember(member, seat.position, delta, elapsed, true);
         if (distance < 0.14) {
