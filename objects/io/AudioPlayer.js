@@ -115,12 +115,12 @@ export class AudioPlayer {
     }
   }
 
-  unlock(stage) {
+  unlock(stage, titleSong = "./files/songs/senji-v2-ov.mp3") {
     this.unlocked = true;
     this.audioContext?.resume?.();
 
     if (stage === "title" && !this.musicTrack) {
-      this.playMusic("./files/songs/senji-v2-ov.mp3");
+      this.playMusic(titleSong);
     } else if (this.musicTrack?.paused) {
       this.musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
     }
