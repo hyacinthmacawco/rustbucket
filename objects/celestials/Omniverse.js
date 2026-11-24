@@ -127,8 +127,9 @@ export class Omniverse {
       onCameraSensitivity: value => this.cameraController.setSensitivity?.(value)
     });
     this.pause.create();
-    this.pauseButton = document.createElement("button");
-    this.pauseButton.type = "button";
+    this.pauseButton = document.createElement("div");
+    this.pauseButton.setAttribute("role", "button");
+    this.pauseButton.tabIndex = 0;
     this.pauseButton.textContent = "PAUSE";
     this.pauseButton.setAttribute("aria-label", "Pause game");
     Object.assign(this.pauseButton.style, {
