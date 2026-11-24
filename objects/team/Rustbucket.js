@@ -218,9 +218,11 @@ export class Rustbucket {
       const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.18, 0.9), cushionMaterial);
       cushion.position.y = 0.82;
       cushion.castShadow = true;
+      cushion.userData.noPhysics = true;
       const back = new THREE.Mesh(new THREE.BoxGeometry(0.92, 1.0, 0.16), backMaterial);
       back.position.set(0, 1.31, -0.36);
       back.castShadow = true;
+      back.userData.noPhysics = true;
       group.add(cushion, back);
       group.userData.seatIndex = index;
       group.userData.noPhysics = true;
