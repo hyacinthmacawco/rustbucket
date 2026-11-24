@@ -268,6 +268,7 @@ export class HumanRig {
     setWalkSpeed(value) {
       speed = Math.max(0, Number(value) || 0);
     },
+    attack() { return rig.playAnimation("punch"); },
     playAnimation(name) {
       if (sitting) sitting = false;
       if (!actionClips[name]) {
