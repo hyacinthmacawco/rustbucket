@@ -9,13 +9,13 @@ export class Joystick {
 
   constructor() {
     this.styles = {
-      joystick: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "132px", height: "132px", zIndex: "10000", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
+      joystick: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "132px", height: "132px", zIndex: "10001", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
       knob: { position: "absolute", left: "50%", top: "50%", width: "48px", height: "48px", margin: "-24px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
-      lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "10000", touchAction: "none", pointerEvents: "auto" },
+      lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "10001", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
-      actionGroup: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", display: "flex", gap: "10px", zIndex: "10000", pointerEvents: "auto" },
-      label: { position: "absolute", color: "#c8ffd7", fontSize: "11px", fontFamily: "Industry, sans-serif", textShadow: "0 0 8px #0a3", padding: "5px 9px", minWidth: "22px", textAlign: "center", border: "1px solid rgba(126,255,168,.7)", borderRadius: "4px", background: "rgba(2,24,12,.88)", pointerEvents: "none" }
+      actionGroup: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(150px, calc(env(safe-area-inset-bottom) + 150px))", display: "flex", gap: "10px", zIndex: "10001", pointerEvents: "auto" },
+      label: { position: "absolute", width: "34px", height: "28px", display: "grid", placeItems: "center", padding: "0", color: "#c8ffd7", fontSize: "11px", fontFamily: "Industry, sans-serif", textShadow: "0 0 8px #0a3", textAlign: "center", border: "1px solid rgba(126,255,168,.85)", borderRadius: "4px", background: "rgba(2,24,12,.96)", pointerEvents: "auto", cursor: "pointer", zIndex: "3", boxSizing: "border-box" }
     };
 
     this.input = {
@@ -46,12 +46,23 @@ export class Joystick {
     Object.assign(this.knob.style, this.styles.knob);
     this.labels = [];
     for (const [index, name] of ["ben", "gwen", "kevin", "rook"].entries()) {
-      const label = document.createElement("span");
+      const label = document.createElement("button");
+      label.type = "button";
       label.className = "team-label team-" + name;
       label.textContent = Joystick.TEAM_LABELS[name];
       Object.assign(label.style, this.styles.label);
       label.style.left = index % 2 ? "78%" : "22%";
       label.style.top = index < 2 ? "22%" : "78%";
+      label.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      label.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const member = label.dataset.member;
+        if (member) this.selectMember(member);
+      });
       this.base.append(label);
       this.labels.push(label);
     }
@@ -247,7 +258,10 @@ export class Joystick {
     const available = members.filter(name => name !== selected);
     this.labels.forEach((label, index) => {
       label.textContent = Joystick.TEAM_LABELS[available[index]] || "";
+      label.dataset.member = available[index] || "";
       label.setAttribute("aria-label", available[index] || "");
+      label.disabled = !available[index];
+      label.style.display = available[index] ? "grid" : "none";
     });
   }
 
@@ -303,6 +317,15 @@ export class Joystick {
     this.keys.clear();
   };
 
+  selectMember(next) {
+    if (!this.selectableMembers?.includes(next) || next === this.selected) return;
+    this.selected = next;
+    this.setTeamOptions(this.selected, this.selectableMembers);
+    this.setVehicleMode(this.selected === "rustbucket");
+    this.onSelect(this.selected);
+    this.updateCamera();
+  }
+
   chooseMember(x, y) {
     const available = this.selectableMembers.filter(name => name !== this.selected);
     let index;
@@ -310,11 +333,7 @@ export class Joystick {
     else index = y > 0 ? 0 : 2;
     const next = available[index];
     if (!next) return;
-    this.selected = next;
-    this.setTeamOptions(this.selected, this.selectableMembers);
-    this.setVehicleMode(this.selected === "rustbucket");
-    this.onSelect(this.selected);
-    this.updateCamera();
+    this.selectMember(next);
   }
 
   update(dt) {
