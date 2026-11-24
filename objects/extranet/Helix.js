@@ -326,7 +326,7 @@ export class Helix {
   completeTask(id) { return this.pages.tasks.completeTask(id); }
 
   showTaskCompleted({ resident, relationshipIncrease = 5, taydeniteIncrease = 10 } = {}) {
-    const name = resident?.species || "Rescued individual";
+    const name = resident?.species || resident?.group?.userData?.species || "Rescued individual";
     this.taskSummary.replaceChildren();
     for (const line of [name + " safely returned home.", "RELATIONSHIP  +" + relationshipIncrease + "%", "TAYDENITE  +" + taydeniteIncrease]) {
       const item = document.createElement("div");
