@@ -452,6 +452,8 @@ export class Omniverse {
       this.joystick?.update(delta);
       this.updateCamera();
       this.updateResidents(delta, elapsed);
+      this.crew?.forEach(member => member.update?.(delta));
+      this.crew?.[0]?.chromastone?.checkLaserCollisions(this.vehicle?.projectiles || []);
       this.vehicle?.updateRescueInteraction({ selected: this.joystick?.currentSelection, pickControl: this.titleScreen?.newGame?.pickControl });
     }
     this.systemWorld?.animate?.(delta, elapsed);
