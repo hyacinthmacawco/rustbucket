@@ -156,11 +156,18 @@ export class Chromastone {
     if (!this.group.parent || !projectiles.length) return;
     this.group.updateWorldMatrix(true, false);
     const center = this.group.getWorldPosition(new THREE.Vector3());
+    center.y += 1.45;
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const projectile = projectiles[index];
       if (!projectile?.parent) continue;
+      projectile.parent.updateWorldMatrix(true, false);
       const position = projectile.getWorldPosition(new THREE.Vector3());
-      if (position.distanceTo(center) > 1.05) continue;
+      const previous = projectile.userData.previousPosition
+        ? projectile.userData.previousPosition.clone().applyMatrix4(projectile.parent.matrixWorld)
+        : position.clone();
+      const closest = new THREE.Vector3();
+      new THREE.Line3(previous, position).closestPointToPoint(center, closest);
+      if (closest.distanceTo(center) > 1.25) continue;
       this.absorbLaser(projectile.userData.damage ?? 10);
       projectile.parent.remove(projectile);
       projectile.geometry?.dispose();
