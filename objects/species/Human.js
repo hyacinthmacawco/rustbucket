@@ -2,7 +2,8 @@ import * as THREE from "three";
 
 export class Human {
   static homeworld = "earth";
-  constructor() {
+  static relationships = { Ben: 96, Gwen: 80, Kevin: 50, Rook: 28, Highbreed: -56, Incursean: -36, Anodite: 40, Galvan: 56 };
+  constructor(options = {}) {
     this.leader = false;
     this.health = 100;
     this.energy = 100;
@@ -18,8 +19,8 @@ export class Human {
       this.rig._rig.setWalking(moving);
       this.rig._rig.updateWalk(time);
     };
-    if (arguments[0]?.residentIndex !== undefined) {
-      initializeResident(this, arguments[0].residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this.rig });
+    if (options.residentIndex !== undefined) {
+      initializeResident(this, options.residentIndex, { species: "Human", homeworld: Human.homeworld, rig: this.rig });
     }
   }
   awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
