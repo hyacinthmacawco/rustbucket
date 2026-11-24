@@ -624,7 +624,9 @@ export class Omniverse {
   loadSystemScene(systemKey, ship = this.vehicle?.ship, crew = this.crew || [], destinationKey = null) {
     const vehicle = this.vehicle;
     ship?.removeFromParent();
-    crew.forEach(member => member.group?.removeFromParent());
+    crew.forEach(member => {
+      if (member.group?.parent !== ship) member.group?.removeFromParent();
+    });
 
     this.clearWorld();
 
@@ -667,7 +669,9 @@ export class Omniverse {
     const vehicle = this.vehicle;
     const activeShip = ship || vehicle?.ship;
     activeShip?.removeFromParent();
-    crew.forEach(member => member.group?.removeFromParent());
+    crew.forEach(member => {
+      if (member.group?.parent !== activeShip) member.group?.removeFromParent();
+    });
 
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
