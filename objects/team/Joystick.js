@@ -6,10 +6,10 @@ export class Joystick {
 
   constructor() {
     this.styles = {
-      joystick: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "132px", height: "132px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
+      joystick: { position: "relative", width: "56px", height: "56px", flex: "0 0 56px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
       knob: { position: "absolute", left: "50%", top: "50%", width: "48px", height: "48px", margin: "-24px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
-      lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
+      lift: { position: "relative", width: "56px", height: "56px", flex: "0 0 56px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
       teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
@@ -60,7 +60,36 @@ export class Joystick {
       this.teamPanel.append(button);
       this.teamButtons.set(name, button);
     }
-    document.body.append(this.element, this.teamPanel);
+    this.bottomBar = document.createElement("div");
+    this.bottomBar.id = "game-bottom-controls";
+    Object.assign(this.bottomBar.style, {
+      position: "fixed", left: "0", right: "0",
+      bottom: "max(6px, env(safe-area-inset-bottom))",
+      width: "100%", minHeight: "64px", padding: "4px 6px",
+      boxSizing: "border-box", display: "flex", alignItems: "center",
+      justifyContent: "space-between", gap: "5px",
+      zIndex: "2147483647", pointerEvents: "none"
+    });
+    this.element.style.pointerEvents = "auto";
+    this.statusBars = document.createElement("div");
+    this.statusBars.id = "selected-member-status";
+    Object.assign(this.statusBars.style, {
+      display: "flex", flexDirection: "column", justifyContent: "center",
+      gap: "5px", flex: "1 1 82px", minWidth: "58px", maxWidth: "150px",
+      color: "#dfffe8", font: "9px Industry, sans-serif", letterSpacing: ".06em",
+      pointerEvents: "none"
+    });
+    this.healthFill = this.createStatusBar("HEALTH");
+    this.energyFill = this.createStatusBar("ENERGY");
+    this.bottomBar.append(this.element, this.statusBars);
+    this.actionControls = document.createElement("div");
+    this.actionControls.id = "game-action-controls";
+    Object.assign(this.actionControls.style, {
+      display: "flex", alignItems: "center", gap: "4px",
+      flex: "0 0 auto", pointerEvents: "auto"
+    });
+    this.bottomBar.append(this.actionControls);
+    document.body.append(this.bottomBar, this.teamPanel);
 
     this.transformationSelect = document.createElement("select");
     this.transformationSelect.id = "ben-transformations";
@@ -90,7 +119,7 @@ export class Joystick {
     Object.assign(this.liftKnob.style, this.styles.knob);
     this.liftBase.append(this.liftKnob);
     this.liftElement.append(this.liftBase);
-    document.body.append(this.liftElement);
+    this.bottomBar.append(this.liftElement);
 
     this.handleBaseDown = this.handleBaseDown.bind(this);
     this.handleBaseMove = this.handleBaseMove.bind(this);
@@ -109,6 +138,37 @@ export class Joystick {
     this.liftElement.style.display = "none";
   }
 
+
+  createStatusBar(label) {
+    const row = document.createElement("div");
+    Object.assign(row.style, { display: "flex", alignItems: "center", gap: "4px", minWidth: "0" });
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    caption.style.width = "38px";
+    const track = document.createElement("div");
+    Object.assign(track.style, { height: "6px", flex: "1", minWidth: "12px", borderRadius: "5px", overflow: "hidden", background: "rgba(255,255,255,.18)" });
+    const fill = document.createElement("div");
+    Object.assign(fill.style, { width: "100%", height: "100%", background: "#80ffa6", transition: "width .12s linear" });
+    track.append(fill);
+    row.append(caption, track);
+    this.statusBars.append(row);
+    return fill;
+  }
+
+  updateStatusBars() {
+    const entity = this.entities?.[this.selected];
+    const owner = entity?.userData?.statusOwner;
+    const health = Number(owner?.health ?? 0);
+    const maxHealth = Math.max(1, Number(owner?.maxHealth ?? 100));
+    const energy = Number(owner?.energy ?? 0);
+    const maxEnergy = Math.max(1, Number(owner?.maxEnergy ?? 100));
+    this.healthFill.style.width = (THREE.MathUtils.clamp(health / maxHealth, 0, 1) * 100) + "%";
+    this.energyFill.style.width = (THREE.MathUtils.clamp(energy / maxEnergy, 0, 1) * 100) + "%";
+  }
+
+  setActionControls(controls = []) {
+    this.actionControls.replaceChildren(...controls.filter(Boolean));
+  }
 
   updateBase(event) {
     const rect = this.base.getBoundingClientRect();
@@ -199,6 +259,7 @@ export class Joystick {
   }
 
    setVisible(visible, showJoystick = true) {
+    this.bottomBar.style.display = visible && showJoystick ? "flex" : "none";
     this.element.style.display = visible && showJoystick ? "block" : "none";
     this.teamPanel.style.display = visible && showJoystick ? "grid" : "none";
     this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
@@ -211,7 +272,7 @@ export class Joystick {
 
   setVehicleMode(active) {
     this.vehicleMode = Boolean(active);
-    this.liftElement.style.display = this.vehicleMode && this.element.style.display !== "none" ? "block" : "none";
+    this.liftElement.style.display = this.vehicleMode && this.bottomBar.style.display !== "none" ? "block" : "none";
     if (!this.vehicleMode) this.resetLift();
   }
 
@@ -346,6 +407,7 @@ export class Joystick {
 
     object.userData.updateRigAnimation?.(magnitude > 0.08, performance.now() / 1000);
     object.update?.(dt);
+    this.updateStatusBars();
     if (this.selected === "rustbucket") this.onAtmosphereCheck();
     this.updateCamera();
   }
@@ -368,6 +430,7 @@ export class Joystick {
     this.liftBase.removeEventListener("pointerup", this.handleLiftUp);
     this.liftBase.removeEventListener("pointercancel", this.handleLiftUp);
     this.element.remove();
+    this.bottomBar.remove();
     this.teamPanel.remove();
     this.liftElement.remove();
   }
