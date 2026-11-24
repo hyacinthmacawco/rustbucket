@@ -61,6 +61,7 @@ export class Incursean {
     const relationships = this.relationships || {};
     const relation = Number(relationships[target.species || target.constructor?.name] ?? relationships[target.name] ?? 0);
     if (relation >= 0) return false;
+    this.rig?._rig?.playAnimation("punch");
     target.takeDamage?.(2);
     return true;
   }
