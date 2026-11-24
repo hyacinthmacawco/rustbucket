@@ -123,6 +123,7 @@ export class NewGame {
       onJump: () => omniverse.extranet.openOmnidata(),
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
+      onTransformationChange: form => omniverse.crew[0]?.setTransformation(form),
       initialSelected: "ben"
     });
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
