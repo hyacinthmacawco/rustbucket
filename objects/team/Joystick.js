@@ -13,7 +13,7 @@ export class Joystick {
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
       teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
-      transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", padding: "9px 10px", zIndex: "2147483646", border: "1px solid rgba(126,255,168,.5)", borderRadius: "6px", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
+      transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(320px, calc(env(safe-area-inset-bottom) + 300px))", width: "142px", padding: "9px 10px", zIndex: "2147483646", border: "1px solid rgba(126,255,168,.5)", borderRadius: "6px", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
     };
 
     this.input = {
@@ -202,6 +202,7 @@ export class Joystick {
     this.element.style.display = visible && showJoystick ? "block" : "none";
     this.teamPanel.style.display = visible && showJoystick ? "grid" : "none";
     this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
+    this.transformationSelect.style.display = visible && showJoystick && this.selected === "ben" ? "block" : "none";
     if (!visible) {
       this.resetBase();
       this.resetLift();
@@ -230,6 +231,7 @@ export class Joystick {
     this.camera = camera;
     this.updateCamera = updateCamera;
      this.onSelect = onSelect;
+    this.onTransformationChange = onTransformationChange;
     this.onJump = onJump;
     this.onToggleRamp = onToggleRamp;
     this.onAtmosphereCheck = onAtmosphereCheck;
@@ -239,6 +241,7 @@ export class Joystick {
     this.setTeamOptions(this.selected);
     this.setVehicleMode(this.selected === "rustbucket");
     this.onSelect(this.selected);
+    this.transformationSelect.style.display = this.selected === "ben" ? "block" : "none";
     window.addEventListener("keydown", this.handleKeyDown);
     window.addEventListener("keyup", this.handleKeyUp);
     window.addEventListener("blur", this.handleBlur);
@@ -273,6 +276,7 @@ export class Joystick {
     this.selected = next;
     this.setTeamOptions(this.selected);
     this.setVehicleMode(this.selected === "rustbucket");
+    this.transformationSelect.style.display = this.selected === "ben" && this.element.style.display !== "none" ? "block" : "none";
     this.onSelect(this.selected);
     this.updateCamera();
   }
