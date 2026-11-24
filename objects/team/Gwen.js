@@ -113,7 +113,7 @@ export class Gwen {
   // Shirt graphic is painted into the front-face texture.
   const torso = this.box(joints.spine, "GwenBlueTop", [0.47, 0.88, 0.29], [0, 0.045, 0],
     [mat.shirt, mat.shirt, mat.shirt, mat.shirt, topFront, mat.shirt]);
-  rig.fitToTorso(torso);
+  group.userData.fitToTorso(torso);
   this.box(joints.spine, "GwenCollar", [0.22, 0.055, 0.30], [0, 0.475, 0], mat.shirtDark);
   // Plaid skirt pattern is applied directly to the upper-leg surfaces; no
   // separate skirt or hip cuboid is added to the silhouette.
@@ -121,7 +121,7 @@ export class Gwen {
   // Hair is painted directly onto the head's front, side, top and rear faces.
   const headMesh = this.box(joints.head, "GwenHead", [0.37, 0.42, 0.32], [0, 0.055, 0],
     [hairSideMat, hairSideMat, mat.hair, mat.skin, hairFrontMat, mat.hair]);
-  rig.fitHeadToTorso(torso, headMesh);
+  group.userData.fitHeadToTorso(torso, headMesh);
 
   // Keep only the spectacle frames and lenses; lower them clear of the fringe.
   for (const sign of [-1, 1]) {
