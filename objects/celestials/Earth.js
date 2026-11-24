@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { SolarSystem } from "./SolarSystem.js";
 
 export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
@@ -102,71 +101,21 @@ export class Earth {
     return mode === "interior" ? this.interior() : this.exterior();
   }
 
-  enter(react) {
-    react.clearWorld();
-    react.celestial = this.interior();
-    react.scene.background = new THREE.Color(this.world.sky);
-    react.scene.fog = new THREE.Fog(this.world.sky, 180, 700);
-    react.camera.position.set(0, 8, 23);
-    react.camera.lookAt(0, 1.5, 0);
-    react.cameraTarget = new THREE.Vector3(0, 1.5, 0);
-    react.state.stage = "gameplay";
-    react.state.currentScene = this.world.key;
-    react.titleScreen.setVisible(false);
-    react.titleScreen.newGame.setPreludeVisible(false);
-    react.extranetButton.style.display = "block";
-    react.extranet.setLocation(this.world.key);
-    react.currentPlanet = this;
-    if (this.world.key === "earth") react.earth = this;
-    return this;
+  enter(omniverse) {
+    return omniverse.enterPlanetScene(
+      this,
+      omniverse.vehicle?.ship,
+      [...(omniverse.crew || [])]
+    );
   }
 
-  exit(react) {
-    // Detach active gameplay entities before clearWorld() disposes the old
-    // planet meshes and clears the scene references.
-    const vehicle = react.vehicle;
-    const crew = [...(react.crew || [])];
-    const ship = vehicle?.ship;
-    ship?.removeFromParent();
-    for (const member of crew) member.group.removeFromParent();
-
-    react.clearWorld();
-    const system = new THREE.Group();
-    react.systemWorld = new SolarSystem(system);
-    react.celestial = system;
-    react.addSystemPlanets(this.system);
-    react.celestial.animate = react.systemWorld.animate.bind(react.systemWorld);
-
-    // Reintroduce the Rustbucket just beyond Earth's atmosphere, with the
-    // crew standing inside its cabin, so flight continues seamlessly.
-    if (ship) {
-      ship.position.set(0, 1500, 0);
-      ship.rotation.set(0, 0, 0);
-      react.celestial.add(ship);
-      react.vehicle = vehicle;
-      react.crew = crew;
-      const crewPositions = [
-        [-0.6, -1.18, 0.15],
-        [-0.2, -1.18, 0.15],
-        [0.2, -1.18, 0.15],
-        [0.6, -1.18, 0.15]
-      ];
-      crew.forEach((member, index) => {
-        member.group.position.set(...crewPositions[index]);
-        ship.add(member.group);
-      });
-      react.bags = [];
-    }
-
-    react.scene.background = new THREE.Color(0x02040a);
-    react.scene.fog = null;
-    react.camera.position.set(0, 1504, 42);
-    react.camera.lookAt(0, 1500, 0);
-    react.cameraTarget.set(0, 1500, 0);
-    react.state.currentScene = this.system === "solar" ? "space" : "system-" + this.system;
-    react.extranet.setLocation(this.system === "solar" ? "space" : this.system);
-    react.joystick?.setVehicleMode(true);
-    react.updateCamera?.();
-    return react.systemWorld;
+  exit(omniverse) {
+    return omniverse.loadSystemScene(
+      this.system,
+      omniverse.vehicle?.ship,
+      [...(omniverse.crew || [])],
+      this.world.key
+    );
   }
+
 }
