@@ -22,9 +22,11 @@ const SPECIES_STYLE = {
 };
 
 export class PlanetaryResident {
-  constructor(species = "Human", index = 0) {
+  constructor(species = "Human", index = 0, homeWorldKey = null) {
     this.species = species;
     this.index = index;
+    const homeKeys = { Human: "earth", Highbreed: "augstaka", Anodite: "anodyne", Galvan: "galvan", Incursean: "incursia" };
+    this.homeWorldKey = homeWorldKey || homeKeys[species] || "earth";
     this.rig = new HumanRig(SPECIES_STYLE[species] || SPECIES_STYLE.Human);
     this.speciesInstance = SPECIES_TYPES[species] ? new SPECIES_TYPES[species]() : null;
 
@@ -44,6 +46,7 @@ export class PlanetaryResident {
       .filter(part => (part.isMesh || part.isGroup) && part.position.y < 1.1 && Math.abs(part.position.x) > 0.1)
       .map(part => ({ part, rest: part.rotation.x, phase: part.position.x < 0 ? 0 : Math.PI }));
     this.group.userData.species = species;
+    this.group.userData.homeWorldKey = this.homeWorldKey;
     this.group.userData.statusOwner = this.speciesInstance || this.rig;
     this.group.userData.rig = this.rig;
     this.group.userData.updateRigAnimation = (moving, time) => this.rig._rig.updateWalk(time);
