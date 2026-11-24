@@ -2,6 +2,10 @@ import * as THREE from "three";
 import { Title } from "../io/Title.js";
 import { Camera } from "../team/Camera.js";
 import { SolarSystem } from "./SolarSystem.js";
+import { AugstakaSystem } from "./AugstakaSystem.js";
+import { AnodyneSystem } from "./AnodyneSystem.js";
+import { GalvanSystem } from "./GalvanSystem.js";
+import { IncursiaSystem } from "./IncursiaSystem.js";
 import { Moon } from "./Moon.js";
 import { Augstaka } from "./Augstaka.js";
 import { Anodyne } from "./Anodyne.js";
@@ -82,6 +86,14 @@ export class Omniverse {
       getStage: () => this.state.stage,
       getTarget: () => this.cameraTarget
     });
+
+    this.systemClasses = {
+      solar: SolarSystem,
+      augstaka: AugstakaSystem,
+      anodyne: AnodyneSystem,
+      galvan: GalvanSystem,
+      incursia: IncursiaSystem
+    };
 
     this.planetClasses = {
       earth: Earth,
@@ -295,16 +307,21 @@ export class Omniverse {
   loadSystemScene(systemKey, ship = this.vehicle?.ship, crew = this.crew || [], destinationKey = null) {
     const vehicle = this.vehicle;
     ship?.removeFromParent();
-    crew.forEach(member => member.group.removeFromParent());
+    crew.forEach(member => member.group?.removeFromParent());
+
     this.clearWorld();
-    const system = new THREE.Group();
-    this.systemWorld = new SolarSystem(system);
-    this.celestial = system;
+
+    const SystemClass = this.systemClasses[systemKey] || SolarSystem;
+    this.systemWorld = new SystemClass();
+    this.celestial.add(this.systemWorld.model());
+
     this.addSystemPlanets(systemKey);
-    this.celestial.animate = this.systemWorld.animate.bind(this.systemWorld);
+    this.celestial.updateMatrixWorld(true);
+
     const destination = this.systemPlanets.find(entry => entry.planet.world.key === destinationKey)
       || this.systemPlanets[0];
-    const center = destination?.exterior.position || new THREE.Vector3();
+    const center = destination?.model.position || new THREE.Vector3();
+
     if (ship) {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
@@ -317,31 +334,57 @@ export class Omniverse {
         ship.add(member.group);
       });
     }
+
     this.scene.background = new THREE.Color(0x02040a);
     this.scene.fog = null;
     this.state.stage = "gameplay";
     this.state.currentScene = systemKey === "solar" ? "space" : "system-" + systemKey;
-    this.extranet?.setLocation(this.state.currentScene === "space" ? "space" : systemKey);
+    this.extranet?.setLocation(systemKey === "solar" ? "space" : systemKey);
     if (ship) this.resetCameraToShip(ship);
+    else {
+      this.camera.position.set(0, 0, 600000);
+      this.camera.lookAt(0, 0, 0);
+      this.cameraTarget.set(0, 0, 0);
+    }
     return this.systemWorld;
   }
 
   enterPlanetScene(planet, ship, crew) {
     const vehicle = this.vehicle;
-    ship.removeFromParent();
-    crew.forEach(member => member.group.removeFromParent());
-    planet.enter(this);
-    this.vehicle = vehicle || { ship };
-    this.vehicle.ship = ship;
-    this.crew = crew;
-    ship.position.set(0, 2, 34);
-    ship.rotation.set(0, 0, 0);
-    this.celestial.add(ship);
-    crew.forEach((member, index) => {
-      member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
-      ship.add(member.group);
-    });
-    this.resetCameraToShip(ship);
+    ship?.removeFromParent();
+    crew.forEach(member => member.group?.removeFromParent());
+
+    this.clearWorld();
+    this.celestial.add(planet.model("interior"));
+    this.currentPlanet = planet;
+    this.scene.background = new THREE.Color(planet.world.sky);
+    this.scene.fog = new THREE.Fog(planet.world.sky, 180, 700);
+
+    this.vehicle = vehicle || (ship ? { ship } : null);
+    if (ship) {
+      this.vehicle.ship = ship;
+      this.crew = crew;
+      ship.position.set(0, 2, 34);
+      ship.rotation.set(0, 0, 0);
+      this.celestial.add(ship);
+      crew.forEach((member, index) => {
+        member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
+        ship.add(member.group);
+      });
+      this.resetCameraToShip(ship);
+    } else {
+      this.camera.position.set(0, 8, 23);
+      this.camera.lookAt(0, 1.5, 0);
+      this.cameraTarget.set(0, 1.5, 0);
+    }
+
+    this.state.stage = "gameplay";
+    this.state.currentScene = planet.world.key;
+    this.titleScreen.setVisible(false);
+    this.titleScreen.newGame.setPreludeVisible(false);
+    this.extranetButton.style.display = "block";
+    this.extranet?.setLocation(planet.world.key);
+    return this.celestial;
   }
 
   jumpToSystem(systemKey) {
@@ -394,16 +437,18 @@ export class Omniverse {
     this.joystick = null;
     this.pause?.setVisible(false);
     this.clearWorld();
-    const system = new THREE.Group();
-    this.titleWorld = new SolarSystem(system);
-    this.celestial = system;
-    this.celestial.animate = this.titleWorld.animate.bind(this.titleWorld);
+
+    this.systemWorld = new SolarSystem();
+    this.celestial.add(this.systemWorld.model());
     this.addSystemPlanets("solar");
     this.celestial.updateMatrixWorld(true);
+
     this.camera.position.set(0, 0, 600000);
     this.camera.lookAt(-137150, 0, 0);
     this.camera.updateProjectionMatrix();
     this.cameraTarget.set(-137150, 0, 0);
+    this.scene.background = new THREE.Color(0x02040a);
+    this.scene.fog = null;
     this.state.stage = "title";
     this.state.currentScene = "space";
   }
@@ -425,10 +470,10 @@ export class Omniverse {
       const PlanetClass = this.planetClasses[placement.key];
       if (!PlanetClass) continue;
       const planet = new PlanetClass();
-      const exterior = planet.exterior();
-      exterior.position.set(...placement.position);
-      this.celestial.add(exterior);
-      this.systemPlanets.push({ planet, exterior });
+      const model = planet.model("exterior");
+      model.position.set(...placement.position);
+      this.celestial.add(model);
+      this.systemPlanets.push({ planet, model, exterior: model });
     }
   }
 
