@@ -2,10 +2,9 @@ import * as THREE from "three";
 import { Starfield } from "./Starfield.js";
 
 export class SolarSystem {
-  constructor(parent) {
+  constructor() {
     this.root = new THREE.Group();
     this.root.name = "SolarSystem";
-    parent.add(this.root);
     this.root.add(new THREE.AmbientLight(0x52617f, 0.45));
 
     const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -48,4 +47,9 @@ export class SolarSystem {
     this.sunOuterGlow.material.opacity = 0.05 + Math.sin(elapsed * 0.45) * 0.012;
     this.stars.dome.rotation.y += delta * 0.0008;
   }
+
+  model() {
+    return this.root;
+  }
+
 }
