@@ -3,11 +3,12 @@ import { initializeResident } from "./Human.js";
 
 export class Incursean {
   static homeworld = "incursia";
-  static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: 3, Galvan: 10, Human: -36 };
 
   constructor(parent = null, options = {}) {
     this.name = options.name || "Incursean";
     this.leader = false;
+    this.species = this.constructor.name;
+    this.relationships = options.relationships || {};
     this.homeworld = Incursean.homeworld;
     this.health = 30;
     this.energy = 100;
@@ -57,7 +58,7 @@ export class Incursean {
 
   attack(target) {
     if (!target || target.health <= 0) return false;
-    const relationships = this.constructor.relationships || {};
+    const relationships = this.relationships || {};
     const relation = Number(relationships[target.species || target.constructor?.name] ?? relationships[target.name] ?? 0);
     if (relation >= 0) return false;
     target.takeDamage?.(2);
