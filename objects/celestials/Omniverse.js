@@ -560,7 +560,7 @@ export class Omniverse {
         if (distance < 0.14) {
           member.group.position.copy(seat.position);
           member.group.rotation.set(0, seat.rotation, 0);
-          member.rig?.sit?.();
+          this.getActiveRig(member)?.sit?.();
           member.seated = true;
           member.seatIndex = task.seatIndex;
           seat.occupiedBy = member;
