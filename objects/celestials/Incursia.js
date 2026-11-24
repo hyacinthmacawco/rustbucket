@@ -21,6 +21,7 @@ export class Incursia {
   };
 
   constructor() {
+    this.songs = ["./files/songs/neodevol-ov.mp3"];
     this.world = Incursia.WORLD;
     this.system = "incursia";
     this.atmosphereHeight = 90;
