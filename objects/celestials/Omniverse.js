@@ -23,7 +23,6 @@ export class Omniverse {
     this.state = Omniverse.state;
     this.installStyles();
     this.account = new Account();
-    this.createAccountHUD();
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "omniverse";
@@ -119,7 +118,7 @@ export class Omniverse {
     });
     this.titleScreen.setVisible(true);
 
-    this.extranet = new Extranet({ onJumpSystem: key => this.jumpToSystem(key) });
+    this.extranet = new Extranet({ account: this.account, onJumpSystem: key => this.jumpToSystem(key) });
     this.extranetButton = this.extranet.createButton();
     this.extranetButton.style.display = "none";
 
@@ -165,17 +164,7 @@ export class Omniverse {
     this.start();
   }
 
-  createAccountHUD() {
-    this.accountElement = document.createElement("div");
-    this.accountElement.id = "taydenite-account";
-    Object.assign(this.accountElement.style, { position: "fixed", top: "max(14px, env(safe-area-inset-top))", left: "max(14px, env(safe-area-inset-left))", zIndex: "30", padding: "9px 13px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "18px", background: "rgba(5,30,18,.84)", color: "#eaffef", font: "inherit", letterSpacing: ".06em", pointerEvents: "none" });
-    document.body.append(this.accountElement);
-    this.updateAccountHUD();
-  }
-
-  updateAccountHUD() {
-    if (this.accountElement) this.accountElement.textContent = `TAYDENITE  ${this.account.balance}`;
-  }
+  updateAccountHUD() { this.extranet?.updateAccount(); }
 
   installStyles() {
     this.fontStyle = document.createElement("style");
@@ -559,7 +548,6 @@ export class Omniverse {
     this.titleScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
-    this.accountElement?.remove();
     this.fontStyle.remove();
     if (this.joystick) this.joystick.destroy();
     if (this.animationFrame !== null) cancelAnimationFrame(this.animationFrame);
