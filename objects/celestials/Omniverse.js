@@ -177,8 +177,14 @@ export class Omniverse {
   handleRescueDrop(resident, relationshipIncrease = 5, taydeniteIncrease = 10) {
     this.helix?.completeTask(resident?.taskId);
     const species = resident?.species || resident?.group?.userData?.species;
-    if (species) this.helix?.pages.relationships.addRelationship(species, "Ben", relationshipIncrease);
-    this.helix?.showTaskCompleted({ resident, relationshipIncrease, taydeniteIncrease });
+    let actualRelationshipIncrease = relationshipIncrease;
+    if (species) {
+      const relationships = this.helix?.pages.relationships;
+      const before = relationships?.getRelationship(species, "Ben") ?? 0;
+      relationships?.addRelationship(species, "Ben", relationshipIncrease);
+      actualRelationshipIncrease = (relationships?.getRelationship(species, "Ben") ?? before) - before;
+    }
+    this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
   }
 
   installStyles() {
