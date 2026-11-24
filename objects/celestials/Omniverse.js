@@ -245,12 +245,72 @@ export class Omniverse {
     this.camera.lookAt(this.cameraTarget);
   }
 
-  checkPlanetExit() {
-    if (this.state.currentScene !== "earth") return;
-    if (this.joystick?.currentSelection !== "rustbucket") return;
-    const altitude = this.vehicle?.ship?.position.y;
-    if (!Number.isFinite(altitude) || altitude < Earth.EXIT_ALTITUDE) return;
-    this.currentPlanet?.exit(this);
+  checkAtmosphereTransition() {
+    const ship = this.vehicle?.ship;
+    if (!ship || this.joystick?.currentSelection !== "rustbucket") return;
+
+    if (this.currentPlanet && this.state.currentScene === this.currentPlanet.world.key) {
+      const groundHeight = -0.6;
+      const altitude = ship.position.y - groundHeight;
+      if (altitude <= this.currentPlanet.atmosphereHeight) return;
+
+      const vehicle = this.vehicle;
+      const crew = [...(this.crew || [])];
+      const planet = this.currentPlanet;
+      planet.exit(this);
+
+      this.vehicle = vehicle;
+      this.crew = crew;
+      const destination = this.systemPlanets.find(entry => entry.planet.world.key === planet.world.key);
+      const center = destination?.exterior.position || new THREE.Vector3();
+      ship.removeFromParent();
+      ship.position.set(center.x, center.y + 1500, center.z);
+      ship.rotation.set(0, 0, 0);
+      this.celestial.add(ship);
+      crew.forEach((member, index) => {
+        member.group.removeFromParent();
+        member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
+        ship.add(member.group);
+      });
+      this.joystick?.setVehicleMode(true);
+      this.updateCamera();
+      return;
+    }
+
+    if (this.state.currentScene !== "space" && !this.state.currentScene.startsWith("system-")) return;
+    ship.updateWorldMatrix(true, false);
+    const shipPosition = ship.getWorldPosition(new THREE.Vector3());
+    let nearest = null;
+    let nearestDistance = Infinity;
+    for (const entry of this.systemPlanets || []) {
+      const center = entry.exterior.getWorldPosition(new THREE.Vector3());
+      const distance = shipPosition.distanceTo(center);
+      if (distance < nearestDistance) {
+        nearest = entry;
+        nearestDistance = distance;
+      }
+    }
+    if (!nearest) return;
+
+    const planetRadius = 1300;
+    if (nearestDistance >= planetRadius + nearest.planet.atmosphereHeight) return;
+
+    const vehicle = this.vehicle;
+    const crew = [...(this.crew || [])];
+    nearest.planet.enter(this);
+    this.vehicle = vehicle;
+    this.crew = crew;
+    ship.removeFromParent();
+    ship.position.set(0, 2, 34);
+    ship.rotation.set(0, 0, 0);
+    this.celestial.add(ship);
+    crew.forEach((member, index) => {
+      member.group.removeFromParent();
+      member.group.position.set((index - 1.5) * 0.4, -1.18, 0.15);
+      ship.add(member.group);
+    });
+    this.joystick?.setVehicleMode(true);
+    this.updateCamera();
   }
 
   animate() {
@@ -259,7 +319,6 @@ export class Omniverse {
     const elapsed = this.clock.elapsedTime;
     if (this.state.stage === "gameplay") {
       this.joystick?.update(delta);
-      this.checkPlanetExit();
       this.updateCamera();
     }
     this.celestial.animate?.(delta, elapsed);
