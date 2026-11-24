@@ -245,12 +245,21 @@ export class Omniverse {
     this.camera.lookAt(this.cameraTarget);
   }
 
+  checkPlanetExit() {
+    if (this.state.currentScene !== "earth") return;
+    if (this.joystick?.currentSelection !== "rustbucket") return;
+    const altitude = this.vehicle?.ship?.position.y;
+    if (!Number.isFinite(altitude) || altitude < Earth.EXIT_ALTITUDE) return;
+    this.currentPlanet?.exit(this);
+  }
+
   animate() {
     this.animationFrame = requestAnimationFrame(this.animate);
     const delta = Math.min(this.clock.getDelta(), 0.05);
     const elapsed = this.clock.elapsedTime;
     if (this.state.stage === "gameplay") {
       this.joystick?.update(delta);
+      this.checkPlanetExit();
       this.updateCamera();
     }
     this.celestial.animate?.(delta, elapsed);
