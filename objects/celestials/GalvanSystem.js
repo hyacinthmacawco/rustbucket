@@ -19,7 +19,8 @@ export class GalvanSystem {
     this.root.add(this.starGlow);
     this.starlight = new THREE.PointLight(0xffd38a, 1800000000, 520000, 1.8);
     this.root.add(this.starlight);
-    this.stars = new Starfield(this.root, "GalvanStarfield");
+    this.stars = new Starfield("GalvanStarfield");
+    this.root.add(this.stars.model());
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
 
