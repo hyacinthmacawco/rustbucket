@@ -181,7 +181,7 @@ export class HumanRig {
       frames: [
         { at: 0, pose: {} },
         { at: 0.18, pose: { rootY: 0.72, leftThigh: { x: -0.35 }, rightThigh: { x: -0.35 }, leftShoulder: { x: 0.35 }, rightShoulder: { x: -0.35 } } },
-        { at: 0.42, pose: { rootY: 0.22, leftThigh: { x: 0.25 }, rightThigh: { x: 0.25 }, leftShoulder: { x: 0.2 }, rightShoulder: { x: -0.2 } } },
+        { at: 0.42, pose: { rootY: 0.72, leftThigh: { x: 0.25 }, rightThigh: { x: 0.25 }, leftShoulder: { x: 0.2 }, rightShoulder: { x: -0.2 } } },
         { at: 1, pose: {} }
       ]
     },
