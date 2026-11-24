@@ -112,7 +112,7 @@ export class NewGame {
         omniverse.selectedMember = selected;
         omniverse.updateCamera();
       },
-      onJump: () => omniverse.vehicle?.toggleRamp(),
+      onJump: () => omniverse.extranet.openOmnidata(),
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       initialSelected: "ben"
