@@ -46,6 +46,10 @@ export class Moon {
     return interior;
   }
 
+  spawnResidents() {
+    return [];
+  }
+
   model(mode = "exterior") {
     return mode === "interior" ? this.interior() : this.exterior();
   }
