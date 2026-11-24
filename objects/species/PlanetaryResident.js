@@ -40,6 +40,9 @@ export class PlanetaryResident {
     }
 
     this.group.name = species + "Resident" + (index + 1);
+    this.limbPivots = this.group.children
+      .filter(part => (part.isMesh || part.isGroup) && part.position.y < 1.1 && Math.abs(part.position.x) > 0.1)
+      .map(part => ({ part, rest: part.rotation.x, phase: part.position.x < 0 ? 0 : Math.PI }));
     this.group.userData.species = species;
     this.group.userData.statusOwner = this.speciesInstance || this.rig;
     this.group.userData.rig = this.rig;
@@ -77,6 +80,11 @@ export class PlanetaryResident {
     this.group.position.x += dx / distance * step;
     this.group.position.z += dz / distance * step;
     this.group.rotation.y = Math.atan2(dx, dz);
+    const stride = Math.sin(elapsed * 7.5 + this.index * 0.7) * 0.28;
+    for (const limb of this.limbPivots) {
+      limb.part.rotation.x = limb.rest + Math.sin(elapsed * 7.5 + limb.phase) * 0.28;
+    }
+    this.group.position.y = Math.abs(stride) * 0.045;
     this.rig._rig.setWalking(true);
     this.rig._rig.updateWalk(elapsed);
   }
