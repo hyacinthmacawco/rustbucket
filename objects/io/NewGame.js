@@ -60,6 +60,8 @@ export class NewGame {
     omniverse.clearWorld();
     omniverse.earth = new Earth();
     omniverse.earth.enter(omniverse);
+    omniverse.crewHomePlanet = omniverse.earth;
+    omniverse.vehicleSystem = "solar";
 
     omniverse.vehicle = new Rustbucket(omniverse.celestial);
     omniverse.vehicle.ship.position.set(0, 2, 34);
@@ -110,7 +112,7 @@ export class NewGame {
       isMobile,
       onSelect: selected => {
         omniverse.selectedMember = selected;
-        omniverse.updateCamera();
+        omniverse.selectTeamMember(selected);
       },
       onJump: () => omniverse.extranet.openOmnidata(),
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
