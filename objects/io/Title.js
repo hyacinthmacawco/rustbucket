@@ -8,7 +8,7 @@ export class Title {
     this.styles = {
       screen: { position: "fixed", inset: "0", display: "grid", placeItems: "center", zIndex: "20", pointerEvents: "none" },
       menu: { width: "min(88vw, 560px)", display: "grid", justifyItems: "center", gap: "22px", pointerEvents: "auto", textAlign: "center" },
-      heading: { margin: "0", color: "#f5fff7", fontFamily: "Nulshock, sans-serif", fontSize: "clamp(2.2rem, 8vw, 5.5rem)", letterSpacing: ".08em", textShadow: "0 0 28px rgba(83,255,151,.32)" },
+      heading: { margin: "0", color: "#f5fff7", fontFamily: "Industry, sans-serif", fontSize: "clamp(2.2rem, 8vw, 5.5rem)", fontWeight: "700", letterSpacing: ".08em", textShadow: "0 0 28px rgba(83,255,151,.32)" },
       buttons: { display: "grid", width: "min(78vw, 320px)", gap: "12px" },
       panel: { color: "#a9e9bd", letterSpacing: ".12em", fontSize: "1rem" }
     };
