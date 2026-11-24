@@ -14,8 +14,9 @@ export class Jump {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.setAttribute("role", "button");
+    this.element.tabIndex = 0;
     this.element.textContent = "JUMP";
     this.element.setAttribute("aria-label", "Jump");
     Object.assign(this.element.style, this.styles);
