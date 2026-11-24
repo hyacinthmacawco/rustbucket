@@ -24,10 +24,10 @@ export class Interact {
   };
 
   setMode(mode) {
-    this.mode = ["Pick", "Drop", "Sit", "Stand"].includes(mode) ? mode : "Pick";
+    this.mode = ["Pick", "Drop", "Sit", "Stand", "Shop"].includes(mode) ? mode : "Pick";
     if (!this.element) return;
     this.element.textContent = this.mode;
-    const labels = { Pick: "Pick up", Drop: "Drop", Sit: "Sit", Stand: "Stand" };
+    const labels = { Pick: "Pick up", Drop: "Drop", Sit: "Sit", Stand: "Stand", Shop: "Shop" };
     this.element.setAttribute("aria-label", labels[this.mode]);
   }
 
