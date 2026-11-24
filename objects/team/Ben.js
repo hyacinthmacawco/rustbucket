@@ -16,6 +16,8 @@ export class Ben {
     this.startPosition = [-3,-0.5,5];
     this.startScale = [0.5,0.5,0.5];
     this.health = this.constructor.health;
+    this.damage = 1;
+    this.dead = false;
     this.energy = this.constructor.energy;
     this.energyLabel = "OMNITRIX";
     this.maxHealth = 100;
@@ -303,6 +305,7 @@ export class Ben {
   attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Ben ?? target.constructor?.relationships?.Ben ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(2); return true; }
 
   updateStatus(delta) {
+    if (this.dead || this.health <= 0) { this.health = 0; this.dead = true; this.group.visible = false; return; }
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
     if (this.healthRecoveryDelay === 0 && this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + delta * 0.32);
@@ -313,6 +316,7 @@ export class Ben {
 
   takeDamage(amount) {
     this.health = Math.max(0, this.health - Math.max(0, amount));
+    if (this.health === 0) { this.dead = true; this.group.visible = false; }
     this.healthRecoveryDelay = 4;
     this.constructor.health = this.health;
     return this.health;
