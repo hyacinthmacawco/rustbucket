@@ -3,6 +3,7 @@ import * as THREE from "three";
 export class Bag {
   constructor(parent, position, owner, color) {
     this.owner = owner;
+    this.resources = {};
     this.pickable = true;
     this.stored = false;
     this.group = new THREE.Group();
