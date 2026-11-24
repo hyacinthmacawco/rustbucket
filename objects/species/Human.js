@@ -146,6 +146,7 @@ export class HumanRig {
   headMesh.position.y = 0.09;
   head.add(headMesh);
 
+  if (options.body !== false) {
   // Replace the diagnostic skeleton display with a complete articulated,
   // Ben-proportioned cuboid human body. Each garment segment is parented to
   // its corresponding joint so the walk cycle deforms the visible character.
@@ -188,6 +189,7 @@ export class HumanRig {
     bodyBox(thigh, side + "HumanPantsUpper", [0.20, 0.48, 0.21], [0, -0.23, 0], bodyMaterials.pants);
     bodyBox(knee, side + "HumanPantsLower", [0.17, 0.43, 0.19], [0, -0.21, 0], bodyMaterials.pants);
     bodyBox(ankle, side + "HumanShoe", [0.20, 0.14, 0.29], [0, -0.06, 0.07], bodyMaterials.shoes);
+  }
   }
   root.userData.collisionCapsule = { type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 };
 
@@ -464,9 +466,27 @@ export class HumanRig {
 
 
 export function initializeResident(instance, index, { species, homeworld, style = {}, rig = null } = {}) {
-  const residentRig = rig || new HumanRig(style);
+  const residentRig = rig || new HumanRig({ ...style, body: false });
   if (!rig) {
+    const modelParts = [...instance.group.children];
     instance.group.add(residentRig.group);
+    instance.group.updateMatrixWorld(true);
+    residentRig.group.updateMatrixWorld(true);
+    // Bind the species' own model pieces to the shared articulated skeleton.
+    for (const part of modelParts) {
+      const position = part.position;
+      let joint;
+      if (position.y >= 2.35) joint = residentRig.joints.head;
+      else if (position.y >= 1.0) joint = residentRig.joints.spine;
+      else if (position.y >= 0.48) {
+        const side = position.x < 0 ? "left" : "right";
+        joint = residentRig.joints[side + "Shoulder"];
+      } else {
+        const side = position.x < 0 ? "left" : "right";
+        joint = residentRig.joints[side + "Thigh"];
+      }
+      joint.attach(part);
+    }
     instance.group.scale.setScalar(0.78);
   }
   instance.rig = residentRig;
