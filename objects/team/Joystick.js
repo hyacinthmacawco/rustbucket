@@ -333,7 +333,7 @@ export class Joystick {
 
     if (joy.jumpRequested) {
       if (this.selected === "rustbucket") this.onJump();
-      else object.userData.requestJump?.();
+      else object.userData.statusOwner?.rig?.jump();
       joy.jumpRequested = false;
     }
 
@@ -350,7 +350,8 @@ export class Joystick {
     }
 
     if (joy.pickRequested) {
-      object.userData.performPickup?.();
+      if (this.selected === "rustbucket") object.userData.performPickup?.();
+      else object.userData.statusOwner?.rig?.pick();
       joy.pickRequested = false;
     }
 
@@ -358,11 +359,12 @@ export class Joystick {
     const attackInterval = this.selected === "rustbucket" ? 280 : 720;
     const now = performance.now();
     if (attackHeld && now - this.lastAttackAt >= attackInterval) {
-      object.userData.performAttack?.();
+      if (this.selected === "rustbucket") object.userData.performAttack?.();
+      else object.userData.statusOwner?.rig?.attack();
       this.lastAttackAt = now;
     }
 
-    object.setAnimation?.(magnitude > 0.08 ? "walk" : "idle");
+    object.userData.updateRigAnimation?.(magnitude > 0.08, performance.now() / 1000);
     object.update?.(dt);
     this.updateCamera();
   }
