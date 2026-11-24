@@ -180,7 +180,7 @@ export class Omniverse {
     this.helix?.completeTask(resident?.taskId);
     const species = resident?.species || resident?.group?.userData?.species;
     let actualRelationshipIncrease = relationshipIncrease;
-    if (species) {
+    if (species && resident?.homeworld === this.currentPlanet?.world?.key) {
       const relationships = this.helix?.pages.relationships;
       const home = this.currentPlanet;
       const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
