@@ -2,7 +2,7 @@ export class Jump {
   constructor({ onPress = () => {} } = {}) {
     this.onPress = onPress;
     this.onAction = () => {};
-    this.styles = { padding: "12px 18px", border: "1px solid rgba(119,255,164,.5)", borderRadius: "50%", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none" };
+    this.styles = { padding: "12px 18px", border: "1px solid rgba(119,255,164,.5)", borderRadius: "50%", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
   }
 
   setAction(action = () => {}) {
