@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Chromastone } from "../omnitrix/Chromastone.js";
 
 /**
  * Ben's articulated cuboid model.
@@ -235,6 +236,31 @@ export class Ben {
   // watch case, strap meshes, or faceplate geometry.
 
   Object.assign(this, { group, rig, joints });
+
+  // Transformations reuse Ben's existing group and HumanRig. Only the visible
+  // model changes; movement, camera tracking and team selection stay intact.
+  this.baseModelMeshes = [];
+  group.traverse(object => {
+    if (object.isMesh) this.baseModelMeshes.push(object);
+  });
+  this.chromastone = new Chromastone({ HumanRig });
+  group.add(this.chromastone.group);
+  this.chromastone.group.visible = false;
+  this.activeTransformation = "Ben";
+  this.setTransformation = name => {
+    const useChromastone = name === "Chromastone";
+    this.baseModelMeshes.forEach(mesh => { mesh.visible = !useChromastone; });
+    this.chromastone.group.visible = useChromastone;
+    this.activeTransformation = useChromastone ? "Chromastone" : "Ben";
+    return this.activeTransformation;
+  };
+  this.rig.attack = () => this.activeTransformation === "Chromastone"
+    ? this.chromastone.attack()
+    : rig.attack();
+  this.update = delta => {
+    this.chromastone.update(delta);
+    this.chromastone.checkLaserCollisions(this.projectiles || []);
+  };
   group.userData.statusOwner = this;
   }
 
