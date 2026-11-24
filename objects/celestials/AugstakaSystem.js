@@ -4,6 +4,7 @@ import { Augstaka } from "./Augstaka.js";
 
 export class AugstakaSystem {
   constructor() {
+    this.songs = ["./files/songs/baird.mp3","./files/songs/alien-force-lofi.mp3"];
     this.root = new THREE.Group();
     this.root.name = "AugstakaSystem";
     this.root.add(new THREE.AmbientLight(0x8794a8, 0.8));
