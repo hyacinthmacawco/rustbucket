@@ -104,7 +104,7 @@ export class Omniverse {
     });
     this.titleScreen.setVisible(true);
 
-    this.extranet = new Extranet();
+    this.extranet = new Extranet({ onJumpSystem: key => this.jumpToSystem(key) });
     this.extranetButton = this.extranet.createButton();
     this.extranetButton.style.display = "none";
 
@@ -293,6 +293,7 @@ export class Omniverse {
   }
 
   loadSystemScene(systemKey, ship = this.vehicle?.ship, crew = this.crew || [], destinationKey = null) {
+    const vehicle = this.vehicle;
     ship?.removeFromParent();
     crew.forEach(member => member.group.removeFromParent());
     this.clearWorld();
@@ -308,7 +309,7 @@ export class Omniverse {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
       this.celestial.add(ship);
-      this.vehicle = this.vehicle || { ship };
+      this.vehicle = vehicle || { ship };
       this.vehicle.ship = ship;
       this.crew = crew;
       crew.forEach((member, index) => {
@@ -326,10 +327,11 @@ export class Omniverse {
   }
 
   enterPlanetScene(planet, ship, crew) {
+    const vehicle = this.vehicle;
     ship.removeFromParent();
     crew.forEach(member => member.group.removeFromParent());
     planet.enter(this);
-    this.vehicle = this.vehicle || { ship };
+    this.vehicle = vehicle || { ship };
     this.vehicle.ship = ship;
     this.crew = crew;
     ship.position.set(0, 2, 34);
