@@ -769,9 +769,32 @@ export class Omniverse {
     return this.celestial;
   }
 
+  handleCombatAttack(selected) {
+    const attacker = this.getTeamMember(selected);
+    if (!attacker || attacker.health <= 0 || attacker.seated) return false;
+    const origin = attacker.group.getWorldPosition(new THREE.Vector3());
+    let target = null, nearest = 3.2;
+    for (const resident of this.residents || []) {
+      if (resident.health <= 0 || resident.isAboard) continue;
+      const distance = origin.distanceTo(resident.group.getWorldPosition(new THREE.Vector3()));
+      if (distance < nearest) { nearest = distance; target = resident; }
+    }
+    return target ? attacker.attack?.(target) ?? false : false;
+  }
+
   updateResidents(delta, elapsed) {
     for (const resident of this.residents || []) {
-      if (!resident.isAboard) resident.update(delta, elapsed);
+      if (!resident.isAboard && resident.health > 0) {
+        resident.update(delta, elapsed);
+        resident.attackCooldown = Math.max(0, (resident.attackCooldown || 0) - delta);
+        if (resident.attackCooldown === 0) {
+          const origin = resident.group.getWorldPosition(new THREE.Vector3());
+          for (const member of this.crew || []) {
+            if (member.health <= 0 || member.seated) continue;
+            if (origin.distanceTo(member.group.getWorldPosition(new THREE.Vector3())) < 2.2 && resident.attack?.(member)) { resident.attackCooldown = 1.4; break; }
+          }
+        }
+      }
     }
   }
 
