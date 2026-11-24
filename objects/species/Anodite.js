@@ -1,6 +1,8 @@
 import * as THREE from "three";
+import { initializeResident } from "./Human.js";
 
 export class Anodite {
+  static homeworld = "anodyne";
   static relationships = {
     Ben: 50,
     Gwen: 70,
@@ -14,6 +16,7 @@ export class Anodite {
 
   constructor(parent = null, options = {}) {
     this.leader = false;
+    this.homeworld = Anodite.homeworld;
     this.group = new THREE.Group();
     this.group.name = "Anodite";
     this.health = 100;
@@ -50,6 +53,7 @@ export class Anodite {
     this.model = this.group;
     this.mesh = this.group;
     this.group.userData.statusOwner = this;
+    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Anodite", homeworld: Anodite.homeworld, style: { boneColor: 0xc17bf0, jointColor: 0xff78c9 } });
   }
 
   createMaterial(color, options = {}) {
@@ -193,6 +197,8 @@ export class Anodite {
   createAura() {
     // The body already carries the luminous edge details created in createBody.
   }
+
+  awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
 
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
