@@ -29,7 +29,7 @@ export class Anodyne {
     exterior.name = "AnodyneExterior";
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(1300, 64, 48),
-      new THREE.MeshStandardMaterial({ color: 0x70252d, roughness: 0.88 })
+      new THREE.MeshStandardMaterial({ color: 0x7540b8, roughness: 0.82, emissive: 0x160728, emissiveIntensity: 0.12 })
     );
     globe.name = "Anodyne";
     exterior.add(globe);
@@ -37,11 +37,6 @@ export class Anodyne {
       new THREE.SphereGeometry(1345, 48, 32),
       new THREE.MeshBasicMaterial({ color: 0x542b45, transparent: true, opacity: 0.14, side: THREE.BackSide, depthWrite: false })
     ));
-    for (const [radius, tube, opacity] of [[1872, 62, 0.85], [2184, 42, 0.65]]) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 160), new THREE.MeshBasicMaterial({ color: 0xe97835, transparent: true, opacity, side: THREE.DoubleSide }));
-      ring.rotation.set(1.18, 0.18, 0.16);
-      exterior.add(ring);
-    }
     return exterior;
   }
 
