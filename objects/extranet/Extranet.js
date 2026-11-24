@@ -132,7 +132,7 @@ export class Extranet {
       },
       launchButton: {
         position: "fixed",
-        bottom: "max(22px, env(safe-area-inset-bottom))",
+        bottom: "max(98px, calc(env(safe-area-inset-bottom) + 76px))",
         right: "max(22px, env(safe-area-inset-right))",
         zIndex: "30",
         padding: "10px 14px",
