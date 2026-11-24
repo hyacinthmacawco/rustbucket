@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import { HumanRig } from "../species/Human.js";
+import { Anodite } from "../species/Anodite.js";
+import { Galvan } from "../species/Galvan.js";
+import { Highbreed } from "../species/Highbreed.js";
+import { Incursean } from "../species/Incursean.js";
 
 export class Earth {
   static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
@@ -95,6 +100,33 @@ export class Earth {
     addBox([4.2, 7.8, 0.55], [-14.2, 4.1, 14.2], wall);
     addBox([4.2, 7.8, 0.55], [14.2, 4.1, 14.2], wall);
     for (let z = -14; z <= 10; z += 6) addBox([33, 0.22, 0.22], [0, 11.3, z], metal);
+  }
+
+
+  spawnResidents(parent) {
+    const speciesClasses = [HumanRig, Highbreed, Anodite, Galvan, Incursean];
+    const nativeClass = speciesClasses.find(SpeciesClass => SpeciesClass.homeworld === this.world.key);
+    if (!nativeClass) return [];
+    const visitors = speciesClasses
+      .filter(SpeciesClass => SpeciesClass !== nativeClass)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
+    const residents = [];
+    const spawn = (SpeciesClass, index, isVisitor = false) => {
+      const resident = SpeciesClass === HumanRig
+        ? new HumanRig({ residentIndex: index })
+        : new SpeciesClass(null, { residentIndex: index });
+      if (isVisitor) resident.group.userData.isRescueTarget = true;
+      const angle = index * Math.PI * 2 / 7;
+      const radius = 20 + (index % 3) * 10;
+      resident.group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 18);
+      resident.group.rotation.y = angle + Math.PI;
+      parent.add(resident.group);
+      residents.push(resident);
+    };
+    for (let index = 0; index < 5; index++) spawn(nativeClass, index);
+    visitors.forEach((SpeciesClass, index) => spawn(SpeciesClass, index + 5, true));
+    return residents;
   }
 
   model(mode = "exterior") {
