@@ -12,7 +12,7 @@ import { Anodyne } from "./Anodyne.js";
 import { GalvanPrime } from "./GalvanPrime.js";
 import { Incursia } from "./Incursia.js";
 import { Earth } from "./Earth.js";
-import { Helix } from "../extranet/Extranet.js";
+import { Helix } from "../extranet/Helix.js";
 import { AudioPlayer } from "../io/AudioPlayer.js";
 import { Pause } from "../io/Pause.js";
 import { Account } from "../io/Account.js";
@@ -213,7 +213,7 @@ export class Omniverse {
         font-family: "Industry", sans-serif !important;
         font-weight: 700 !important;
       }
-      #title-screen, #prelude-screen, #pause-overlay, #extranet-overlay {
+      #title-screen, #prelude-screen, #pause-overlay, #helix-overlay {
         box-sizing: border-box;
       }
       #title-screen * { box-sizing: border-box; }
