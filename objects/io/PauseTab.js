@@ -11,8 +11,9 @@ export class PauseTab {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.setAttribute("role", "button");
+    this.element.tabIndex = 0;
     this.element.textContent = this.label;
     Object.assign(this.element.style, this.styles.button, this.active ? this.styles.active : {});
     this.element.addEventListener("click", this.handleClick);
