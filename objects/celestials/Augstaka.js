@@ -16,6 +16,7 @@ export class Augstaka {
   constructor() {
     this.world = Augstaka.WORLD;
     this.system = "augstaka";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
