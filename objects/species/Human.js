@@ -43,10 +43,6 @@ export class HumanRig {
     this.species = "Human";
     this.homeworld = Human.homeworld;
   const {
-    boneColor = 0x8bb8e8,
-    jointColor = 0xf0bd72,
-    boneRadius = 0.045,
-    jointRadius = 0.065,
     walkSpeed = 1.8,
     walkAmplitude = 1
   } = options;
