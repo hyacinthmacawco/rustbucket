@@ -95,6 +95,10 @@ export class GalvanPrime {
     return interior;
   }
 
+  model(mode = "exterior") {
+    return mode === "interior" ? this.interior() : this.exterior();
+  }
+
   enter(react) {
     react.clearWorld();
     react.celestial = this.interior();
