@@ -72,12 +72,12 @@ export class Kevin {
 
   const torso = this.box(joints.spine, "KevinBlackShirt", [0.49, 0.96, 0.30], [0, 0.035, 0],
     [mat.shirt, mat.shirt, mat.shirt, mat.shirt, shirtFront, mat.shirt]);
-  rig.fitToTorso(torso);
+  group.userData.fitToTorso(torso);
   this.box(joints.spine, "KevinNeckBand", [0.30, 0.11, 0.30], [0, 0.49, 0], mat.sleeveDark);
   // Hair is a set of painted head-surface maps; no separate hair meshes.
   const headMesh = this.box(joints.head, "KevinHead", [0.37, 0.43, 0.32], [0, 0.055, 0],
     [sideHairMat, sideHairMat, mat.hair, faceMaterial, frontHairMat, sideHairMat]);
-  rig.fitHeadToTorso(torso, headMesh);
+  group.userData.fitHeadToTorso(torso, headMesh);
 
   for (const side of ["left", "right"]) {
     const sign = side === "left" ? -1 : 1;
