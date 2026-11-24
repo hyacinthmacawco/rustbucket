@@ -174,7 +174,7 @@ export class Ben {
     [0, 0.025, 0], [
       mat.black, mat.black, mat.black, mat.black, mat.shirt, mat.black
     ]);
-  rig.fitToTorso(torso);
+  group.userData.fitToTorso(torso);
 
 
   // No neck mesh: the head remains attached directly to the neck bone.
@@ -184,7 +184,7 @@ export class Ben {
       mat.hairSide, mat.hairSide, mat.hairTop, mat.skin,
       mat.hairFront, mat.hairBack
     ]);
-  rig.fitHeadToTorso(torso, headMesh);
+  group.userData.fitHeadToTorso(torso, headMesh);
 
   // Sleeves are black with narrow green texture accents, matching Ben's shirt.
   for (const side of ["left", "right"]) {
