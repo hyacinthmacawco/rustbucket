@@ -20,6 +20,10 @@ export class Ben {
     this.energyLabel = "OMNITRIX";
     this.maxHealth = 100;
     this.maxEnergy = 100;
+    this.baseHealth = this.health;
+    this.baseMaxHealth = this.maxHealth;
+    this.baseEnergy = this.energy;
+    this.baseMaxEnergy = this.maxEnergy;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
   if (typeof HumanRig !== "function") {
@@ -252,6 +256,10 @@ export class Ben {
     this.baseModelMeshes.forEach(mesh => { mesh.visible = !useChromastone; });
     this.chromastone.group.visible = useChromastone;
     this.activeTransformation = useChromastone ? "Chromastone" : "Ben";
+    this.health = useChromastone ? this.chromastone.health : this.baseHealth;
+    this.maxHealth = useChromastone ? this.chromastone.maxHealth : this.baseMaxHealth;
+    this.energy = useChromastone ? this.chromastone.energy : this.baseEnergy;
+    this.maxEnergy = useChromastone ? this.chromastone.maxEnergy : this.baseMaxEnergy;
     const activeRig = useChromastone ? this.chromastone.rig : rig;
     group.userData.rig = activeRig;
     group.userData.updateRigAnimation = (moving, time) => {
@@ -278,6 +286,14 @@ export class Ben {
   };
   this.update = delta => {
     this.chromastone.update(delta);
+    if (this.activeTransformation === "Chromastone") {
+      this.health = this.chromastone.health;
+      this.maxHealth = this.chromastone.maxHealth;
+      this.energy = this.chromastone.energy;
+      this.maxEnergy = this.chromastone.maxEnergy;
+      this.constructor.health = this.health;
+      this.constructor.energy = this.energy;
+    }
   };
   group.userData.statusOwner = this;
   }
