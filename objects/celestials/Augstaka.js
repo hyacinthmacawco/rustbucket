@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { HumanRig } from "../species/Human.js";
+import { Human } from "../species/Human.js";
 import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
 import { Highbreed } from "../species/Highbreed.js";
@@ -93,7 +93,7 @@ export class Augstaka {
 
 
   spawnResidents(parent) {
-    const speciesClasses = [HumanRig, Highbreed, Anodite, Galvan, Incursean];
+    const speciesClasses = [Human, Highbreed, Anodite, Galvan, Incursean];
     const nativeClass = speciesClasses.find(SpeciesClass => SpeciesClass.homeworld === this.world.key);
     if (!nativeClass) return [];
     const visitors = speciesClasses
@@ -102,8 +102,8 @@ export class Augstaka {
       .slice(0, 2);
     const residents = [];
     const spawn = (SpeciesClass, index, isVisitor = false) => {
-      const resident = SpeciesClass === HumanRig
-        ? new HumanRig({ residentIndex: index })
+      const resident = SpeciesClass === Human
+        ? new Human({ residentIndex: index })
         : new SpeciesClass(null, { residentIndex: index });
       if (isVisitor) resident.group.userData.isRescueTarget = true;
       const angle = index * Math.PI * 2 / 7;
