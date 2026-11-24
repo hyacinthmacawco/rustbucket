@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 export class Joystick {
   static TEAM_MEMBERS = ["ben", "gwen", "kevin", "rook", "rustbucket"];
-  static TEAM_LABELS = { ben: "B", gwen: "G", kevin: "K", rook: "R", rustbucket: "T" };
+  static TEAM_NAMES = { ben: "Ben", gwen: "Gwen", kevin: "Kevin", rook: "Rook", rustbucket: "Rustbucket" };
 
   constructor() {
     this.styles = {
@@ -11,7 +11,8 @@ export class Joystick {
       knob: { position: "absolute", left: "50%", top: "50%", width: "48px", height: "48px", margin: "-24px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
       lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
-      label: { position: "absolute", width: "34px", height: "28px", display: "grid", placeItems: "center", padding: "0", color: "#c8ffd7", fontSize: "11px", fontFamily: "Industry, sans-serif", textShadow: "0 0 8px #0a3", textAlign: "center", border: "1px solid rgba(126,255,168,.85)", borderRadius: "4px", background: "rgba(2,24,12,.96)", pointerEvents: "auto", cursor: "pointer", zIndex: "3", boxSizing: "border-box" }
+      teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
+      teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "1px solid rgba(126,255,168,.28)", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" }
     };
 
     this.input = {
@@ -19,19 +20,16 @@ export class Joystick {
       pointerId: null,
       x: 0,
       y: 0,
-      mode: "move",
-      selection: null,
-      liftY: 0,
+       liftY: 0,
       jumpRequested: false,
       pickRequested: false,
       attackHeld: false
     };
     this.vehicleMode = false;
-    this.lastCenterTap = 0;
-    this.liftPointerId = null;
+     this.liftPointerId = null;
     this.element = document.createElement("div");
     this.element.id = "movement-joystick";
-    this.element.setAttribute("aria-label", "Movement and team selector");
+    this.element.setAttribute("aria-label", "Movement joystick");
     Object.assign(this.element.style, this.styles.joystick);
 
     this.base = document.createElement("div");
@@ -40,27 +38,25 @@ export class Joystick {
     this.knob = document.createElement("div");
     this.knob.id = "joystick-knob";
     Object.assign(this.knob.style, this.styles.knob);
-    this.labels = [];
-    for (const [index, name] of ["ben", "gwen", "kevin", "rook"].entries()) {
-      const label = document.createElement("button");
-      label.type = "button";
-      label.className = "team-label team-" + name;
-      label.textContent = Joystick.TEAM_LABELS[name];
-      Object.assign(label.style, this.styles.label);
-      label.style.left = index % 2 ? "78%" : "22%";
-      label.style.top = index < 2 ? "22%" : "78%";
-      label.addEventListener("pointerdown", event => {
-        event.preventDefault();
-        event.stopPropagation();
-        const member = label.dataset.member;
-        if (member) this.selectMember(member);
-      });
-      this.base.append(label);
-      this.labels.push(label);
-    }
     this.base.append(this.knob);
     this.element.append(this.base);
-    document.body.append(this.element);
+
+    this.teamPanel = document.createElement("nav");
+    this.teamPanel.id = "team-member-list";
+    this.teamPanel.setAttribute("aria-label", "Select team member");
+    Object.assign(this.teamPanel.style, this.styles.teamPanel);
+    this.teamButtons = new Map();
+    for (const name of Joystick.TEAM_MEMBERS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = Joystick.TEAM_NAMES[name];
+      button.dataset.member = name;
+      Object.assign(button.style, this.styles.teamButton);
+      button.addEventListener("click", () => this.selectMember(name));
+      this.teamPanel.append(button);
+      this.teamButtons.set(name, button);
+    }
+    document.body.append(this.element, this.teamPanel);
 
     this.liftElement = document.createElement("div");
     this.liftElement.id = "lift-joystick";
@@ -138,21 +134,6 @@ export class Joystick {
       return;
     }
 
-    if (Math.hypot(this.input.x, this.input.y) < 0.22) {
-      const now = performance.now();
-      if (this.lastCenterTap && now - this.lastCenterTap <= 420) {
-        this.lastCenterTap = 0;
-        this.setMode(this.input.mode === "switch" ? "move" : "switch");
-      } else {
-        this.lastCenterTap = now;
-        window.setTimeout(() => {
-          if (this.lastCenterTap === now) this.lastCenterTap = 0;
-        }, 420);
-      }
-    } else if (this.input.mode === "switch") {
-      this.lastCenterTap = 0;
-      this.input.selection = { x: this.input.x, y: this.input.y };
-    }
     this.resetBase();
   }
 
@@ -195,13 +176,7 @@ export class Joystick {
     this.resetLift();
   }
 
-  setMode(mode) {
-    this.input.mode = mode;
-    this.element.classList.toggle("team-mode", mode === "switch");
-    this.knob.textContent = mode === "switch" ? "↔" : "";
-  }
-
-  setVisible(visible, showJoystick = true) {
+   setVisible(visible, showJoystick = true) {
     this.element.style.display = visible && showJoystick ? "block" : "none";
     this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
     if (!visible) {
@@ -216,15 +191,14 @@ export class Joystick {
     if (!this.vehicleMode) this.resetLift();
   }
 
-  setTeamOptions(selected, members = Joystick.TEAM_MEMBERS) {
-    const available = members.filter(name => name !== selected);
-    this.labels.forEach((label, index) => {
-      label.textContent = Joystick.TEAM_LABELS[available[index]] || "";
-      label.dataset.member = available[index] || "";
-      label.setAttribute("aria-label", available[index] || "");
-      label.disabled = !available[index];
-      label.style.display = available[index] ? "grid" : "none";
-    });
+  setTeamOptions(selected) {
+    for (const [name, button] of this.teamButtons) {
+      const active = name === selected;
+      button.setAttribute("aria-pressed", String(active));
+      button.style.background = active ? "rgba(34,105,61,.9)" : "rgba(5,30,18,.7)";
+      button.style.borderColor = active ? "rgba(188,255,205,.9)" : "rgba(126,255,168,.28)";
+      button.style.color = active ? "#effff2" : "#c8ffd7";
+    }
   }
 
   createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, initialSelected = "ben" }) {
@@ -232,14 +206,13 @@ export class Joystick {
     this.entities = entities;
     this.camera = camera;
     this.updateCamera = updateCamera;
-    this.isMobile = isMobile;
-    this.onSelect = onSelect;
+     this.onSelect = onSelect;
     this.onJump = onJump;
     this.onToggleRamp = onToggleRamp;
     this.selected = initialSelected;
     this.lastAttackAt = 0;
     this.selectableMembers = Joystick.TEAM_MEMBERS.filter(name => entities[name]);
-    this.setTeamOptions(this.selected, this.selectableMembers);
+    this.setTeamOptions(this.selected);
     this.setVehicleMode(this.selected === "rustbucket");
     this.onSelect(this.selected);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -250,14 +223,7 @@ export class Joystick {
 
   handleKeyDown = event => {
     const key = event.key.toLowerCase();
-    if (key === "f") {
-      if (event.repeat) return;
-      this.setMode(this.input.mode === "switch" ? "move" : "switch");
-      this.keys.clear();
-      event.preventDefault();
-      return;
-    }
-    if (key === "r" && !event.repeat && this.selected === "rustbucket") {
+     if (key === "r" && !event.repeat && this.selected === "rustbucket") {
       this.onToggleRamp();
       event.preventDefault();
       return;
@@ -281,40 +247,14 @@ export class Joystick {
   selectMember(next) {
     if (!this.selectableMembers?.includes(next) || next === this.selected) return;
     this.selected = next;
-    this.setTeamOptions(this.selected, this.selectableMembers);
+    this.setTeamOptions(this.selected);
     this.setVehicleMode(this.selected === "rustbucket");
     this.onSelect(this.selected);
     this.updateCamera();
   }
 
-  chooseMember(x, y) {
-    const available = this.selectableMembers.filter(name => name !== this.selected);
-    let index;
-    if (Math.abs(x) > Math.abs(y)) index = x > 0 ? 1 : 3;
-    else index = y > 0 ? 0 : 2;
-    const next = available[index];
-    if (!next) return;
-    this.selectMember(next);
-  }
-
-  update(dt) {
+   update(dt) {
     const joy = this.input;
-    if (joy.selection) {
-      this.chooseMember(joy.selection.x, joy.selection.y);
-      joy.selection = null;
-    }
-    if (joy.mode === "switch") {
-      if (!this.isMobile) {
-        const x = (this.keys.has("d") ? 1 : 0) - (this.keys.has("a") ? 1 : 0);
-        const y = (this.keys.has("w") ? 1 : 0) - (this.keys.has("s") ? 1 : 0);
-        if (x || y) {
-          this.chooseMember(x, y);
-          this.keys.clear();
-        }
-      }
-      return;
-    }
-
     const object = this.entities[this.selected];
     if (!object) return;
     const forward = (this.keys.has("w") ? 1 : 0) - (this.keys.has("s") ? 1 : 0) + joy.y;
@@ -387,6 +327,7 @@ export class Joystick {
     this.liftBase.removeEventListener("pointerup", this.handleLiftUp);
     this.liftBase.removeEventListener("pointercancel", this.handleLiftUp);
     this.element.remove();
+    this.teamPanel.remove();
     this.liftElement.remove();
   }
 }
