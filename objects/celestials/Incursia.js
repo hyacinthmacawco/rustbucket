@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Starfield } from "./Starfield.js";
 import { Human } from "../species/Human.js";
 import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
@@ -51,6 +52,7 @@ export class Incursia {
   interior() {
     const interior = new THREE.Group();
     interior.name = "IncursiaInterior";
+    interior.add(Starfield.createAtmosphere(this.world.sky));
     interior.add(new THREE.HemisphereLight(0x6b4c35, 0x3e2b21, 1.8));
     const sunlight = new THREE.DirectionalLight(0xffe0c0, 2.1);
     sunlight.position.set(-35, 70, 25);
