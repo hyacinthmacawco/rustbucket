@@ -21,10 +21,10 @@ export class Highbreed {
     this.homeworld = Highbreed.homeworld;
     this.currentWorld = null;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
-    this.health = 100;
+    this.health = 30;
     this.energy = 100;
     this.energyLabel = "VITALITY";
-    this.maxHealth = 100;
+    this.maxHealth = 30;
     this.maxEnergy = 100;
     this.healthRecoveryDelay = 0;
     this.energyRecoveryDelay = 0;
