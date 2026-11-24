@@ -19,7 +19,8 @@ export class AugstakaSystem {
     this.root.add(this.starGlow);
     this.starlight = new THREE.PointLight(0xffd9a0, 1800000000, 520000, 1.8);
     this.root.add(this.starlight);
-    this.stars = new Starfield(this.root, "AugstakaStarfield");
+    this.stars = new Starfield("AugstakaStarfield");
+    this.root.add(this.stars.model());
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
 
