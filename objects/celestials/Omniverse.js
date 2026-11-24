@@ -12,7 +12,8 @@ import { Anodyne } from "./Anodyne.js";
 import { GalvanPrime } from "./GalvanPrime.js";
 import { Incursia } from "./Incursia.js";
 import { Earth } from "./Earth.js";
-import { Extranet } from "../extranet/Extranet.js";
+import { Helix } from "../extranet/Extranet.js";
+import { AudioPlayer } from "../io/AudioPlayer.js";
 import { Pause } from "../io/Pause.js";
 import { Account } from "../io/Account.js";
 
@@ -23,6 +24,7 @@ export class Omniverse {
     this.state = Omniverse.state;
     this.installStyles();
     this.account = new Account();
+    this.audioPlayer = new AudioPlayer();
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "omniverse";
@@ -118,11 +120,12 @@ export class Omniverse {
     });
     this.titleScreen.setVisible(true);
 
-    this.extranet = new Extranet({ account: this.account, onJumpSystem: key => this.jumpToSystem(key) });
-    this.extranetButton = this.extranet.createButton();
-    this.extranetButton.style.display = "none";
+    this.helix = new Helix({ account: this.account, audioPlayer: this.audioPlayer, onJumpSystem: key => this.jumpToSystem(key) });
+    this.helixButton = this.helix.createButton();
+    this.helixButton.style.display = "none";
 
     this.pause = new Pause({
+      audioPlayer: this.audioPlayer,
       onResume: () => this.pause.setVisible(false),
       onCameraSensitivity: value => this.cameraController.setSensitivity?.(value)
     });
@@ -154,7 +157,7 @@ export class Omniverse {
       this.resize();
     };
     window.addEventListener("resize", this.onResize);
-    this.onFirstInteraction = () => this.requestFullscreen();
+    this.onFirstInteraction = () => { this.requestFullscreen(); this.audioPlayer.unlock(this.state.stage); };
     document.addEventListener("pointerdown", this.onFirstInteraction, { once: true });
     this.clock = new THREE.Clock();
     this.animationFrame = null;
@@ -165,7 +168,18 @@ export class Omniverse {
     this.start();
   }
 
-  updateAccountHUD() { this.extranet?.updateAccount(); }
+  updateAccountHUD() { this.helix?.updateAccount(); }
+
+  handleRescuePickup(resident) {
+    return this.helix?.addTask(resident) ?? null;
+  }
+
+  handleRescueDrop(resident, relationshipIncrease = 5, taydeniteIncrease = 10) {
+    this.helix?.completeTask(resident?.taskId);
+    const species = resident?.species;
+    if (species) this.helix?.pages.relationships.addRelationship(species, "Ben", relationshipIncrease);
+    this.helix?.showTaskCompleted({ resident, relationshipIncrease, taydeniteIncrease });
+  }
 
   installStyles() {
     this.fontStyle = document.createElement("style");
@@ -363,7 +377,7 @@ export class Omniverse {
     this.state.stage = "gameplay";
     this.state.currentScene = systemKey === "solar" ? "space" : "system-" + systemKey;
     this.vehicleSystem = systemKey;
-    this.extranet?.setLocation(systemKey === "solar" ? "space" : systemKey);
+    this.helix?.setLocation(systemKey === "solar" ? "space" : systemKey);
     if (ship) this.resetCameraToShip(ship);
     else {
       this.camera.position.set(0, 0, 600000);
@@ -411,14 +425,16 @@ export class Omniverse {
     this.state.currentScene = planet.world.key;
     this.titleScreen.setVisible(false);
     this.titleScreen.newGame.setPreludeVisible(false);
-    this.extranetButton.style.display = "block";
-    this.extranet?.setLocation(planet.world.key);
+    this.helixButton.style.display = "block";
+    this.helix?.setLocation(planet.world.key);
     this.residents = planet.spawnResidents?.(this.celestial) || [];
     this.vehicle?.setRescueContext({
       getCurrentPlanet: () => this.currentPlanet,
       getResidents: () => this.residents || [],
       account: this.account,
-      onUpdate: () => this.updateAccountHUD()
+      onUpdate: () => this.updateAccountHUD(),
+      onPickup: resident => this.handleRescuePickup(resident),
+      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => this.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease)
     });
     return this.celestial;
   }
@@ -440,7 +456,7 @@ export class Omniverse {
     const ship = this.vehicle?.ship;
     const crew = [...(this.crew || [])];
     this.loadSystemScene(destination, ship, crew);
-    this.extranet?.close();
+    this.helix?.close();
     this.joystick?.setVehicleMode(true);
   }
 
@@ -453,7 +469,7 @@ export class Omniverse {
       this.updateCamera();
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
-      this.vehicle?.updateRescueInteraction({ selected: this.joystick?.currentSelection, pickControl: this.titleScreen?.newGame?.pickControl });
+      this.vehicle?.updateRescueInteraction({ selected: this.joystick?.currentSelection, interactControl: this.titleScreen?.newGame?.interactControl });
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
@@ -467,7 +483,7 @@ export class Omniverse {
     this.state.stage = stage;
     this.titleScreen.setVisible(stage === "title");
     this.titleScreen.newGame.setPreludeVisible(stage === "prelude");
-    this.extranetButton.style.display = stage === "gameplay" ? "block" : "none";
+    this.helixButton.style.display = stage === "gameplay" ? "block" : "none";
     this.pauseButton.style.display = stage === "gameplay" ? "block" : "none";
 
     this.titleScreen.newGame.setControlsVisible(stage === "gameplay");
@@ -549,7 +565,7 @@ export class Omniverse {
     window.removeEventListener("resize", this.onResize);
     document.removeEventListener("pointerdown", this.onFirstInteraction);
     this.cameraController.destroy();
-    this.extranet.destroy();
+    this.helix.destroy();
     this.titleScreen.destroy();
     this.pause.destroy();
     this.pauseButton.remove();
@@ -557,6 +573,7 @@ export class Omniverse {
     if (this.joystick) this.joystick.destroy();
     if (this.animationFrame !== null) cancelAnimationFrame(this.animationFrame);
     this.animationFrame = null;
+    this.audioPlayer?.destroy();
     this.renderer.dispose();
     this.canvas.remove();
   }
