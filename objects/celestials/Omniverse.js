@@ -138,7 +138,7 @@ export class Omniverse {
       right: "max(14px, env(safe-area-inset-right))",
       zIndex: "30",
       padding: "10px 14px",
-      border: "1px solid rgba(126,255,168,.5)",
+      border: "none",
       borderRadius: "20px",
       background: "rgba(5,30,18,.84)",
       color: "#eaffef",
