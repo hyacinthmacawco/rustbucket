@@ -65,8 +65,12 @@ export class NewGame {
 
     omniverse.vehicle = new Rustbucket(omniverse.celestial);
     omniverse.vehicle.ship.position.set(0, 2, 34);
-    omniverse.rescuePassengers = omniverse.rescuePassengers || [];
-    omniverse.vehicle.ship.userData.performPickup = () => omniverse.performRescueAction();
+    omniverse.vehicle.setRescueContext({
+      getCurrentPlanet: () => omniverse.currentPlanet,
+      getResidents: () => omniverse.residents || [],
+      account: omniverse.account,
+      onUpdate: () => omniverse.updateAccountHUD()
+    });
 
     omniverse.crew = [
       new Ben({ HumanRig }),
