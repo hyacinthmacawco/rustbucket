@@ -6,8 +6,9 @@ export class Attack {
   }
 
   create() {
-    this.element = document.createElement("button");
-    this.element.type = "button";
+    this.element = document.createElement("div");
+    this.element.setAttribute("role", "button");
+    this.element.tabIndex = 0;
     this.element.textContent = "ATTACK";
     this.element.setAttribute("aria-label", "Attack");
     Object.assign(this.element.style, this.styles);
