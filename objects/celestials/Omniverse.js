@@ -325,7 +325,7 @@ export class Omniverse {
       if (selected === "rustbucket") {
         position.set(0, 0.55, 3.65).applyMatrix4(entity.matrixWorld);
       } else {
-        const head = entity.userData.statusOwner?.rig?.joints?.head;
+        const head = this.getActiveRig(entity.userData.statusOwner)?.joints?.head;
         if (head) {
           head.getWorldPosition(position);
           position.add(new THREE.Vector3(0, 0.06, 0.2).applyQuaternion(rotation));
@@ -351,6 +351,10 @@ export class Omniverse {
   getTeamMember(selected) {
     const index = ["ben", "gwen", "kevin", "rook"].indexOf(selected);
     return index < 0 ? null : this.crew?.[index] || null;
+  }
+
+  getActiveRig(member) {
+    return member?.activeTransformation === "Chromastone" ? member.chromastone?.rig : member?.rig;
   }
 
   findNearbyBag(member, range = 1.8) {
@@ -390,7 +394,7 @@ export class Omniverse {
   pickTeamBag(member, bag) {
     if (!member || member.carryingBag || !bag || !bag.pickable) return false;
     member.group.updateWorldMatrix(true, false);
-    const hand = member.rig?.joints?.rightWrist;
+    const hand = this.getActiveRig(member)?.joints?.rightWrist;
     if (!hand) return false;
     hand.attach(bag.group);
     bag.group.position.set(0.08, -0.04, 0.1);
@@ -426,7 +430,7 @@ export class Omniverse {
     ship.attach(member.group);
     member.group.position.copy(seat.position);
     member.group.rotation.set(0, seat.rotation, 0);
-    member.rig?.sit?.();
+    this.getActiveRig(member)?.sit?.();
     member.seated = true;
     member.seatIndex = seatIndex;
     seat.occupiedBy = member;
@@ -442,7 +446,7 @@ export class Omniverse {
     this.celestial.attach(member.group);
     member.group.position.copy(exit);
     member.group.rotation.y = ship.rotation.y;
-    member.rig?.stand?.();
+    this.getActiveRig(member)?.stand?.();
     const seat = ship.seats?.[member.seatIndex];
     if (seat?.occupiedBy === member) seat.occupiedBy = null;
     member.seated = false;
@@ -513,11 +517,11 @@ export class Omniverse {
       position.x += dx / distance * step;
       position.z += dz / distance * step;
       member.group.rotation.y = Math.atan2(dx, dz);
-      member.rig?._rig?.setWalking(true);
+      this.getActiveRig(member)?._rig?.setWalking(true);
     } else {
-      member.rig?._rig?.setWalking(false);
+      this.getActiveRig(member)?._rig?.setWalking(false);
     }
-    member.rig?._rig?.updateWalk(elapsed);
+    this.getActiveRig(member)?._rig?.updateWalk(elapsed);
     return distance;
   }
 
