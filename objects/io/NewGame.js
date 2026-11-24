@@ -3,7 +3,7 @@ import { Ben } from "../team/Ben.js";
 import { Gwen } from "../team/Gwen.js";
 import { Kevin } from "../team/Kevin.js";
 import { Rook } from "../team/Rook.js";
-import { Human } from "../species/Human.js";
+import { HumanRig } from "../species/Human.js";
 import { BenBag } from "../team/BenBag.js";
 import { GwenBag } from "../team/GwenBag.js";
 import { KevinBag } from "../team/KevinBag.js";
@@ -65,10 +65,10 @@ export class NewGame {
     omniverse.vehicle.ship.position.set(0, 2, 34);
 
     omniverse.crew = [
-      new Ben({ HumanRig: Human }),
-      new Gwen({ HumanRig: Human }),
-      new Kevin({ HumanRig: Human }),
-      new Rook({ HumanRig: Human })
+      new Ben({ HumanRig }),
+      new Gwen({ HumanRig }),
+      new Kevin({ HumanRig }),
+      new Rook({ HumanRig })
     ];
 
     const positions = [
