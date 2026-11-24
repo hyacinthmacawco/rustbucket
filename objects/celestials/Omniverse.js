@@ -236,7 +236,7 @@ export class Omniverse {
       : this.crew?.[["ben", "gwen", "kevin", "rook"].indexOf(selected)]?.group;
     if (!entity) return;
 
-    const target = entity.position.clone();
+    const target = entity.getWorldPosition(new THREE.Vector3());
     target.y += selected === "rustbucket" ? 1.5 : 1.15;
     if (!this.cameraTarget) this.cameraTarget = target.clone();
     const shift = target.clone().sub(this.cameraTarget);
