@@ -29,6 +29,21 @@ export class Rustbucket {
     this.createLighting();
     this.createRamp();
     this.createShadow(parent);
+
+    // The movement joystick supplies camera-relative horizontal movement and
+    // a vertical lift value. Keep the flight behavior on the vehicle itself.
+    this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
+  }
+
+  moveVehicle(moveX, moveZ, lift, delta, right = 0, heading = this.ship.rotation.y) {
+    const horizontalSpeed = 18;
+    const verticalSpeed = 12;
+    this.ship.position.x += moveX * horizontalSpeed * delta;
+    this.ship.position.z += moveZ * horizontalSpeed * delta;
+    this.ship.position.y += lift * verticalSpeed * delta;
+    if (Math.abs(moveX) + Math.abs(moveZ) > 0.001) {
+      this.ship.rotation.y = heading;
+    }
   }
 
   addMesh(geometry, material, position, rotation = [0, 0, 0], parent = this.ship) {
