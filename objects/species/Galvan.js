@@ -1,6 +1,8 @@
 import * as THREE from "three";
+import { initializeResident } from "./Human.js";
 
 export class Galvan {
+  static homeworld = "galvan";
   static relationships = {
     Ben: 80,
     Gwen: 70,
@@ -16,7 +18,7 @@ export class Galvan {
     this.leader = false;
     this.group = new THREE.Group();
     this.group.name = "Galvan";
-    this.homeworld = "galvan";
+    this.homeworld = Galvan.homeworld;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
     this.health = 100;
     this.energy = 100;
@@ -50,6 +52,7 @@ export class Galvan {
     this.model = this.group;
     this.mesh = this.group;
     this.group.userData.statusOwner = this;
+    if (options.residentIndex !== undefined) initializeResident(this, options.residentIndex, { species: "Galvan", homeworld: Galvan.homeworld, style: { boneColor: 0x8d9b8c, jointColor: 0x20d51d } });
     this.group.userData.speciesInstance = this;
   }
 
@@ -172,6 +175,8 @@ export class Galvan {
     this.addBox(dark, [0.26, 0.23, 0.04], [0, 1.43, 0.155]);
     this.addBox(green, [0.12, 0.12, 0.025], [0, 1.43, 0.185]);
   }
+
+  awardTaydenite(account, amount = 10) { return account?.addTaydenite(amount) ?? 0; }
 
   updateStatus(delta) {
     this.healthRecoveryDelay = Math.max(0, this.healthRecoveryDelay - delta);
