@@ -7,6 +7,11 @@ import { Incursean } from "../species/Incursean.js";
 import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
 import { Human } from "../species/Human.js";
+import { Earth } from "../celestials/Earth.js";
+import { Augstaka } from "../celestials/Augstaka.js";
+import { Incursia } from "../celestials/Incursia.js";
+import { Anodyne } from "../celestials/Anodyne.js";
+import { GalvanPrime } from "../celestials/GalvanPrime.js";
 
 export class Relationships {
   constructor() {
@@ -19,6 +24,7 @@ export class Relationships {
       Human: "earth"
     };
     this.entityClasses = { Ben, Gwen, Kevin, Rook, Highbreed, Incursean, Anodite, Galvan, Human };
+    this.planetClasses = { earth: Earth, augstaka: Augstaka, incursia: Incursia, anodyne: Anodyne, galvan: GalvanPrime };
     this.styles = {
       wrapper: { overflowX: "auto" },
       table: { width: "100%", borderCollapse: "collapse", minWidth: "760px", fontSize: ".78rem" },
@@ -30,7 +36,6 @@ export class Relationships {
 
   getRelationship(from, to) {
     if (from === to) return 0;
-    const homeworld = this.homeworlds[from];
     if (homeworld) {
       try {
         const saved = JSON.parse(localStorage.getItem("rustbucket.planet." + homeworld) || "null");
@@ -40,12 +45,16 @@ export class Relationships {
         // Fall back to the relationship stored on the character class.
       }
     }
-    return Number(this.entityClasses[from]?.relationships?.[to] ?? 0);
+    const PlanetClass = this.planetClasses[homeworld];
+    return Number(PlanetClass?.relationships?.[to] ?? this.entityClasses[from]?.relationships?.[to] ?? 0);
   }
 
   addRelationship(from, to, amount = 0.1) {
-    if (from === to || !this.entityClasses[from]) return;
-    const relationships = this.entityClasses[from].relationships;
+    if (from === to || (!this.entityClasses[from] && !this.homeworlds[from])) return;
+    const homeworld = this.homeworlds[from];
+    const source = homeworld ? this.planetClasses[homeworld] : this.entityClasses[from];
+    source.relationships ||= {};
+    const relationships = source.relationships;
     relationships[to] = Math.max(-100, Math.min(100, this.getRelationship(from, to) + amount));
     const homeworld = this.homeworlds[from];
     if (homeworld) {
