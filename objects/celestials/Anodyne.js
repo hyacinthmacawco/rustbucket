@@ -30,7 +30,7 @@ export class Anodyne {
     exterior.name = "AnodyneExterior";
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(1300, 64, 48),
-      new THREE.MeshStandardMaterial({ color: 0x7540b8, roughness: 0.82, emissive: 0x160728, emissiveIntensity: 0.12 })
+      new THREE.MeshStandardMaterial({ color: 0x8753d6, roughness: 0.82, emissive: 0x3d1b78, emissiveIntensity: 0.28 })
     );
     globe.name = "Anodyne";
     exterior.add(globe);
