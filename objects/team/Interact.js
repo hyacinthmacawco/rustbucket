@@ -9,7 +9,7 @@ export class Interact {
     this.element = document.createElement("div");
     this.element.setAttribute("role", "button");
     this.element.tabIndex = 0;
-    this.element.textContent = this.mode.toUpperCase();
+    this.element.textContent = this.mode;
     this.element.setAttribute("aria-label", this.mode);
     Object.assign(this.element.style, this.styles);
     this.element.addEventListener("pointerdown", this.handlePress);
