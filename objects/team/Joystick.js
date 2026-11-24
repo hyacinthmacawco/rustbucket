@@ -371,8 +371,12 @@ export class Joystick {
       localForward.copy(new THREE.Vector3(fx, 0, fz).applyMatrix4(inverseParent).sub(origin)).normalize();
       localMovement.copy(new THREE.Vector3(mx, 0, mz).applyMatrix4(inverseParent).sub(origin));
     }
-    // Every controllable entity, including the Rustbucket, faces the camera heading.
-    object.rotation.y = Math.atan2(localForward.x, localForward.z);
+    // Player-controlled movement follows the camera heading. Preserve AI
+    // facing and seat orientation while no movement input is being applied.
+    const seated = Boolean(object.userData.statusOwner?.seated);
+    if (!seated && (this.selected === "rustbucket" || magnitude > 0.08)) {
+      object.rotation.y = Math.atan2(localForward.x, localForward.z);
+    }
 
     if (joy.jumpRequested) {
       if (this.selected === "rustbucket") this.onJump();
@@ -380,7 +384,9 @@ export class Joystick {
       joy.jumpRequested = false;
     }
 
-    if (this.selected === "rustbucket" && object.userData.moveVehicle) {
+    if (seated) {
+      // A seated crew member must stand up before moving.
+    } else if (this.selected === "rustbucket" && object.userData.moveVehicle) {
       const lift = Math.abs(joy.liftY) < 0.08 ? 0 : THREE.MathUtils.clamp(joy.liftY, -1, 1);
       const fuelDemand = magnitude > 0.08 || Math.abs(lift) > 0.05;
       const hasFuel = !fuelDemand || object.userData.onFuelUse?.((magnitude + Math.abs(lift)) * dt) !== false;
