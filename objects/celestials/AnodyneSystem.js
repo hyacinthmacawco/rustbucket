@@ -19,7 +19,8 @@ export class AnodyneSystem {
     this.root.add(this.starGlow);
     this.starlight = new THREE.PointLight(0xffb36b, 1800000000, 520000, 1.8);
     this.root.add(this.starlight);
-    this.stars = new Starfield(this.root, "AnodyneStarfield");
+    this.stars = new Starfield("AnodyneStarfield");
+    this.root.add(this.stars.model());
     this.root.traverse(object => { object.userData.noPhysics = true; });
   }
 
