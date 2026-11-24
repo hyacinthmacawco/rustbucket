@@ -12,7 +12,8 @@ export class Joystick {
       lift: { position: "fixed", right: "max(22px, env(safe-area-inset-right))", bottom: "max(22px, env(safe-area-inset-bottom))", width: "112px", height: "112px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
-      teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" }
+      teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
+      transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", padding: "9px 10px", zIndex: "2147483646", border: "1px solid rgba(126,255,168,.5)", borderRadius: "6px", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
     };
 
     this.input = {
@@ -60,6 +61,22 @@ export class Joystick {
       this.teamButtons.set(name, button);
     }
     document.body.append(this.element, this.teamPanel);
+
+    this.transformationSelect = document.createElement("select");
+    this.transformationSelect.id = "ben-transformations";
+    this.transformationSelect.setAttribute("aria-label", "Ben transformations");
+    Object.assign(this.transformationSelect.style, this.styles.transformation);
+    for (const name of ["Ben", "Chromastone"]) {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      this.transformationSelect.append(option);
+    }
+    this.transformationSelect.addEventListener("change", () => {
+      this.onTransformationChange?.(this.transformationSelect.value);
+    });
+    document.body.append(this.transformationSelect);
+    this.transformationSelect.style.display = "none";
 
     this.liftElement = document.createElement("div");
     this.liftElement.id = "lift-joystick";
@@ -207,7 +224,7 @@ export class Joystick {
     }
   }
 
-  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, initialSelected = "ben" }) {
+  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, onTransformationChange = () => {}, initialSelected = "ben" }) {
     this.keys = new Set();
     this.entities = entities;
     this.camera = camera;
