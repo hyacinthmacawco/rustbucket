@@ -71,7 +71,7 @@ export class Earth {
     interior.add(ground);
     const storage = new THREE.Group();
     storage.name = "KevinStorageUnit";
-    storage.position.set(0, 0, -8);
+    storage.position.set(0, 0, -30);
     interior.add(storage);
     this.createStorageUnit(storage);
     return interior;
