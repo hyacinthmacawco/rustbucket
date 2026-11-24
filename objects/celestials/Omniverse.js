@@ -514,7 +514,8 @@ export class Omniverse {
     const dz = target.z - position.z;
     const distance = Math.hypot(dx, dz);
     if (distance > 0.08) {
-      const step = Math.min(distance, 2.5 * delta);
+      const parentScale = member.group.parent === this.vehicle?.ship ? (this.vehicle.ship.scale.x || 1) : 1;
+      const step = Math.min(distance, (2.5 / parentScale) * delta);
       position.x += dx / distance * step;
       position.z += dz / distance * step;
       member.group.rotation.y = Math.atan2(dx, dz);
