@@ -5,7 +5,7 @@ export class PauseTab {
     this.onSelect = onSelect;
     this.active = active;
     this.styles = {
-      button: { padding: "10px 14px", border: "1px solid rgba(126,255,168,.35)", borderRadius: "4px", background: "rgba(5, 35, 18, .8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" },
+      button: { padding: "10px 14px", border: "none", borderRadius: "4px", background: "rgba(5, 35, 18, .8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em" },
       active: { borderColor: "#8cffaa", background: "rgba(23, 90, 46, .8)" }
     };
   }
