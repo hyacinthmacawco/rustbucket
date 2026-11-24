@@ -3,21 +3,13 @@ import { initializeResident } from "./Human.js";
 
 export class Highbreed {
   static homeworld = "augstaka";
-  static relationships = {
-    Ben: 40,
-    Gwen: 30,
-    Kevin: 20,
-    Rook: 10,
-    Incursean: -64,
-    Anodite: 3,
-    Galvan: 16,
-    Human: -56
-  };
 
   constructor(parent = null, options = {}) {
     this.group = new THREE.Group();
     this.group.name = "Highbreed";
     this.leader = false;
+    this.species = this.constructor.name;
+    this.relationships = options.relationships || {};
     this.homeworld = Highbreed.homeworld;
     this.currentWorld = null;
     this.taydenite = 350 + Math.floor(Math.random() * 251);
@@ -228,7 +220,7 @@ export class Highbreed {
 
   attack(target) {
     if (!target || target.health <= 0) return false;
-    const relationships = this.constructor.relationships || {};
+    const relationships = this.relationships || {};
     const relation = Number(relationships[target.species || target.constructor?.name] ?? relationships[target.name] ?? 0);
     if (relation >= 0) return false;
     this.rig?._rig?.playAnimation("punch");
