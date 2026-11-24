@@ -7,6 +7,7 @@ export class Moon {
   constructor() {
     this.world = Moon.WORLD;
     this.system = "solar";
+    this.atmosphereHeight = 90;
   }
 
   exterior() {
