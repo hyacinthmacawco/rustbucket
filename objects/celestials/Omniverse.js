@@ -410,7 +410,7 @@ export class Omniverse {
       this.joystick?.update(delta);
       this.updateCamera();
     }
-    this.celestial.animate?.(delta, elapsed);
+    this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
     if (this.state.stage !== "paused") this.renderer.render(this.scene, this.camera);
   }
