@@ -483,11 +483,11 @@ export class Omniverse {
     const dialog = document.createElement("section");
     Object.assign(dialog.style, { position: "fixed", inset: "15% 8%", zIndex: "120", padding: "24px", background: "rgba(3,18,12,.96)", color: "#eaffef", border: "1px solid #79e99a", font: "inherit", display: "grid", alignContent: "start", gap: "14px" });
     const title = document.createElement("h2"); title.textContent = "MARKET";
-    const stock = document.createElement("p"); const quantity = Number(market.userData.resources?.["Grape Smoothie"] || 0); stock.textContent = `Grape Smoothie — ${quantity}`;
+    const stock = document.createElement("p"); const quantity = Number(market.resources?.["Grape Smoothie"] || 0); stock.textContent = `Grape Smoothie — ${quantity}`;
     const buy = document.createElement("button"); buy.textContent = "BUY";
     Object.assign(buy.style, { padding: "12px", background: "#174c2c", color: "white", font: "inherit" });
     buy.disabled = quantity <= 0;
-    buy.onclick = () => { const bag = this.bags?.[this.crew.indexOf(member)]; if (!bag || quantity <= 0) return; bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; market.userData.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
+    buy.onclick = () => { const bag = this.bags?.[this.crew.indexOf(member)]; if (!bag || quantity <= 0) return; bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
     const close = document.createElement("button"); close.textContent = "CLOSE"; close.onclick = () => dialog.remove();
     dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
   }
