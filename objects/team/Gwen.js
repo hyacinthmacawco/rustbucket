@@ -156,7 +156,7 @@ export class Gwen {
   group.userData.statusOwner = this;
   }
 
-  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Gwen ?? target.constructor?.relationships?.Gwen ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(2); return true; }
+  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Gwen ?? target.constructor?.relationships?.Gwen ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(this.damage || 1); return true; }
 
   updateStatus(delta) {
     if (this.dead || this.health <= 0) { this.health = 0; this.dead = true; this.group.visible = false; return; }
