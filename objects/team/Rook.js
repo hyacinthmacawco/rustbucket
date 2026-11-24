@@ -99,7 +99,7 @@ export class Rook {
   group.userData.statusOwner = this;
   }
 
-  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Rook ?? target.constructor?.relationships?.Rook ?? -1); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(this.damage || 1); return true; }
+  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Rook ?? target.constructor?.relationships?.Rook ?? 0); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(this.damage || 1); return true; }
 
   updateStatus(delta) {
     if (this.dead || this.health <= 0) { this.health = 0; this.dead = true; this.group.visible = false; return; }
