@@ -26,6 +26,7 @@ export class HumanRig extends Human {
   static relationships = {"Ben":96,"Gwen":80,"Kevin":50,"Rook":28,"Highbreed":-56,"Incursean":-36,"Anodite":40,"Galvan":56};
 
   constructor(options = {}) {
+    super();
   const {
     boneColor = 0x8bb8e8,
     jointColor = 0xf0bd72,
