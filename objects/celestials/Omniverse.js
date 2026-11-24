@@ -457,7 +457,7 @@ export class Omniverse {
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
-    if (this.state.stage === "gameplay" && this.crew?.[0]?.activeTransformation === "Chromastone") {
+    if (this.state.stage === "gameplay" && this.crew?.[0]?.group?.parent && this.crew[0].activeTransformation === "Chromastone") {
       this.crew[0].chromastone.checkLaserCollisions(this.vehicle?.projectiles || []);
     }
     if (this.state.stage !== "paused") this.renderer.render(this.scene, this.camera);
