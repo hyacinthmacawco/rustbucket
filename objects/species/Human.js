@@ -155,6 +155,7 @@ export class HumanRig {
   );
 
   let walking = true;
+  let sitting = false;
   let speed = walkSpeed;
   let amplitude = walkAmplitude;
   let activeAction = null;
@@ -248,6 +249,7 @@ export class HumanRig {
     joints,
     get walking() { return walking; },
     setWalking(enabled) {
+      if (sitting) return;
       walking = Boolean(enabled);
       if (!walking) {
         rig.resetPose();
@@ -258,6 +260,7 @@ export class HumanRig {
       speed = Math.max(0, Number(value) || 0);
     },
     playAnimation(name) {
+      if (sitting) sitting = false;
       if (!actionClips[name]) {
         console.warn("Unknown rig animation:", name);
         return false;
@@ -272,6 +275,7 @@ export class HumanRig {
       rig.resetPose();
     },
     updateWalk(timeSeconds) {
+      if (sitting) return;
       if (activeAction) {
         const clip = actionClips[activeAction.name];
         if (activeAction.startedAt === null) activeAction.startedAt = timeSeconds;
@@ -385,6 +389,28 @@ export class HumanRig {
       joints.spine.rotation.y = -Math.sin(cycle) * 0.025 * amplitude;
       root.position.y = 0;
     },
+    sit() {
+      activeAction = null;
+      sitting = true;
+      walking = false;
+      rig.resetPose();
+      joints.leftThigh.rotation.x = -1.15;
+      joints.rightThigh.rotation.x = -1.15;
+      joints.leftKnee.rotation.x = 1.25;
+      joints.rightKnee.rotation.x = 1.25;
+      joints.spine.rotation.x = 0.08;
+      root.position.y = -0.12;
+      return true;
+    },
+    stand() {
+      sitting = false;
+      activeAction = null;
+      rig.resetPose();
+      walking = true;
+      root.position.y = 0;
+      return true;
+    },
+    get sitting() { return sitting; },
     resetPose() {
       for (const [bone, rotation] of initialRotations) {
         bone.rotation.copy(rotation);
@@ -416,6 +442,9 @@ export class HumanRig {
   root.userData.playRigAction = name => rig.playAnimation(name);
   }
 
+  sit() { this._rig.sit(); return this; }
+  stand() { this._rig.stand(); return this; }
+  get sitting() { return this._rig.sitting; }
   jump() { this.group.userData.playRigAction("jump"); }
   attack() { this.group.userData.playRigAction("punch"); }
   pick() { this.group.userData.playRigAction("pickup"); }
