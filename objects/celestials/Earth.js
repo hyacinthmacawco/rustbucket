@@ -142,14 +142,14 @@ export class Earth {
       react.vehicle = vehicle;
       react.crew = crew;
       const crewPositions = [
-        [-1.2, 1497.7, 0.15],
-        [-0.4, 1497.7, 0.15],
-        [0.4, 1497.7, 0.15],
-        [1.2, 1497.7, 0.15]
+        [-0.6, -1.18, 0.15],
+        [-0.2, -1.18, 0.15],
+        [0.2, -1.18, 0.15],
+        [0.6, -1.18, 0.15]
       ];
       crew.forEach((member, index) => {
         member.group.position.set(...crewPositions[index]);
-        react.celestial.add(member.group);
+        ship.add(member.group);
       });
       react.bags = [];
     }
