@@ -21,6 +21,7 @@ export class GalvanPrime {
   };
 
   constructor() {
+    this.songs = ["./files/songs/neodevol-ov.mp3"];
     this.world = GalvanPrime.WORLD;
     this.system = "galvan";
     this.atmosphereHeight = 90;
