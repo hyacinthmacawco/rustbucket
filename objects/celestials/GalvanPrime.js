@@ -57,17 +57,6 @@ export class GalvanPrime {
     ground.position.y = -0.6;
     interior.add(ground);
 
-    for (let index = 0; index < 34; index++) {
-      const angle = index * Math.PI * 2 / 34;
-      const radius = 38 + (index % 5) * 15;
-      const formation = new THREE.Mesh(
-        new THREE.OctahedronGeometry(2 + (index % 4) * 0.7),
-        new THREE.MeshStandardMaterial({ color: index % 2 ? 0x77d6a2 : 0x4c9b78, emissive: 0x123d2b, emissiveIntensity: 0.18 })
-      );
-      formation.position.set(Math.cos(angle) * radius, 5 + (index % 6) * 5, Math.sin(angle) * radius);
-      formation.scale.y = 1.2;
-      interior.add(formation);
-    }
 
     const hub = new THREE.Group();
     hub.name = "Galvan PrimeCivicHub";
