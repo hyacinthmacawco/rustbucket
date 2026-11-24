@@ -2,7 +2,6 @@ import { PauseTab } from "./PauseTab.js";
 import { Resume } from "./Resume.js";
 import { VolumeSlider } from "./VolumeSlider.js";
 import { CameraSensitivitySlider } from "./CameraSensitivitySlider.js";
-import { NewGame } from "./NewGame.js";
 
 export class Pause {
   constructor({ onResume = () => {}, audioPlayer = null, onCameraSensitivity = () => {} } = {}) {
