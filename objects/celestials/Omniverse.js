@@ -113,12 +113,13 @@ export class Omniverse {
     };
 
     this.titleScreen = new Title({
-      onNewGame: () => {
-        this.requestFullscreen();
+      onNewGame: async () => {
+        await this.requestFullscreen();
+        this.audioPlayer.unlock("title", this.titleScreen.song);
         this.setStage("prelude");
       },
-      onSkipPrelude: () => {
-        this.requestFullscreen();
+      onSkipPrelude: async () => {
+        await this.requestFullscreen();
         this.setStage("gameplay");
       }
     });
