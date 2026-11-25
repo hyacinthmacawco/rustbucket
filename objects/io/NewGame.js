@@ -106,6 +106,7 @@ export class NewGame {
       new KevinBag(omniverse.celestial, [2.5, 0.45, 2]),
       new RookBag(omniverse.celestial, [7, 0.45, 2])
     ];
+    omniverse.bags.forEach(bag => omniverse.registerBagPhysics(bag));
     omniverse.attachObjectClickHandlers();
     omniverse.crew.forEach((member, index) => {
       member.automation = { bag: omniverse.bags[index], seatIndex: index, phase: "toBag", elapsed: 0 };
