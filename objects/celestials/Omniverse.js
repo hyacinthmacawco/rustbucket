@@ -306,10 +306,13 @@ export class Omniverse {
 
   stepPhysics(delta) {
     if (!this.physicsWorld || this.state.stage !== "gameplay") return;
-    for (const [object, entry] of this.physicsBodies) {
+    // Sync the vehicle before its passengers so child world transforms use
+    // the current ship transform. Only seated crew are taken out of simulation.
+    const physicsEntries = [...this.physicsBodies.entries()];
+    physicsEntries.sort(([a], [b]) => a === this.vehicle?.ship ? -1 : b === this.vehicle?.ship ? 1 : 0);
+    for (const [object, entry] of physicsEntries) {
       if (!object.parent) continue;
-      const insideShip = object.parent === this.vehicle?.ship;
-      if (entry.owner?.seated || insideShip) {
+      if (entry.owner?.seated) {
         if (!entry.disabled) entry.body.setEnabled(false);
         entry.disabled = true;
         continue;
@@ -326,7 +329,7 @@ export class Omniverse {
     }
     this.physicsWorld.timestep = Math.max(1 / 120, Math.min(delta, 0.05));
     this.physicsWorld.step();
-    for (const [object, entry] of this.physicsBodies) {
+    for (const [object, entry] of physicsEntries) {
       if (!object.parent || entry.disabled) continue;
       const p = entry.body.translation(), q = entry.body.rotation(), parent = object.parent;
       parent.updateWorldMatrix(true, false);
