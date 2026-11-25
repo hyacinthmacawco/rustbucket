@@ -30,10 +30,11 @@ export class Camera {
     this.sensitivity = Math.max(0.001, Math.min(0.02, Number(value) || 0.004));
   }
 
-  attach(canvas, { getStage = () => "gameplay", getTarget = () => new this.THREE.Vector3() } = {}) {
+  attach(canvas, { getStage = () => "gameplay", getTarget = () => new this.THREE.Vector3(), getFirstPerson = () => false } = {}) {
     this.canvas = canvas;
     this.getStage = getStage;
     this.getTarget = getTarget;
+    this.getFirstPerson = getFirstPerson;
     this.onPointerDown = event => {
       if (event.button !== 0 || this.getStage() === "title") return;
       if (event.target !== this.canvas) return;
@@ -61,6 +62,12 @@ export class Camera {
       this.pointer.x = event.clientX;
       this.pointer.y = event.clientY;
 
+      if (this.getFirstPerson()) {
+        this.camera.rotation.order = "YXZ";
+        this.camera.rotation.y -= dx * this.sensitivity;
+        this.camera.rotation.x = this.THREE.MathUtils.clamp(this.camera.rotation.x - dy * this.sensitivity, -Math.PI / 2 + 0.08, Math.PI / 2 - 0.08);
+        return;
+      }
       const target = this.getTarget();
       const offset = this.camera.position.clone().sub(target);
       const spherical = new this.THREE.Spherical().setFromVector3(offset);
@@ -86,6 +93,11 @@ export class Camera {
     };
     this.onWheel = event => {
       if (this.getStage() === "title") return;
+      if (this.getFirstPerson()) {
+        this.camera.fov = this.THREE.MathUtils.clamp(this.camera.fov + event.deltaY * 0.025, 25, 85);
+        this.camera.updateProjectionMatrix();
+        return;
+      }
       const target = this.getTarget();
       const offset = this.camera.position.clone().sub(target);
       const distance = offset.length();
@@ -109,6 +121,11 @@ export class Camera {
   }
 
   zoomByRatio(ratio) {
+    if (this.getFirstPerson()) {
+      this.camera.fov = this.THREE.MathUtils.clamp(this.camera.fov / ratio, 25, 85);
+      this.camera.updateProjectionMatrix();
+      return;
+    }
     const target = this.getTarget();
     const offset = this.camera.position.clone().sub(target);
     const nextDistance = this.THREE.MathUtils.clamp(offset.length() * ratio, 4, 250);
