@@ -91,7 +91,8 @@ export class Omniverse {
     this.cameraTarget = new THREE.Vector3();
     this.cameraController.attach(this.canvas, {
       getStage: () => this.state.stage,
-      getTarget: () => this.cameraTarget
+      getTarget: () => this.cameraTarget,
+      getFirstPerson: () => this.firstPerson
     });
 
     this.systemClasses = {
@@ -766,7 +767,7 @@ export class Omniverse {
     this.state.currentScene = planet.world.key;
     this.titleScreen.setVisible(false);
     this.titleScreen.newGame.setPreludeVisible(false);
-    this.helixButton.style.display = "block";
+    this.helixButton.style.display = "inline-flex";
     this.helix?.setLocation(planet.world.key);
     this.residents = planet.spawnResidents?.(this.celestial) || [];
     this.vehicle?.setRescueContext({
@@ -861,7 +862,7 @@ export class Omniverse {
     this.state.stage = stage;
     this.titleScreen.setVisible(stage === "title");
     this.titleScreen.newGame.setPreludeVisible(stage === "prelude");
-    this.helixButton.style.display = stage === "gameplay" ? "block" : "none";
+    this.helixButton.style.display = stage === "gameplay" ? "inline-flex" : "none";
     this.pauseButton.style.display = stage === "gameplay" ? "block" : "none";
 
     this.titleScreen.newGame.setControlsVisible(stage === "gameplay");
