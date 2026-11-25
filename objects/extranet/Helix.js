@@ -337,10 +337,11 @@ export class Helix {
     this.root.style.display = "flex";
     this.window.style.display = "none";
     this.taskCompletedPage.style.display = "flex";
-    this.audioPlayer?.playSfx("./files/songs/ov-end-credits.m4a");
+    this.audioPlayer?.playOverrideMusic("./files/songs/ov-end-credits.m4a");
   }
 
   continueAfterTask = () => {
+    this.audioPlayer?.stopOverrideMusic();
     this.taskCompletedPage.style.display = "none";
     this.window.style.display = "flex";
   };
