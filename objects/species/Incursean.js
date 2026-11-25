@@ -3,6 +3,7 @@ import { initializeResident } from "./Human.js";
 
 export class Incursean {
   static homeworld = "incursia";
+  static collisionCapsule = Object.freeze({ type: "capsule", radius: 0.24, halfHeight: 0.72, centerY: 0.95 });
 
   constructor(parent = null, options = {}) {
     this.name = options.name || "Incursean";
