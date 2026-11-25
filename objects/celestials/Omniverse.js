@@ -120,6 +120,7 @@ export class Omniverse {
     this.titleScreen = new Title({
       onNewGame: async () => {
         await this.requestFullscreen();
+        this.audioPlayer.unlocked = true;
         this.setStage("prelude");
       },
       onSkipPrelude: async () => {
