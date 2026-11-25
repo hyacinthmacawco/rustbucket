@@ -279,8 +279,9 @@ export class Omniverse {
   registerVehiclePhysics(vehicle) {
     if (!vehicle?.ship || !this.physicsWorld) return null;
     const body = vehicle.addVehicle(this.physicsWorld, RAPIER);
-    const inAtmosphere = this.state.currentScene !== "space" && !this.state.currentScene.startsWith("system-");
-    body.setGravityScale(inAtmosphere ? 1 : 0, true);
+    // Flight controls position the ship directly; keep it buoyant while
+    // Rapier still resolves hull contacts against the planetary ground.
+    body.setGravityScale(0, true);
     this.physicsBodies.set(vehicle.ship, { body, owner: vehicle, disabled: false });
     return body;
   }
@@ -832,7 +833,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
-    this.vehicle?.vehicleBody?.setGravityScale(1, true);
+    this.vehicle?.vehicleBody?.setGravityScale(0, true);
     if (ship) {
       this.vehicle.ship = ship;
       ship.position.set(0, 2, 34);
