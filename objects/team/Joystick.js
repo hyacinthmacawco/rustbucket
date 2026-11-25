@@ -92,7 +92,7 @@ export class Joystick {
       flex: "0 0 auto", pointerEvents: "auto", zIndex: "2147483647"
     });
 
-    document.body.append(this.element, this.statusBars, this.actionControls, this.teamPanel);
+    document.body.append(this.element, this.statusBars, this.actionControls, this.liftElement, this.teamPanel);
 
     this.transformationSelect = document.createElement("select");
     this.transformationSelect.id = "ben-transformations";
