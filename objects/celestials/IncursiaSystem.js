@@ -25,6 +25,7 @@ export class IncursiaSystem {
     this.stars = new Starfield("IncursiaStarfield");
     this.root.add(this.stars.model());
     this.ships = [];
+    this.patrolTime = 0;
     for (let index = 0; index < 3; index++) {
       const visual = new IncurseanShip(this.root, { scale: 3 });
       const group = visual.group;
@@ -56,12 +57,13 @@ export class IncursiaSystem {
   }
 
   animate(delta, elapsed) {
+    this.patrolTime += delta;
     for (const ship of this.ships) {
       if (ship.destroyed) continue;
-      const angle = ship.orbitPhase + elapsed * ship.orbitSpeed;
+      const angle = ship.orbitPhase + this.patrolTime * ship.orbitSpeed;
       ship.group.position.set(
         274300 + Math.cos(angle) * ship.orbitRadius,
-        1250 + Math.sin(elapsed * 0.32 + ship.orbitPhase) * 110,
+        1250 + Math.sin(this.patrolTime * 0.32 + ship.orbitPhase) * 110,
         Math.sin(angle) * ship.orbitRadius
       );
       ship.group.rotation.y = -angle;
