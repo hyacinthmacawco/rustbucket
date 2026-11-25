@@ -12,12 +12,11 @@ import { Earth } from "../celestials/Earth.js";
 import { Joystick } from "../team/Joystick.js";
 import { Jump } from "../team/Jump.js";
 import { Attack } from "../team/Attack.js";
-import { Interact } from "../team/Interact.js";
 import { POV } from "../team/POV.js";
 import { Ramp } from "../team/Ramp.js";
 
 export class NewGame {
-  static helpText = "WASD / joystick: move. Drag / swipe: rotate camera. Mouse wheel / pinch: zoom. F / joystick centre: switch team member. Space / JUMP: open the system map when Rustbucket is selected. E / INTERACT: pick up, drop off, sit, stand or shop. Q / ATTACK: attack hostile characters. R: open or close the Rustbucket ramp. 1P / 3P: toggle first-person and third-person view. PAUSE: open settings, help and credits. EXTRANET: open the Private Cloud browser.";
+  static helpText = "WASD / joystick: move. Drag / swipe: rotate camera. Mouse wheel / pinch: zoom. F / joystick centre: switch team member. Space / JUMP: open the system map when Rustbucket is selected. Click bags to pick up or drop them. Click markets to shop. Click visitors to board or leave them at a planet. Q / ATTACK: attack hostile characters. R: open or close the Rustbucket ramp. 1P / 3P: toggle first-person and third-person view. PAUSE: open settings, help and credits. EXTRANET: open the Private Cloud browser.";
 
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
     this.omniverse = omniverse;
@@ -70,14 +69,16 @@ export class NewGame {
     omniverse.vehicleSystem = "solar";
 
     omniverse.vehicle = new Rustbucket(omniverse.celestial);
-    omniverse.vehicle.ship.position.set(0, 2, 34);
+    omniverse.vehicle.ship.position.set(0, 3.54, 34);
     omniverse.vehicle.setRescueContext({
       getCurrentPlanet: () => omniverse.currentPlanet,
       getResidents: () => omniverse.residents || [],
       account: omniverse.account,
       onUpdate: () => omniverse.updateAccountHUD(),
       onPickup: resident => omniverse.handleRescuePickup(resident),
-      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => omniverse.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease)
+      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => omniverse.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease),
+      onBoard: resident => omniverse.setResidentAboard(resident, true),
+      onUnboard: resident => omniverse.setResidentAboard(resident, false)
     });
 
     omniverse.crew = [
@@ -105,6 +106,7 @@ export class NewGame {
       new KevinBag(omniverse.celestial, [2.5, 0.45, 2]),
       new RookBag(omniverse.celestial, [7, 0.45, 2])
     ];
+    omniverse.attachObjectClickHandlers();
     omniverse.crew.forEach((member, index) => {
       member.automation = { bag: omniverse.bags[index], seatIndex: index, phase: "toBag", elapsed: 0 };
       member.carryingBag = null;
@@ -116,7 +118,6 @@ export class NewGame {
 
     omniverse.joystick?.destroy();
     this.jumpControl?.destroy();
-    this.interactControl?.destroy();
     this.attackControl?.destroy();
     this.povControl?.destroy();
     this.rampControl?.destroy();
@@ -141,13 +142,12 @@ export class NewGame {
       },
       onJump: () => omniverse.helix.openOmnidata(),
       onAtmosphereCheck: () => omniverse.checkAtmosphereTransition(),
+      onMove: (object, dx, dz) => omniverse.moveCharacterWithCollisions(object, dx, dz),
       onToggleRamp: () => omniverse.vehicle?.toggleRamp(),
       onTransformationChange: form => omniverse.crew[0]?.setTransformation(form),
-      onInteract: selected => omniverse.handleTeamInteraction(selected),
       initialSelected: "ben"
     });
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
-    this.interactControl = new Interact({ onPress: () => omniverse.handleTeamInteraction(omniverse.joystick.currentSelection) });
     this.povControl = new POV({ onToggle: enabled => omniverse.setPOV(enabled) });
     this.rampControl = new Ramp({ onPress: () => omniverse.vehicle?.toggleRamp() });
     this.attackControl = new Attack({
@@ -163,11 +163,10 @@ export class NewGame {
       }
     });
     this.jumpControl.create();
-    this.interactControl.create();
     this.attackControl.create();
     this.povControl.create();
     this.rampControl.create();
-    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element, this.povControl.element, omniverse.helixButton, this.rampControl.element]);
+    omniverse.joystick.setActionControls([this.attackControl.element, this.jumpControl.element, this.povControl.element, omniverse.helixButton, this.rampControl.element]);
     this.setControlsVisible(true);
     omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
@@ -177,7 +176,6 @@ export class NewGame {
 
   setControlsVisible(visible) {
     this.jumpControl?.setVisible(visible);
-    this.interactControl?.setVisible(visible);
     this.attackControl?.setVisible(visible);
     this.povControl?.setVisible(visible);
     this.rampControl?.setVisible(visible);
@@ -193,7 +191,6 @@ export class NewGame {
     this.element?.remove();
     this.prelude?.remove();
     this.jumpControl?.destroy();
-    this.interactControl?.destroy();
     this.attackControl?.destroy();
     this.povControl?.destroy();
     this.rampControl?.destroy();
