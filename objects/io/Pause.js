@@ -10,7 +10,7 @@ export class Pause {
     this.onCameraSensitivity = onCameraSensitivity;
     this.visible = false;
     this.styles = {
-      overlay: { position: "fixed", inset: "0", zIndex: "90", display: "none", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0, 5, 2, .76)" },
+      overlay: { position: "fixed", inset: "0", zIndex: "100", display: "none", alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(0, 5, 2, .76)" },
       panel: { width: "min(92vw, 620px)", maxHeight: "88vh", overflow: "auto", padding: "24px", border: "1px solid rgba(126,255,168,.5)", borderRadius: "10px", background: "rgba(3, 19, 10, .97)", color: "#eaffef", boxShadow: "0 0 42px rgba(61,255,131,.15)" },
       title: { margin: "0 0 20px", color: "#a6ffbd", fontFamily: "Industry Light, sans-serif", letterSpacing: ".14em", fontSize: "1.4rem", fontWeight: "300" },
       tabs: { display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" },
