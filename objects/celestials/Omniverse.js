@@ -366,10 +366,20 @@ export class Omniverse {
     }
     const entry = this.physicsBodies.get(object);
     if (!entry || entry.disabled || !this.characterController) {
-      object.position.x += dx;
-      object.position.z += dz;
+      const parent = object.parent;
+      if (parent) {
+        parent.updateWorldMatrix(true, false);
+        const inverse = parent.matrixWorld.clone().invert();
+        const origin = new THREE.Vector3().applyMatrix4(inverse);
+        const target = new THREE.Vector3(dx, 0, dz).applyMatrix4(inverse);
+        object.position.add(target.sub(origin));
+      } else {
+        object.position.x += dx;
+        object.position.z += dz;
+      }
       return;
     }
+    this.physicsWorld.updateSceneQueries();
     const collider = entry.body.collider(0);
     if (!collider) return;
     this.characterController.computeColliderMovement(collider, { x: dx, y: 0, z: dz });
