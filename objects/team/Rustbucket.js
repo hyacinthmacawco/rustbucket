@@ -101,7 +101,7 @@ export class Rustbucket {
     context.onUnboard(resident);
 
     const currentWorld = planet?.world?.key;
-    const residentHomeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
+    const residentHomeworld = resident.homeworld;
     const returnedHome = Boolean(currentWorld && residentHomeworld && residentHomeworld === currentWorld);
 
     let earned = 0;
@@ -209,7 +209,7 @@ export class Rustbucket {
     if (nearby) return this.boardResident(nearby);
     const currentWorld = planet.world.key;
     const deliverable = this.rescuePassengers.find(resident =>
-      (resident.homeworld || resident.group?.userData?.homeWorldKey) === currentWorld
+      (resident.homeworld) === currentWorld
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
