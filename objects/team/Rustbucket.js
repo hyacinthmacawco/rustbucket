@@ -91,6 +91,7 @@ export class Rustbucket {
     if (!resident?.isAboard || !this.ship.parent) return false;
     const context = this.rescueContext;
     const planet = context.getCurrentPlanet();
+
     this.ship.updateWorldMatrix(true, false);
     const exit = this.ship.localToWorld(new THREE.Vector3(0, -1.18, -6.3));
     const world = this.ship.parent;
@@ -105,9 +106,11 @@ export class Rustbucket {
     const residentHomeworld = this.normalizeWorldKey(
       resident.homeworld || resident.group?.userData?.homeWorldKey
     );
-    if (currentWorld && residentHomeworld && residentHomeworld === currentWorld) {
-      let earned = 0;
-      let actualRelationshipIncrease = 0.5;
+    const returnedHome = Boolean(currentWorld && residentHomeworld && residentHomeworld === currentWorld);
+
+    let earned = 0;
+    let actualRelationshipIncrease = 0.5;
+    if (returnedHome) {
       try {
         const before = context.account?.balance ?? 0;
         resident.awardTaydenite?.(context.account, 10);
@@ -124,23 +127,27 @@ export class Rustbucket {
           }
         }
       } catch (error) {
-        console.error("Rustbucket delivery reward update failed:", error);
+        console.error("Rustbucket homecoming reward update failed:", error);
       }
-
-      // Delivery to the resident's homeworld completes the task. The overlay
-      // is triggered directly by the unload path, independently of task-list
-      // lookup or reward updates.
-      try {
-        context.helix?.completeTask(resident);
-      } catch (error) {
-        console.error("Rustbucket task-list update failed:", error);
-      }
-      context.helix?.showTaskCompleted({
-        resident,
-        relationshipIncrease: actualRelationshipIncrease,
-        taydeniteIncrease: earned
-      });
     }
+
+    // The unload action itself owns the completion-screen trigger. Do not
+    // make the screen depend on task-list lookup or a homeworld-key comparison.
+    try {
+      context.helix?.completeTask(resident);
+      if (context.helix?.showTaskCompleted) {
+        context.helix.showTaskCompleted({
+          resident,
+          relationshipIncrease: returnedHome ? actualRelationshipIncrease : 0,
+          taydeniteIncrease: earned
+        });
+      } else {
+        console.error("Rustbucket unload: Helix completion screen is unavailable.");
+      }
+    } catch (error) {
+      console.error("Rustbucket unload: unable to show task completion screen:", error);
+    }
+
     context.onUpdate();
     return true;
   }
