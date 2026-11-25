@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { HighbreedShip } from "../resources/HighbreedShip.js";
 import { Starfield } from "./Starfield.js";
 import { Human } from "../species/Human.js";
 import { Anodite } from "../species/Anodite.js";
@@ -98,6 +99,63 @@ export class Augstaka {
     return interior;
   }
 
+
+  spawnShips(parent) {
+    this.ships = [];
+    this.patrolTime = 0;
+    const positions = [[-350, 1250, -1050], [0, 1320, -1100], [350, 1250, -1050]];
+    for (let index = 0; index < positions.length; index++) {
+      const visual = new HighbreedShip(parent, { scale: 3 });
+      const group = visual.group;
+      group.name = this.world.key + "PatrolShip" + index;
+      const [x, y, z] = positions[index];
+      group.position.set(274300 + x, y, z);
+      const patrol = {
+        group,
+        homePlanet: this.world.key,
+        relationships: this.constructor.relationships,
+        damage: 5,
+        health: 50,
+        destroyed: false,
+        orbitPhase: -Math.PI / 2 + (index - 1) * 0.28,
+        orbitRadius: 1100,
+        orbitSpeed: 0.12 + index * 0.015,
+        takeDamage: amount => {
+          patrol.health = Math.max(0, patrol.health - Math.max(0, Number(amount) || 0));
+          if (patrol.health === 0 && !patrol.destroyed) {
+            patrol.destroyed = true;
+            group.visible = false;
+            for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
+              patrol.relationships[name] = Math.max(-100, Number(patrol.relationships[name] ?? 0) - 0.5);
+            }
+          }
+          return patrol.health;
+        },
+        attack: target => {
+          const species = target?.species || target?.constructor?.name;
+          if (!target || target.health <= 0 || Number(patrol.relationships[species] ?? 0) >= 0) return false;
+          target.takeDamage?.(patrol.damage);
+          return true;
+        }
+      };
+      this.ships.push(patrol);
+    }
+    return this.ships;
+  }
+
+  animateShips(delta) {
+    this.patrolTime = (this.patrolTime || 0) + delta;
+    for (const patrol of this.ships || []) {
+      if (patrol.destroyed) continue;
+      const angle = patrol.orbitPhase + this.patrolTime * patrol.orbitSpeed;
+      patrol.group.position.set(
+        274300 + Math.cos(angle) * patrol.orbitRadius,
+        1250 + Math.sin(this.patrolTime * 0.32 + patrol.orbitPhase) * 110,
+        Math.sin(angle) * patrol.orbitRadius
+      );
+      patrol.group.rotation.y = -angle;
+    }
+  }
 
   spawnResidents(parent) {
     const speciesClasses = [Human, Highbreed, Anodite, Galvan, Incursean];
