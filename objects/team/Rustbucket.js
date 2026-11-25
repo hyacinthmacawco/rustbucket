@@ -153,7 +153,7 @@ export class Rustbucket {
     this.addMesh(new THREE.BoxGeometry(2.7, 0.14, 9.7), interior, [0, -1.18, 0]);
     this.addMesh(new THREE.BoxGeometry(0.22, 0.16, 10.5), hull, [-1.22, 1.22, 0]);
     this.addMesh(new THREE.BoxGeometry(0.22, 0.16, 10.5), hull, [1.22, 1.22, 0]);
-    this.addMesh(new THREE.BoxGeometry(2.7, 2.5, 0.16), hull, [0, 0, -5.18]);
+    this.tailPanel = this.addMesh(new THREE.BoxGeometry(2.7, 2.5, 0.16), hull, [0, 0, -5.18]);
     this.addMesh(new THREE.BoxGeometry(2.82, 0.18, 10.7), hull, [0, 1.38, 0]);
     this.addMesh(new THREE.BoxGeometry(2.78, 0.18, 0.24), orange, [0, 0, 5.12]);
 
@@ -277,6 +277,8 @@ export class Rustbucket {
 
   setRamp(open) {
     this.rampOpen = Boolean(open);
+    this.tailPanel.visible = !this.rampOpen;
+    this.ramp.visible = true;
     this.rampPivot.rotation.x = this.rampOpen ? -Math.PI / 2 : 0;
   }
 
