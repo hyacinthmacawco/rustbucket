@@ -67,6 +67,7 @@ export class Anodyne {
     hub.userData.market = true;
     hub.userData.onClick = event => hub.userData.clickHandler?.(event);
     hub.resources = { "Grape Smoothie": 1 + Math.floor(Math.random() * 10) };
+    hub.prices = { "Grape Smoothie": 5 };
     interior.add(hub);
     const dark = new THREE.MeshStandardMaterial({ color: 0x17231c, roughness: 0.9 });
     const accent = new THREE.MeshStandardMaterial({ color: 0xf08c55, roughness: 0.55 });
