@@ -73,7 +73,7 @@ export class Pause {
         ["Mouse wheel / pinch", "Zoom the camera."],
         ["F / joystick centre", "Switch the selected team member."],
         ["Space / JUMP", "Open the system map when Rustbucket is selected."],
-        ["E / INTERACT", "Pick up, drop off, sit, stand or shop."],
+        ["Click objects", "Click bags to carry or drop them, markets to shop, and visiting species to board or leave them."],
         ["Q / ATTACK", "Attack nearby hostile characters."],
         ["R", "Open or close the Rustbucket ramp."],
         ["1P / 3P", "Toggle first-person and third-person view."],
