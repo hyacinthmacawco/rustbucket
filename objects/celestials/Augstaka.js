@@ -115,6 +115,7 @@ export class Augstaka {
         relationships: this.constructor.relationships,
         damage: 5,
         health: 50,
+        maxHealth: 50,
         destroyed: false,
         orbitPhase: -Math.PI / 2 + (index - 1) * 0.28,
         orbitRadius: 520,
@@ -124,26 +125,21 @@ export class Augstaka {
           if (patrol.destroyed) return 0;
           patrol.health = Math.max(0, patrol.health - Math.max(0, Number(amount) || 0));
           if (patrol.healthBar) {
-            const ratio = patrol.health / 50;
+            const ratio = patrol.health / patrol.maxHealth;
             patrol.healthBar.fill.scale.x = Math.max(0.001, ratio);
-            patrol.healthBar.fill.position.x = -1.1 * (1 - ratio);
-            patrol.healthBar.group.visible = patrol.health < 50;
+            patrol.healthBar.fill.position.x = -1.7 * (1 - ratio);
           }
-          if (patrol.health === 0) {
-            patrol.destroyed = true;
-            group.visible = false;
-            patrol.healthBar?.group.removeFromParent();
-            for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
-              patrol.relationships[name] = Math.max(-100, Number(patrol.relationships[name] ?? 0) - 0.5);
-            }
-          }
+          if (patrol.health === 0) patrol.destroy();
           return patrol.health;
         },
         destroy: () => {
           if (patrol.destroyed) return;
           patrol.destroyed = true;
-          group.visible = false;
+          group.removeFromParent();
           patrol.healthBar?.group.removeFromParent();
+          for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
+            patrol.relationships[name] = Math.max(-100, Number(patrol.relationships[name] ?? 0) - 0.5);
+          }
         },
         attack: target => {
           const species = target?.species || target?.constructor?.name;
@@ -153,14 +149,24 @@ export class Augstaka {
         }
       };
       const barGroup = new THREE.Group();
-      barGroup.position.set(0, 2.2, 0);
-      const back = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.24), new THREE.MeshBasicMaterial({ color: 0x250909, side: THREE.DoubleSide, depthTest: false }));
-      const fill = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.15), new THREE.MeshBasicMaterial({ color: 0x65ff72, side: THREE.DoubleSide, depthTest: false }));
-      fill.position.z = 0.01;
+      barGroup.name = "PatrolShipHealthBar";
+      barGroup.position.set(0, 3.2, 0);
+      barGroup.scale.setScalar(0.7);
+      const back = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.8, 0.48),
+        new THREE.MeshBasicMaterial({ color: 0x260909, side: THREE.DoubleSide, depthTest: false, depthWrite: false })
+      );
+      const fill = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.5, 0.28),
+        new THREE.MeshBasicMaterial({ color: 0x65ff72, side: THREE.DoubleSide, depthTest: false, depthWrite: false })
+      );
+      fill.position.z = 0.02;
+      back.renderOrder = 1000;
+      fill.renderOrder = 1001;
       back.userData.noPhysics = true;
       fill.userData.noPhysics = true;
       barGroup.add(back, fill);
-      barGroup.visible = false;
+      barGroup.visible = true;
       barGroup.userData.noPhysics = true;
       group.add(barGroup);
       patrol.healthBar = { group: barGroup, fill };
