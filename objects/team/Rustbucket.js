@@ -127,11 +127,13 @@ export class Rustbucket {
       }
     }
 
-    this.showRescueCompleted({
-      resident,
-      relationshipIncrease: returnedHome ? actualRelationshipIncrease : 0,
-      taydeniteIncrease: earned
-    });
+    if (returnedHome) {
+      this.showRescueCompleted({
+        resident,
+        relationshipIncrease: actualRelationshipIncrease,
+        taydeniteIncrease: earned
+      });
+    }
 
     context.onUpdate();
     return true;
