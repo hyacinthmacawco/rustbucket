@@ -29,7 +29,7 @@ export class IncursiaSystem {
       const visual = new IncurseanShip(this.root, { scale: 3 });
       const group = visual.group;
       group.name = "incursiaPatrolShip" + index;
-      const patrolPositions = [[-520, 1250, -620], [0, 1450, -550], [520, 1250, -620]];
+      const patrolPositions = [[-350, 1250, -1050], [0, 1320, -1100], [350, 1250, -1050]];
       const patrolPosition = patrolPositions[index];
       group.position.set(274300 + patrolPosition[0], patrolPosition[1], patrolPosition[2]);
       const ship = { group, homePlanet: "incursia", relationships: Incursia.relationships, damage: 5, health: 50, destroyed: false, takeDamage: amount => { ship.health = Math.max(0, ship.health - Math.max(0, amount)); if (ship.health === 0 && !ship.destroyed) { ship.destroyed = true; group.visible = false; for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) ship.relationships[name] = Math.max(-100, Number(ship.relationships[name] ?? 0) - 0.5); try { const key = "rustbucket.planet." + ship.homePlanet; const saved = JSON.parse(localStorage.getItem(key) || "null") || {}; saved.relationships = { ...(saved.relationships || {}), ...ship.relationships }; localStorage.setItem(key, JSON.stringify(saved)); } catch (error) {} } return ship.health; }, attack: target => {
@@ -47,9 +47,25 @@ export class IncursiaSystem {
         target.takeDamage?.(5);
         return true;
       } };
+      ship.orbitPhase = -Math.PI / 2 + (index - 1) * 0.28;
+      ship.orbitRadius = 1100;
+      ship.orbitSpeed = 0.12 + index * 0.015;
       this.ships.push(ship);
     }
     this.root.traverse(object => { object.userData.noPhysics = true; });
+  }
+
+  animate(delta, elapsed) {
+    for (const ship of this.ships) {
+      if (ship.destroyed) continue;
+      const angle = ship.orbitPhase + elapsed * ship.orbitSpeed;
+      ship.group.position.set(
+        274300 + Math.cos(angle) * ship.orbitRadius,
+        1250 + Math.sin(elapsed * 0.32 + ship.orbitPhase) * 110,
+        Math.sin(angle) * ship.orbitRadius
+      );
+      ship.group.rotation.y = -angle;
+    }
   }
 
   model() {
