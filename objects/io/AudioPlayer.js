@@ -12,6 +12,7 @@ export class AudioPlayer {
     track.loop = loop;
     track.volume = volume;
     track.preload = "auto";
+    track.setAttribute("playsinline", "");
     this.connectTrack(track, volume);
     return track;
   }
