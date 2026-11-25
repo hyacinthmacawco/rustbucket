@@ -9,7 +9,7 @@ export class Ramp {
     Object.assign(this.element.style, {
       position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center",
       minWidth: "42px", height: "40px", padding: "4px 9px",
-      border: "1px solid rgba(126,255,168,.28)", borderRadius: "8px",
+      border: "1px solid rgba(126,255,168,.28)", 
       background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit",
       fontSize: "10px", letterSpacing: ".08em", cursor: "pointer",
       touchAction: "manipulation", pointerEvents: "auto"
