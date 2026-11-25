@@ -76,7 +76,6 @@ export class NewGame {
       account: omniverse.account,
       onUpdate: () => omniverse.updateAccountHUD(),
       onPickup: resident => omniverse.handleRescuePickup(resident),
-      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => omniverse.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease),
       onBoard: resident => omniverse.setResidentAboard(resident, true),
       onUnboard: resident => omniverse.setResidentAboard(resident, false)
     });
