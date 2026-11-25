@@ -305,6 +305,10 @@ export class Omniverse {
   attachObjectClickHandlers() {
     for (const bag of this.bags || []) bag.onClick = () => this.handleBagClick(bag);
     for (const resident of this.residents || []) resident.onClick = () => this.handleResidentClick(resident);
+    if (this.vehicle) this.vehicle.onSeatClick = (seat, index) => {
+      if (seat.occupiedBy) this.standTeamMember(seat.occupiedBy);
+      else this.sitTeamMember(this.getTeamMember(this.joystick?.currentSelection), index);
+    };
     this.celestial?.traverse(object => {
       if (object.userData?.market) object.userData.clickHandler = () => this.openMarket(this.getTeamMember(this.joystick?.currentSelection), object);
     });
@@ -701,6 +705,9 @@ export class Omniverse {
     if (seatIndex < 0) seatIndex = this.findNearbySeat(member);
     const seat = ship.seats?.[seatIndex];
     if (!seat) return false;
+    const memberPosition = member.group.getWorldPosition(new THREE.Vector3());
+    const seatPosition = seat.group?.getWorldPosition(new THREE.Vector3());
+    if (!seatPosition || memberPosition.distanceTo(seatPosition) > 4.5) return false;
     ship.attach(member.group);
     member.group.position.copy(seat.position);
     member.group.rotation.set(0, seat.rotation, 0);
@@ -727,8 +734,7 @@ export class Omniverse {
     if (seat?.occupiedBy === member) seat.occupiedBy = null;
     member.seated = false;
     member.group.userData.seated = false;
-    const physicsEntry = this.physicsBodies.get(member.group);
-    if (physicsEntry) { physicsEntry.body.setEnabled(true); physicsEntry.disabled = false; }
+    this.setCharacterPhysicsEnabled(member.group, true);
     if (member.automation) member.automation.phase = "manual";
     return true;
   }
