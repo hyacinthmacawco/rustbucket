@@ -991,6 +991,9 @@ export class Omniverse {
   }
 
   loadTitleWorld() {
+    for (const entry of this.physicsBodies.values()) this.physicsWorld.removeRigidBody(entry.body);
+    this.physicsBodies.clear();
+    this.setPhysicsGround(false);
     this.joystick?.destroy();
     this.joystick = null;
     this.pause?.setVisible(false);
