@@ -2,7 +2,7 @@ export class Interact {
   constructor({ onPress = () => {} } = {}) {
     this.onPress = onPress;
     this.mode = "Pick";
-    this.styles = { position: "static", display: "grid", placeItems: "center", width: "38px", minWidth: "38px", height: "40px", padding: "4px", fontSize: "10px", zIndex: "2147483647", border: "none", borderRadius: "8px", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
+    this.styles = { position: "static", display: "grid", placeItems: "center", width: "38px", minWidth: "38px", height: "40px", padding: "4px", fontSize: "10px", zIndex: "2147483647", border: "none",  background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
   }
 
   create() {
