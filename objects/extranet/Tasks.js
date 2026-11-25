@@ -13,7 +13,6 @@ export class Tasks {
   addTask(resident) {
     const existing = this.items.find(item => item.resident === resident && !item.completed);
     if (existing) {
-      resident.taskId = existing.id;
       return existing.id;
     }
     const task = {
@@ -23,7 +22,6 @@ export class Tasks {
       completed: false
     };
     this.items.push(task);
-    resident.taskId = task.id;
     this.renderItems();
     return task.id;
   }
