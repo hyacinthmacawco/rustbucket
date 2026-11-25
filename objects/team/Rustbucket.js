@@ -96,8 +96,9 @@ export class Rustbucket {
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
     const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
-    if (planet?.world?.key === homeworld) {
-      resident.homeworld = homeworld;
+    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (planet?.world?.key && normalizeWorld(planet.world.key) === normalizeWorld(homeworld)) {
+      resident.homeworld = planet.world.key;
       if (resident.taskId == null) resident.taskId = context.onPickup(resident);
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
@@ -116,7 +117,7 @@ export class Rustbucket {
     const nearby = residents.find(resident =>
       !resident.isAboard &&
       resident.group.parent === this.ship.parent &&
-      resident.homeworld !== planet.world.key &&
+      String(resident.homeworld || resident.group?.userData?.homeWorldKey || "").toLowerCase().replace(/[^a-z0-9]/g, "") !== String(planet.world.key || "").toLowerCase().replace(/[^a-z0-9]/g, "") &&
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
@@ -334,6 +335,7 @@ export class Rustbucket {
       bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
       bolt.userData.velocity = direction.clone().multiplyScalar(260);
       bolt.userData.damage = 10;
+      bolt.userData.previousWorldPosition = muzzle.clone();
       bolt.userData.remaining = 2.4;
       parent.add(bolt);
       this.projectiles.push(bolt);
@@ -343,7 +345,7 @@ export class Rustbucket {
   update(delta) {
     for (let index = this.projectiles.length - 1; index >= 0; index--) {
       const bolt = this.projectiles[index];
-      bolt.userData.previousPosition = bolt.position.clone();
+      bolt.getWorldPosition(bolt.userData.previousWorldPosition);
       bolt.position.addScaledVector(bolt.userData.velocity, delta);
       bolt.userData.remaining -= delta;
       if (bolt.userData.remaining <= 0) {
