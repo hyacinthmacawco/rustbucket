@@ -16,6 +16,7 @@ export class Rustbucket {
     this.ship.userData.statusOwner = this;
     this.ship.userData.onClick = event => this.onClick?.(event);
     this.onClick = null;
+    this.onSeatClick = null;
     parent.add(this.ship);
 
     this.materials = {
@@ -225,6 +226,7 @@ export class Rustbucket {
       back.userData.noPhysics = true;
       group.add(cushion, back);
       group.userData.seatIndex = index;
+      group.userData.onClick = event => this.onSeatClick?.(seat, index, event);
       group.userData.noPhysics = true;
       this.ship.add(group);
       seat.group = group;
