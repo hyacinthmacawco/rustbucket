@@ -12,7 +12,10 @@ export class Tasks {
 
   addTask(resident) {
     const existing = this.items.find(item => item.resident === resident && !item.completed);
-    if (existing) return existing.id;
+    if (existing) {
+      resident.taskId = existing.id;
+      return existing.id;
+    }
     const task = {
       id: this.nextId++,
       resident,
