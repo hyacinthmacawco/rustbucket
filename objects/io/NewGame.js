@@ -26,7 +26,7 @@ export class NewGame {
     this.styles = {
       button: { padding: "14px 24px", background: "rgba(5,22,14,.76)", color: "#eaffef", font: "inherit", letterSpacing: ".16em", cursor: "pointer" },
       prelude: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "28px", background: "#000", color: "#fff", zIndex: "50", font: "inherit", letterSpacing: ".18em" },
-      heading: { maxWidth: "min(88vw, 760px)", maxHeight: "70vh", overflowY: "auto", padding: "0 22px", fontSize: "clamp(12px, 2vw, 17px)", lineHeight: "1.8", letterSpacing: ".06em", textAlign: "left", whiteSpace: "pre-line", fontFamily: "\\"Industry Light\\", sans-serif", fontWeight: "300" },
+      heading: { maxWidth: "min(88vw, 760px)", maxHeight: "70vh", overflowY: "auto", padding: "0 22px", fontSize: "clamp(12px, 2vw, 17px)", lineHeight: "1.8", letterSpacing: ".06em", textAlign: "left", whiteSpace: "pre-line", fontFamily: "Industry Light, sans-serif", fontWeight: "300" },
       skip: { padding: "10px 28px", border: "1px solid #79e99a", background: "transparent", color: "#dffff0", font: "inherit", cursor: "pointer" }
     };
   }
