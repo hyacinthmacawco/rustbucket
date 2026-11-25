@@ -942,6 +942,11 @@ export class Omniverse {
       this.updateCamera();
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
+      const rigTime = performance.now() / 1000;
+      for (const member of this.crew || []) {
+        const rig = this.getActiveRig(member)?._rig;
+        if (rig?.animating) rig.updateWalk(rigTime);
+      }
       for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
       if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.setVisible(true); this.audioPlayer.playMusic("./files/songs/af-end-credits-slowed.opus"); }
       this.updateCrewAutomation(delta, elapsed);
