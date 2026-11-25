@@ -290,14 +290,22 @@ export class Omniverse {
   };
 
   attachObjectClickHandlers() {
-    for (const bag of this.bags || []) bag.onClick = () => this.handleBagClick(bag);
-    for (const resident of this.residents || []) resident.onClick = () => this.handleResidentClick(resident);
+    // The canvas raycaster dispatches only through Object3D.userData.onClick.
+    // Attach handlers to each object's root group so child-mesh hits bubble up.
+    for (const bag of this.bags || []) {
+      if (bag.group) bag.group.userData.onClick = () => this.handleBagClick(bag);
+    }
+    for (const resident of this.residents || []) {
+      if (resident.group) resident.group.userData.onClick = () => this.handleResidentClick(resident);
+    }
     if (this.vehicle) this.vehicle.onSeatClick = (seat, index) => {
       if (seat.occupiedBy) this.standTeamMember(seat.occupiedBy);
       else this.sitTeamMember(this.getTeamMember(this.joystick?.currentSelection), index);
     };
     this.celestial?.traverse(object => {
-      if (object.userData?.market) object.userData.clickHandler = () => this.openMarket(this.getTeamMember(this.joystick?.currentSelection), object);
+      if (object.userData?.market) {
+        object.userData.onClick = () => this.openMarket(this.getTeamMember(this.joystick?.currentSelection), object);
+      }
     });
   }
 
@@ -324,9 +332,12 @@ export class Omniverse {
   }
 
   handleResidentClick(resident) {
-    if (!resident || !this.vehicle || !this.currentPlanet) return false;
-    if (resident.isAboard) return this.vehicle.unboardResident(resident);
-    if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
+    if (!resident || !this.vehicle || !this.currentPlanet || resident.isAboard) return false;
+    // Boarding is the only resident-click action. Unloading is handled by
+    // Rustbucket's rescue action so task completion has one authoritative path.
+    if (resident.homeworld !== this.currentPlanet.world.key) {
+      return this.vehicle.boardResident(resident);
+    }
     return false;
   }
 
