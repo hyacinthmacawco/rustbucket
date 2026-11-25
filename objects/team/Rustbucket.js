@@ -98,15 +98,9 @@ export class Rustbucket {
     resident.group.rotation.set(0, this.ship.rotation.y, 0);
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
-    context.onUnboard(resident);
-
-    const currentWorld = planet?.world?.key;
-    const residentHomeworld = resident.homeworld;
-    const returnedHome = Boolean(currentWorld && residentHomeworld && residentHomeworld === currentWorld);
-
     let earned = 0;
     let actualRelationshipIncrease = 0.5;
-    if (returnedHome) {
+    if (resident.homeworld === planet?.world?.key) {
       try {
         const before = context.account?.balance ?? 0;
         resident.awardTaydenite?.(context.account, 10);
@@ -127,7 +121,7 @@ export class Rustbucket {
       }
     }
 
-    if (returnedHome) {
+    if (resident.homeworld === planet?.world?.key) {
       this.showRescueCompleted({
         resident,
         relationshipIncrease: actualRelationshipIncrease,
@@ -135,6 +129,7 @@ export class Rustbucket {
       });
     }
 
+    context.onUnboard(resident);
     context.onUpdate();
     return true;
   }
@@ -207,9 +202,8 @@ export class Rustbucket {
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
-    const currentWorld = planet.world.key;
     const deliverable = this.rescuePassengers.find(resident =>
-      (resident.homeworld) === currentWorld
+      resident.homeworld === planet.world.key
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
