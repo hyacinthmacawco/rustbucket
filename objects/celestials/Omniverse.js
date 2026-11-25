@@ -306,7 +306,7 @@ export class Omniverse {
     for (const bag of this.bags || []) bag.onClick = () => this.handleBagClick(bag);
     for (const resident of this.residents || []) resident.onClick = () => this.handleResidentClick(resident);
     this.celestial?.traverse(object => {
-      if (object.userData?.market) object.userData.clickHandler = () => this.openMarket(null, object);
+      if (object.userData?.market) object.userData.clickHandler = () => this.openMarket(this.getTeamMember(this.joystick?.currentSelection), object);
     });
   }
 
@@ -756,7 +756,7 @@ export class Omniverse {
     const buy = document.createElement("button"); buy.textContent = "BUY";
     Object.assign(buy.style, { padding: "12px", background: "#174c2c", color: "white", font: "inherit" });
     buy.disabled = quantity <= 0;
-    buy.onclick = () => { const bag = member ? this.bags?.[this.crew.indexOf(member)] : null; if (quantity <= 0) return; if (bag) bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; else { this.vehicle.resources ||= {}; this.vehicle.resources["Grape Smoothie"] = (this.vehicle.resources["Grape Smoothie"] || 0) + quantity; } market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
+    buy.onclick = () => { const bag = member ? (member.carryingBag || this.bags?.[this.crew.indexOf(member)]) : null; if (quantity <= 0) return; if (bag) bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; else { this.vehicle.resources ||= {}; this.vehicle.resources["Grape Smoothie"] = (this.vehicle.resources["Grape Smoothie"] || 0) + quantity; } market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
     const close = document.createElement("button"); close.textContent = "CLOSE"; close.onclick = () => dialog.remove();
     dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
   }
