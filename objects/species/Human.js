@@ -529,7 +529,6 @@ export function initializeResident(instance, index, { species, homeworld, style 
   instance.isAboard = false;
   instance.group.name = species + "Resident" + (index + 1);
   instance.group.userData.species = species;
-  instance.group.userData.homeWorldKey = homeworld;
   instance.group.userData.statusOwner = instance;
   instance.group.userData.speciesInstance = instance;
   instance.onClick = null;
