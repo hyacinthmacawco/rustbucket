@@ -152,9 +152,11 @@ export class NewGame {
     this.rampControl = new Ramp({ onPress: () => omniverse.vehicle?.toggleRamp() });
     this.attackControl = new Attack({
       onStart: () => {
+        const selected = omniverse.joystick.currentSelection;
         omniverse.joystick.input.attackHeld = true;
         omniverse.joystick.lastAttackAt = performance.now();
-        omniverse.handleCombatAttack(omniverse.joystick.currentSelection);
+        if (selected === "rustbucket") omniverse.vehicle?.performAttack();
+        else omniverse.handleCombatAttack(selected);
       },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
     });
