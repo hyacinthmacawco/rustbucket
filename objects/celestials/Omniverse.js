@@ -223,36 +223,6 @@ export class Omniverse {
     return true;
   }
 
-  handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
-    if (!resident) return false;
-
-    // Tasks are associated with the resident object itself. Complete that
-    // resident's task directly; task IDs are not part of the rescue flow.
-    const taskCompleted = this.helix?.completeTask(resident) === true;
-
-    // The caller only invokes this callback after the Rustbucket has been
-    // unloaded on the passenger's homeworld. Do not reject completion here
-    // based on a second, potentially stale scene/homeworld check.
-    const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
-    let actualRelationshipIncrease = relationshipIncrease;
-    if (species && this.currentPlanet?.world?.key &&
-        normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) === normalizeHomeworld(this.currentPlanet.world.key)) {
-      const relationships = this.helix?.pages.relationships;
-      const home = this.currentPlanet;
-      const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
-      for (const name of teamNames) {
-        const before = relationships?.getRelationship(species, name) ?? Number(home?.constructor?.relationships?.[name] ?? 0);
-        relationships?.addRelationship(species, name, 0.5);
-        const next = relationships?.getRelationship(species, name) ?? Number(home?.constructor?.relationships?.[name] ?? before);
-        actualRelationshipIncrease = next - before;
-      }
-    }
-
-    if (taskCompleted) {
-      this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
-    }
-    return taskCompleted;
-  }
 
   installStyles() {
     this.fontStyle = document.createElement("style");
@@ -1131,7 +1101,6 @@ export class Omniverse {
       account: this.account,
       onUpdate: () => this.updateAccountHUD(),
       onPickup: resident => this.handleRescuePickup(resident),
-      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => this.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease),
       onBoard: resident => this.setResidentAboard(resident, true),
       onUnboard: resident => this.setResidentAboard(resident, false)
     });
