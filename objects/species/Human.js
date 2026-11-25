@@ -146,7 +146,7 @@ export class HumanRig {
   headMesh.geometry.computeBoundingBox();
   headMesh.position.y = torsoMesh.geometry.boundingBox.max.y + torsoMesh.position.y
     - neck.position.y - head.position.y - headMesh.geometry.boundingBox.min.y;
-  bodyBox(head, "HumanHair", [0.38, 0.14, 0.34], [0, 0.25, -0.005], bodyMaterials.hair);
+  bodyBox(head, "HumanHair", [0.38, 0.14, 0.34], [0, 0.22, -0.005], bodyMaterials.hair);
   for (const side of ["left", "right"]) {
     const shoulder = joints[side + "Shoulder"];
     const elbow = joints[side + "Elbow"];
