@@ -88,7 +88,6 @@ export class Rustbucket {
   unboardResident(resident) {
     if (!resident?.isAboard || !this.ship.parent) return false;
     const context = this.rescueContext;
-    const planet = context.getCurrentPlanet();
 
     this.ship.updateWorldMatrix(true, false);
     const exit = this.ship.localToWorld(new THREE.Vector3(0, -1.18, -6.3));
@@ -98,36 +97,35 @@ export class Rustbucket {
     resident.group.rotation.set(0, this.ship.rotation.y, 0);
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
+
     let earned = 0;
     let actualRelationshipIncrease = 0.5;
-    if (resident.homeworld === planet?.world?.key) {
-      try {
-        const before = context.account?.balance ?? 0;
-        resident.awardTaydenite?.(context.account, 10);
-        earned = Math.max(0, (context.account?.balance ?? before) - before);
+    try {
+      const before = context.account?.balance ?? 0;
+      resident.awardTaydenite?.(context.account, 10);
+      earned = Math.max(0, (context.account?.balance ?? before) - before);
 
-        const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
-        const relationships = context.helix?.pages?.relationships;
-        if (species && relationships) {
-          for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
-            const previous = relationships.getRelationship(species, name) ?? 0;
-            relationships.addRelationship(species, name, 0.5);
-            const next = relationships.getRelationship(species, name) ?? previous;
-            actualRelationshipIncrease = next - previous;
-          }
+      const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
+      const relationships = context.helix?.pages?.relationships;
+      if (species && relationships) {
+        for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
+          const previous = relationships.getRelationship(species, name) ?? 0;
+          relationships.addRelationship(species, name, 0.5);
+          const next = relationships.getRelationship(species, name) ?? previous;
+          actualRelationshipIncrease = next - previous;
         }
-      } catch (error) {
-        console.error("Rustbucket homecoming reward update failed:", error);
       }
+    } catch (error) {
+      console.error("Rustbucket homecoming reward update failed:", error);
     }
 
-    if (resident.homeworld === planet?.world?.key) {
-      this.showRescueCompleted({
-        resident,
-        relationshipIncrease: actualRelationshipIncrease,
-        taydeniteIncrease: earned
-      });
-    }
+    // Both delivery entry points verify the resident's homeworld before
+    // calling this method, so a successful unboard is a completed rescue.
+    this.showRescueCompleted({
+      resident,
+      relationshipIncrease: actualRelationshipIncrease,
+      taydeniteIncrease: earned
+    });
 
     context.onUnboard(resident);
     context.onUpdate();
