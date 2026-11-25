@@ -202,7 +202,6 @@ export class Omniverse {
 
   handleRescuePickup(resident) {
     if (!resident) return null;
-    this.helix?.addTask(resident);
     return true;
   }
 
@@ -1108,6 +1107,7 @@ export class Omniverse {
       getResidents: () => this.residents || [],
       account: this.account,
       helix: this.helix,
+      audioPlayer: this.audioPlayer,
       onUpdate: () => this.updateAccountHUD(),
       onPickup: resident => this.handleRescuePickup(resident),
       onBoard: resident => this.setResidentAboard(resident, true),
