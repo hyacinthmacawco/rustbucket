@@ -835,7 +835,7 @@ export class Omniverse {
       this.updateResidents(delta, elapsed);
       this.crew?.forEach(member => member.update?.(delta));
       for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
-      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.setVisible(true); this.audioPlayer.playMusic("./files/songs/alien-force-credits-slowed.mp3"); }
+      if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.setVisible(true); this.audioPlayer.playMusic("./files/songs/af-end-credits-slowed.opus"); }
       this.updateCrewAutomation(delta, elapsed);
       this.updateTeamInteractionMode();
     }
