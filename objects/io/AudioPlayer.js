@@ -79,9 +79,7 @@ export class AudioPlayer {
     track.addEventListener("error", () => this.handleTrackError(track, "music"), { once: true });
     this.musicTrack = track;
 
-    if (this.unlocked) {
-      track.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
-    }
+    if (this.unlocked) this.startTrack(track, "music");
   }
 
   playSfx(source, onEnded = null) {
@@ -90,11 +88,18 @@ export class AudioPlayer {
     track.addEventListener("ended", () => this.handleSfxEnded(track, onEnded), { once: true });
     track.addEventListener("error", () => this.handleTrackError(track, "SFX"), { once: true });
 
-    if (this.unlocked) {
-      track.play().catch(error => console.warn("SFX playback is waiting for interaction:", error));
-    }
+    if (this.unlocked) this.startTrack(track, "SFX");
 
     return track;
+  }
+
+  async startTrack(track, type) {
+    try {
+      if (this.audioContext?.state === "suspended") await this.audioContext.resume();
+      await track.play();
+    } catch (error) {
+      console.warn(type + " playback could not start:", track.src, error);
+    }
   }
 
   handleSfxEnded(track, onEnded) {
@@ -128,12 +133,12 @@ export class AudioPlayer {
 
   unlock(stage, titleSong = "./files/songs/senji-v2-ov.mp3") {
     this.unlocked = true;
-    this.audioContext?.resume?.();
+    if (this.audioContext?.state === "suspended") this.audioContext.resume().catch(() => {});
 
     if (stage === "title" && !this.musicTrack) {
       this.playMusic(titleSong);
     } else if (this.musicTrack?.paused) {
-      this.musicTrack.play().catch(error => console.warn("Music playback is waiting for interaction:", error));
+      this.startTrack(this.musicTrack, "music");
     }
   }
 
