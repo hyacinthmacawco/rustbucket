@@ -19,6 +19,23 @@ import { AudioPlayer } from "../io/AudioPlayer.js";
 import { Pause } from "../io/Pause.js";
 import { Account } from "../io/Account.js";
 
+const normalizeHomeworld = value => {
+  const key = String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const aliases = {
+    anodite: "anodyne",
+    anodine: "anodyne",
+    anodyne: "anodyne",
+    highbreed: "augstaka",
+    augstaka: "augstaka",
+    incursean: "incursia",
+    incursian: "incursia",
+    incursia: "incursia",
+    galvanprime: "galvan",
+    galvan: "galvan"
+  };
+  return aliases[key] || key;
+};
+
 export class Omniverse {
   static state = { stage: "title", currentScene: "space" };
 
@@ -209,15 +226,21 @@ export class Omniverse {
 
   handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
     if (!resident || !this.currentPlanet?.world?.key) return false;
-    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
-    if (normalizeWorld(homeworld) !== normalizeWorld(this.currentPlanet.world.key)) return false;
-    if (resident.taskId == null) resident.taskId = this.handleRescuePickup(resident);
-    let taskCompleted = this.helix?.completeTask(resident.taskId);
-    if (!taskCompleted) taskCompleted = this.helix?.completeTask(resident);
-    if (!taskCompleted) console.warn("Returned resident had no matching rescue task:", resident);
+    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
+    if (normalizeHomeworld(homeworld) !== normalizeHomeworld(this.currentPlanet.world.key)) return false;
 
-    const species = resident.species || resident.group?.userData?.species;
+    // addTask returns the current unfinished task, or creates a fresh one if
+    // this resident had an earlier completed task or its pickup event was lost.
+    const taskId = this.helix?.addTask(resident);
+    if (taskId == null) return false;
+    resident.taskId = taskId;
+    const taskCompleted = this.helix?.completeTask(taskId) === true;
+    if (!taskCompleted) {
+      console.error("Could not complete the homeworld return task:", resident);
+      return false;
+    }
+
+    const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
     let actualRelationshipIncrease = relationshipIncrease;
     if (species) {
       const relationships = this.helix?.pages.relationships;
@@ -230,8 +253,8 @@ export class Omniverse {
         actualRelationshipIncrease = next - before;
       }
     }
-    if (taskCompleted) this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
-    return Boolean(taskCompleted);
+    this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
+    return true;
   }
 
   installStyles() {
@@ -1118,6 +1141,20 @@ export class Omniverse {
     return this.celestial;
   }
 
+  updatePatrolShipHealthBars() {
+    const patrols = this.systemWorld?.ships || [];
+    if (!this.camera || !patrols.length) return;
+    const cameraQuaternion = this.camera.getWorldQuaternion(new THREE.Quaternion());
+    const parentQuaternion = new THREE.Quaternion();
+    for (const patrol of patrols) {
+      const bar = patrol.healthBar?.group;
+      if (!bar || patrol.destroyed || !patrol.group?.parent) continue;
+      patrol.group.updateWorldMatrix(true, false);
+      patrol.group.getWorldQuaternion(parentQuaternion);
+      bar.quaternion.copy(parentQuaternion.invert().multiply(cameraQuaternion));
+    }
+  }
+
   checkPatrolShipCollisions() {
     const patrols = this.systemWorld?.ships || [];
     const projectiles = this.vehicle?.projectiles || [];
@@ -1126,39 +1163,38 @@ export class Omniverse {
     const previous = new THREE.Vector3();
     const current = new THREE.Vector3();
     const segment = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    const closest = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    const intersection = new THREE.Vector3();
     const bounds = new THREE.Box3();
-    const sphere = new THREE.Sphere();
+    const ray = new THREE.Ray();
 
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const bolt = projectiles[index];
       const parent = bolt?.parent;
       if (!parent) continue;
       parent.updateWorldMatrix(true, false);
+      bolt.updateWorldMatrix(true, false);
       bolt.getWorldPosition(current);
       if (bolt.userData.previousWorldPosition) previous.copy(bolt.userData.previousWorldPosition);
       else if (bolt.userData.previousPosition) previous.copy(bolt.userData.previousPosition).applyMatrix4(parent.matrixWorld);
       else previous.copy(current);
+
       segment.subVectors(current, previous);
-      const segmentLengthSq = segment.lengthSq();
+      const distance = segment.length();
+      if (distance < 1e-5) continue;
+      direction.copy(segment).multiplyScalar(1 / distance);
+      ray.set(previous, direction);
       let hit = false;
 
       for (const patrol of patrols) {
-        if (patrol.destroyed || !patrol.group?.visible) continue;
+        if (patrol.destroyed || !patrol.group?.visible || !patrol.group?.parent) continue;
         patrol.group.updateWorldMatrix(true, true);
-        bounds.setFromObject(patrol.group);
-        bounds.getBoundingSphere(sphere);
-        sphere.radius += 5;
-        patrol.group.getWorldPosition(center);
-        const t = segmentLengthSq > 1e-8
-          ? THREE.MathUtils.clamp(center.sub(previous).dot(segment) / segmentLengthSq, 0, 1)
-          : 0;
-        closest.copy(previous).addScaledVector(segment, t);
-        if (closest.distanceToSquared(sphere.center) > sphere.radius * sphere.radius) continue;
-        const remaining = patrol.takeDamage?.(bolt.userData.damage ?? 10);
+        bounds.setFromObject(patrol.group).expandByScalar(2.5);
+        if (!ray.intersectBox(bounds, intersection)) continue;
+        if (intersection.distanceTo(previous) > distance) continue;
+
+        patrol.takeDamage?.(bolt.userData.damage ?? 10);
         patrol.lastHitAt = performance.now();
-        if (remaining <= 0) patrol.destroy?.();
         hit = true;
         break;
       }
@@ -1166,7 +1202,8 @@ export class Omniverse {
       if (hit) {
         parent.remove(bolt);
         bolt.geometry?.dispose();
-        bolt.material?.dispose();
+        if (Array.isArray(bolt.material)) bolt.material.forEach(material => material.dispose());
+        else bolt.material?.dispose();
         projectiles.splice(index, 1);
       }
     }
@@ -1246,6 +1283,7 @@ export class Omniverse {
       this.updateCrewAutomation(delta, elapsed);
     }
     this.systemWorld?.animate?.(delta, elapsed);
+    this.updatePatrolShipHealthBars();
     this.vehicle?.update?.(delta);
     if (this.state.stage === "gameplay") {
       this.stepPhysics(delta);
