@@ -75,7 +75,7 @@ export class Joystick {
     this.statusBars = document.createElement("div");
     this.statusBars.id = "selected-member-status";
     Object.assign(this.statusBars.style, {
-      position: "fixed", left: "50%", bottom: "max(14px, env(safe-area-inset-bottom))", transform: "translateX(-50%)", width: "min(34vw, 220px)",
+      position: "fixed", left: "50%", bottom: "max(108px, calc(env(safe-area-inset-bottom) + 94px))", transform: "translateX(-50%)", width: "min(34vw, 220px)",
       display: "flex", flexDirection: "column", justifyContent: "center",
       gap: "5px", minWidth: "90px", maxWidth: "220px",
       color: "#dfffe8", font: "9px Industry, sans-serif", letterSpacing: ".06em",
@@ -88,7 +88,7 @@ export class Joystick {
     this.actionControls.id = "game-action-controls";
     Object.assign(this.actionControls.style, {
       position: "fixed", right: "max(112px, calc(env(safe-area-inset-right) + 96px))", bottom: "max(14px, env(safe-area-inset-bottom))",
-      display: "flex", alignItems: "center", gap: "12px",
+      display: "flex", alignItems: "center", gap: "6px", maxWidth: "calc(100vw - 220px)", overflowX: "auto",
       flex: "0 0 auto", pointerEvents: "auto", zIndex: "2147483647"
     });
 
