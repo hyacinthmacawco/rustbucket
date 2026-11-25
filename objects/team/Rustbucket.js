@@ -61,7 +61,7 @@ export class Rustbucket {
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
     this.rescuePassengers = [];
-    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {}, onBoard: () => {}, onUnboard: () => {} };
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, helix: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {}, onBoard: () => {}, onUnboard: () => {} };
     this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
@@ -73,6 +73,7 @@ export class Rustbucket {
       getCurrentPlanet: context.getCurrentPlanet || (() => null),
       getResidents: context.getResidents || (() => []),
       account: context.account || null,
+      helix: context.helix || null,
       onUpdate: context.onUpdate || (() => {}),
       onPickup: context.onPickup || (() => null),
       onDrop: context.onDrop || (() => {}),
@@ -118,7 +119,25 @@ export class Rustbucket {
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
-      context.onDrop(resident, 5, earned);
+      const taskCompleted = context.helix?.completeTask(resident) === true;
+      const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
+      let actualRelationshipIncrease = 5;
+      if (species && context.helix?.pages?.relationships) {
+        const relationships = context.helix.pages.relationships;
+        for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
+          const previous = relationships.getRelationship(species, name) ?? 0;
+          relationships.addRelationship(species, name, 0.5);
+          const next = relationships.getRelationship(species, name) ?? previous;
+          actualRelationshipIncrease = next - previous;
+        }
+      }
+      if (taskCompleted) {
+        context.helix?.showTaskCompleted({
+          resident,
+          relationshipIncrease: actualRelationshipIncrease,
+          taydeniteIncrease: earned
+        });
+      }
     }
     context.onUpdate();
     return true;
@@ -256,9 +275,9 @@ export class Rustbucket {
     });
 
     for (const side of [-1, 1]) {
-      this.addMesh(new THREE.SphereGeometry(0.19, 12, 8), lens, [side * 0.62, 0.12, 7.72]);
+      this.addMesh(new THREE.SphereGeometry(0.19, 12, 8), lens, [side * 0.62, 0.12, 5.22]);
       const headlight = new THREE.SpotLight(0xd9edff, 720, 220, Math.PI / 5.2, 0.62, 1.1);
-      headlight.position.set(side * 0.62, 0.12, 7.72);
+      headlight.position.set(side * 0.62, 0.12, 5.22);
       headlight.target.position.set(side * 0.62, -0.15, 90);
       this.ship.add(headlight, headlight.target);
     }
