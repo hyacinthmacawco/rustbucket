@@ -122,7 +122,7 @@ export class Rustbucket {
     return deliverable ? this.unboardResident(deliverable) : false;
   }
 
-  updateRescueInteraction({ selected, interactControl } = {}) {
+ = {}) {
     if (!interactControl) return;
     if (selected !== "rustbucket") {
       interactControl.setMode("Pick");
