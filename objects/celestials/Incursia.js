@@ -6,7 +6,6 @@ import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
 import { Highbreed } from "../species/Highbreed.js";
 import { Incursean } from "../species/Incursean.js";
-import { IncursiaSystem } from "./IncursiaSystem.js";
 
 export class Incursia {
   static relationships = { Ben: -30, Gwen: -40, Kevin: -50, Rook: -44, Highbreed: -64, Anodite: 3, Galvan: 10, Human: -36 };
