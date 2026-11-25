@@ -12,6 +12,7 @@ export class Bag {
     this.group.userData.pickable = true;
     this.group.userData.owner = owner;
     this.group.userData.bag = this;
+    this.group.userData.collisionBox = { halfExtents: [0.48, 0.38, 0.34], center: [0, 0, 0] };
     this.onClick = null;
     this.group.userData.onClick = event => this.onClick?.(event);
 
