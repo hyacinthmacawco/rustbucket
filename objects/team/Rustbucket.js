@@ -115,9 +115,9 @@ export class Rustbucket {
     const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
     if (planet?.world?.key && normalizeHomeworld(planet.world.key) === normalizeHomeworld(homeworld)) {
       resident.homeworld = planet.world.key;
-      // Reuse the active task or create one if the pickup event was missed.
-      const taskId = context.onPickup(resident);
-      if (taskId != null) resident.taskId = taskId;
+      // The task is created when the resident boards. Only create a fallback
+      // task if that original pickup callback did not produce an ID.
+      if (resident.taskId == null) resident.taskId = context.onPickup(resident);
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
