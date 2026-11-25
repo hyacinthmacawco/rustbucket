@@ -1161,7 +1161,7 @@ export class Omniverse {
     if (stage === "prelude") {
       this.audioPlayer.stopMusic();
       this.audioPlayer.stopSfx();
-      this.audioPlayer.playSfx("./files/dialogues/ov-final-dialogues.mp3", () => {
+      this.audioPlayer.playSfx("./files/dialogues/ov-final-conversation.opus", () => {
         if (this.state.stage === "prelude") this.setStage("gameplay");
       });
     } else if (stage === "gameplay") {
