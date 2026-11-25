@@ -14,8 +14,6 @@ export class Rustbucket {
     this.energyRecoveryDelay = 0;
     this.resources = {};
     this.ship.userData.statusOwner = this;
-    this.ship.userData.onClick = event => this.onClick?.(event);
-    this.onClick = null;
     this.onSeatClick = null;
     parent.add(this.ship);
 
@@ -126,7 +124,7 @@ export class Rustbucket {
 
   moveVehicle(moveX, moveZ, lift, delta, liftX = 0, heading = this.ship.rotation.y) {
     const horizontalSpeed = 18;
-    const verticalSpeed = 40;
+    const verticalSpeed = 400;
     this.ship.position.x += moveX * horizontalSpeed * delta;
     this.ship.position.z += moveZ * horizontalSpeed * delta;
     this.ship.position.y += lift * verticalSpeed * delta;
@@ -157,15 +155,6 @@ export class Rustbucket {
     this.tailPanel = this.addMesh(new THREE.BoxGeometry(2.7, 2.5, 0.16), hull, [0, 0, -5.18]);
     this.addMesh(new THREE.BoxGeometry(2.82, 0.18, 10.7), hull, [0, 1.38, 0]);
     this.addMesh(new THREE.BoxGeometry(2.78, 0.18, 0.24), orange, [0, 0, 5.12]);
-
-    for (let index = 0; index < 3; index++) {
-      this.addMesh(
-        new THREE.BoxGeometry(0.42, 0.62, 0.08),
-        metal,
-        [-0.48 + index * 0.48, 0.7, 3.5 - index * 0.32],
-        [-0.12, 0, 0]
-      );
-    }
 
     for (const side of [-1, 1]) {
       this.addMesh(
