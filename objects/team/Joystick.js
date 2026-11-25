@@ -7,14 +7,14 @@ export class Joystick {
   constructor() {
     this.onAttack = null;
     this.styles = {
-      joystick: { position: "relative", width: "108px", height: "108px", flex: "0 0 108px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
-      base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
-      knob: { position: "absolute", left: "50%", top: "50%", width: "58px", height: "58px", margin: "-29px", border: "1px solid rgba(188,255,205,.8)", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
+      joystick: { position: "relative", width: "108px", height: "108px", flex: "0 0 108px", zIndex: "40", touchAction: "none", userSelect: "none", pointerEvents: "auto", borderRadius: "50%" },
+      base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)", borderRadius: "50%" },
+      knob: { position: "absolute", left: "50%", top: "50%", width: "58px", height: "58px", margin: "-29px", border: "1px solid rgba(188,255,205,.8)", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem", borderRadius: "50%" },
       lift: { position: "fixed", right: "max(14px, env(safe-area-inset-right))", bottom: "max(14px, env(safe-area-inset-bottom))", width: "108px", height: "108px", flex: "0 0 108px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
-      liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", background: "rgba(2,16,10,.68)" },
-      teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "90", boxSizing: "border-box" },
+      liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", background: "rgba(2,16,10,.68)", borderRadius: "50%" },
+      teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "40", boxSizing: "border-box" },
       teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
-      transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(320px, calc(env(safe-area-inset-bottom) + 300px))", width: "142px", padding: "9px 10px", zIndex: "2147483646", border: "1px solid rgba(126,255,168,.5)", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
+      transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(320px, calc(env(safe-area-inset-bottom) + 300px))", width: "142px", padding: "9px 10px", zIndex: "41", border: "1px solid rgba(126,255,168,.5)", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
     };
 
     this.input = {
