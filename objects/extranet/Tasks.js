@@ -11,6 +11,8 @@ export class Tasks {
   }
 
   addTask(resident) {
+    const existing = this.items.find(item => item.resident === resident && !item.completed);
+    if (existing) return existing.id;
     const task = {
       id: this.nextId++,
       resident,
@@ -18,13 +20,16 @@ export class Tasks {
       completed: false
     };
     this.items.push(task);
+    resident.taskId = task.id;
     this.renderItems();
     return task.id;
   }
 
   completeTask(idOrResident) {
     const task = this.items.find(item =>
-      item.id === idOrResident || item.resident === idOrResident
+      item.id === idOrResident ||
+      item.resident === idOrResident ||
+      (idOrResident?.group && item.resident?.group === idOrResident.group)
     );
     if (!task) return false;
     task.completed = true;
