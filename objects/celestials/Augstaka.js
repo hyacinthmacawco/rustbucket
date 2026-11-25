@@ -126,7 +126,7 @@ export class Augstaka {
           if (patrol.healthBar) {
             const ratio = patrol.health / 50;
             patrol.healthBar.fill.scale.x = Math.max(0.001, ratio);
-            patrol.healthBar.fill.position.x = -0.48 * (1 - ratio);
+            patrol.healthBar.fill.position.x = -1.1 * (1 - ratio);
             patrol.healthBar.group.visible = patrol.health < 50;
           }
           if (patrol.health === 0) {
@@ -153,9 +153,9 @@ export class Augstaka {
         }
       };
       const barGroup = new THREE.Group();
-      barGroup.position.set(0, 7, 0);
-      const back = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.12), new THREE.MeshBasicMaterial({ color: 0x250909, side: THREE.DoubleSide, depthTest: false }));
-      const fill = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.075), new THREE.MeshBasicMaterial({ color: 0x65ff72, side: THREE.DoubleSide, depthTest: false }));
+      barGroup.position.set(0, 2.2, 0);
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.24), new THREE.MeshBasicMaterial({ color: 0x250909, side: THREE.DoubleSide, depthTest: false }));
+      const fill = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.15), new THREE.MeshBasicMaterial({ color: 0x65ff72, side: THREE.DoubleSide, depthTest: false }));
       fill.position.z = 0.01;
       back.userData.noPhysics = true;
       fill.userData.noPhysics = true;
