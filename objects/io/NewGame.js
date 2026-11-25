@@ -16,7 +16,7 @@ import { POV } from "../team/POV.js";
 import { Ramp } from "../team/Ramp.js";
 
 export class NewGame {
-  static helpText = "WASD / joystick: move. Drag / swipe: rotate camera. Mouse wheel / pinch: zoom. F / joystick centre: switch team member. Space / JUMP: open the system map when Rustbucket is selected. Click bags to pick up or drop them. Click markets to shop. Click visitors to board or leave them at a planet. Q / ATTACK: attack hostile characters. R: open or close the Rustbucket ramp. 1P / 3P: toggle first-person and third-person view. PAUSE: open settings, help and credits. EXTRANET: open the Private Cloud browser.";
+  static helpText = "WASD / joystick: Move.\\nDrag / swipe: Rotate the camera.\\nMouse wheel / pinch: Zoom.\\nF / joystick centre: Switch team member.\\nSpace / JUMP: Open the system map when Rustbucket is selected.\\nClick bags: Pick up or drop them.\\nClick markets: Open the shop.\\nClick visiting species: Board or leave them at a planet.\\nQ / ATTACK: Attack hostile characters.\\nR: Open or close the Rustbucket ramp.\\n1P / 3P: Toggle first-person and third-person view.\\nPAUSE: Open settings, help and credits.\\nEXTRANET: Open the Private Cloud browser.";
 
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
     this.omniverse = omniverse;
