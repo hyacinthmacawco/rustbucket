@@ -22,8 +22,10 @@ export class Tasks {
     return task.id;
   }
 
-  completeTask(id) {
-    const task = this.items.find(item => item.id === id);
+  completeTask(idOrResident) {
+    const task = this.items.find(item =>
+      item.id === idOrResident || item.resident === idOrResident
+    );
     if (!task) return false;
     task.completed = true;
     this.renderItems();
