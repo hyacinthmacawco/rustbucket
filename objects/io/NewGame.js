@@ -158,7 +158,9 @@ export class NewGame {
         if (selected === "rustbucket") omniverse.vehicle?.performAttack();
         else omniverse.handleCombatAttack(selected);
       },
-      onEnd: () => { omniverse.joystick.input.attackHeld = false; }
+      onEnd: () => {
+        if (omniverse.joystick) omniverse.joystick.input.attackHeld = false;
+      }
     });
     this.jumpControl.create();
     this.interactControl.create();
