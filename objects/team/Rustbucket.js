@@ -84,9 +84,6 @@ export class Rustbucket {
     return true;
   }
 
-  normalizeWorldKey(value) {
-    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  }
 
   unboardResident(resident) {
     if (!resident?.isAboard || !this.ship.parent) return false;
@@ -103,10 +100,8 @@ export class Rustbucket {
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
 
-    const currentWorld = this.normalizeWorldKey(planet?.world?.key);
-    const residentHomeworld = this.normalizeWorldKey(
-      resident.homeworld || resident.group?.userData?.homeWorldKey
-    );
+    const currentWorld = planet?.world?.key;
+    const residentHomeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
     const returnedHome = Boolean(currentWorld && residentHomeworld && residentHomeworld === currentWorld);
 
     let earned = 0;
@@ -210,9 +205,9 @@ export class Rustbucket {
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
-    const currentWorld = this.normalizeWorldKey(planet.world.key);
+    const currentWorld = planet.world.key;
     const deliverable = this.rescuePassengers.find(resident =>
-      this.normalizeWorldKey(resident.homeworld || resident.group?.userData?.homeWorldKey) === currentWorld
+      (resident.homeworld || resident.group?.userData?.homeWorldKey) === currentWorld
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
