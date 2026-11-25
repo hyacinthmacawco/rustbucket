@@ -201,19 +201,25 @@ export class Omniverse {
   updateAccountHUD() { this.helix?.updateAccount(); }
 
   handleRescuePickup(resident) {
-    return this.helix?.addTask(resident) ?? null;
+    if (!resident) return null;
+    const taskId = this.helix?.addTask(resident) ?? null;
+    if (taskId != null) resident.taskId = taskId;
+    return taskId;
   }
 
   handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
-    const taskCompleted = this.helix?.completeTask(resident?.taskId ?? resident);
-    if (!taskCompleted && resident) {
-      // A resident reference is a reliable fallback if an older save or a
-      // re-boarded passenger no longer carries its original task ID.
-      this.helix?.completeTask(resident);
-    }
-    const species = resident?.species || resident?.group?.userData?.species;
+    if (!resident || !this.currentPlanet?.world?.key) return false;
+    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
+    if (normalizeWorld(homeworld) !== normalizeWorld(this.currentPlanet.world.key)) return false;
+    if (resident.taskId == null) resident.taskId = this.handleRescuePickup(resident);
+    let taskCompleted = this.helix?.completeTask(resident.taskId);
+    if (!taskCompleted) taskCompleted = this.helix?.completeTask(resident);
+    if (!taskCompleted) console.warn("Returned resident had no matching rescue task:", resident);
+
+    const species = resident.species || resident.group?.userData?.species;
     let actualRelationshipIncrease = relationshipIncrease;
-    if (species && resident?.homeworld === this.currentPlanet?.world?.key) {
+    if (species) {
       const relationships = this.helix?.pages.relationships;
       const home = this.currentPlanet;
       const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
@@ -224,7 +230,8 @@ export class Omniverse {
         actualRelationshipIncrease = next - before;
       }
     }
-    this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
+    if (taskCompleted) this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
+    return Boolean(taskCompleted);
   }
 
   installStyles() {
@@ -346,7 +353,7 @@ export class Omniverse {
   handleResidentClick(resident) {
     if (!resident || !this.vehicle || !this.currentPlanet) return false;
     if (resident.isAboard) return this.vehicle.unboardResident(resident);
-    if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
+    if (String(resident.homeworld || resident.group?.userData?.homeWorldKey || "").toLowerCase().replace(/[^a-z0-9]/g, "") !== String(this.currentPlanet.world.key || "").toLowerCase().replace(/[^a-z0-9]/g, "")) return this.vehicle.boardResident(resident);
     return false;
   }
 
@@ -1119,9 +1126,10 @@ export class Omniverse {
     const previous = new THREE.Vector3();
     const current = new THREE.Vector3();
     const segment = new THREE.Vector3();
-    const offset = new THREE.Vector3();
+    const center = new THREE.Vector3();
     const closest = new THREE.Vector3();
-    const thresholdSq = 24 * 24;
+    const bounds = new THREE.Box3();
+    const sphere = new THREE.Sphere();
 
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const bolt = projectiles[index];
@@ -1129,24 +1137,28 @@ export class Omniverse {
       if (!parent) continue;
       parent.updateWorldMatrix(true, false);
       bolt.getWorldPosition(current);
-      if (bolt.userData.previousPosition) {
-        previous.copy(bolt.userData.previousPosition).applyMatrix4(parent.matrixWorld);
-      } else {
-        previous.copy(current);
-      }
+      if (bolt.userData.previousWorldPosition) previous.copy(bolt.userData.previousWorldPosition);
+      else if (bolt.userData.previousPosition) previous.copy(bolt.userData.previousPosition).applyMatrix4(parent.matrixWorld);
+      else previous.copy(current);
       segment.subVectors(current, previous);
       const segmentLengthSq = segment.lengthSq();
       let hit = false;
 
       for (const patrol of patrols) {
         if (patrol.destroyed || !patrol.group?.visible) continue;
-        patrol.group.getWorldPosition(offset);
+        patrol.group.updateWorldMatrix(true, true);
+        bounds.setFromObject(patrol.group);
+        bounds.getBoundingSphere(sphere);
+        sphere.radius += 5;
+        patrol.group.getWorldPosition(center);
         const t = segmentLengthSq > 1e-8
-          ? THREE.MathUtils.clamp(offset.sub(previous).dot(segment) / segmentLengthSq, 0, 1)
+          ? THREE.MathUtils.clamp(center.sub(previous).dot(segment) / segmentLengthSq, 0, 1)
           : 0;
         closest.copy(previous).addScaledVector(segment, t);
-        if (closest.distanceToSquared(offset.copy(patrol.group.getWorldPosition(offset))) > thresholdSq) continue;
-        patrol.takeDamage?.(bolt.userData.damage ?? 10);
+        if (closest.distanceToSquared(sphere.center) > sphere.radius * sphere.radius) continue;
+        const remaining = patrol.takeDamage?.(bolt.userData.damage ?? 10);
+        patrol.lastHitAt = performance.now();
+        if (remaining <= 0) patrol.destroy?.();
         hit = true;
         break;
       }
