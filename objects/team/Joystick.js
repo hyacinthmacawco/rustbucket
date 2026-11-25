@@ -410,7 +410,9 @@ export class Joystick {
 
 
     const attackHeld = joy.attackHeld || this.keys.has("q");
-    const attackInterval = this.selected === "rustbucket" ? 280 : 720;
+    // Keep the ship's fire cadence independent from frame rate and avoid
+    // creating overlapping laser bursts faster than the projectile update.
+    const attackInterval = this.selected === "rustbucket" ? 360 : 720;
     const now = performance.now();
     if (!seated && attackHeld && now - this.lastAttackAt >= attackInterval) {
       if (this.selected === "rustbucket") object.userData.performAttack?.();
