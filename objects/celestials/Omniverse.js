@@ -268,6 +268,9 @@ export class Omniverse {
     const body = this.physicsWorld.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z).lockRotations().setCanSleep(false)
     );
+    const worldRotation = object.getWorldQuaternion(new THREE.Quaternion());
+    const yaw = new THREE.Euler().setFromQuaternion(worldRotation, "YXZ").y;
+    body.setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw), true);
     this.physicsWorld.createCollider(
       RAPIER.ColliderDesc.capsule(capsule.halfHeight * scale.y, capsule.radius * scale.x)
         .setTranslation(0, capsule.centerY * scale.y, 0).setFriction(0.85).setRestitution(0),
@@ -280,9 +283,8 @@ export class Omniverse {
   registerVehiclePhysics(vehicle) {
     if (!vehicle?.ship || !this.physicsWorld) return null;
     const body = vehicle.addVehicle(this.physicsWorld, RAPIER);
-    // Flight controls position the ship directly; keep it buoyant while
-    // Rapier still resolves hull contacts against the planetary ground.
-    body.setGravityScale(0, true);
+    // Keep the ship under normal world gravity; lift controls must counteract it.
+    body.setGravityScale(1, true);
     this.physicsBodies.set(vehicle.ship, { body, owner: vehicle, disabled: false });
     return body;
   }
@@ -295,7 +297,7 @@ export class Omniverse {
     if (!enabled || !this.physicsWorld) return;
     this.physicsGroundBody = this.physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed());
     this.physicsWorld.createCollider(
-      RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -1.1, 0).setFriction(0.9),
+      RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -0.5, 0).setFriction(0.9),
       this.physicsGroundBody
     );
     if (includeStorageFloor) {
@@ -327,7 +329,9 @@ export class Omniverse {
       const position = object.getWorldPosition(new THREE.Vector3());
       const rotation = object.getWorldQuaternion(new THREE.Quaternion());
       entry.body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
-      entry.body.setRotation({ x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w }, true);
+      const yaw = new THREE.Euler().setFromQuaternion(rotation, "YXZ").y;
+      const uprightRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      entry.body.setRotation({ x: uprightRotation.x, y: uprightRotation.y, z: uprightRotation.z, w: uprightRotation.w }, true);
     }
     this.physicsWorld.timestep = Math.max(1 / 120, Math.min(delta, 0.05));
     this.physicsWorld.step();
@@ -569,8 +573,9 @@ export class Omniverse {
   }
 
   findNearbyMarket(member, range = 14) {
-    if (!member?.group || !this.celestial) return null;
-    const point = member.group.getWorldPosition(new THREE.Vector3());
+    const entity = member?.group || member?.ship || (member?.isObject3D ? member : null);
+    if (!entity || !this.celestial) return null;
+    const point = entity.getWorldPosition(new THREE.Vector3());
     let market = null;
     this.celestial.traverse(object => {
       if (!object.userData?.market) return;
@@ -589,14 +594,16 @@ export class Omniverse {
     const buy = document.createElement("button"); buy.textContent = "BUY";
     Object.assign(buy.style, { padding: "12px", background: "#174c2c", color: "white", font: "inherit" });
     buy.disabled = quantity <= 0;
-    buy.onclick = () => { const bag = this.bags?.[this.crew.indexOf(member)]; if (!bag || quantity <= 0) return; bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
+    buy.onclick = () => { const bag = member ? this.bags?.[this.crew.indexOf(member)] : null; if (quantity <= 0) return; if (bag) bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; else { this.vehicle.resources ||= {}; this.vehicle.resources["Grape Smoothie"] = (this.vehicle.resources["Grape Smoothie"] || 0) + quantity; } market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
     const close = document.createElement("button"); close.textContent = "CLOSE"; close.onclick = () => dialog.remove();
     dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
   }
 
   handleTeamInteraction(selected) {
     if (selected === "rustbucket") {
-      this.vehicle?.performRescueAction();
+      const market = this.findNearbyMarket(this.vehicle);
+      if (market) this.openMarket(null, market);
+      else this.vehicle?.performRescueAction();
       return;
     }
     const member = this.getTeamMember(selected);
@@ -637,7 +644,9 @@ export class Omniverse {
     const control = this.titleScreen?.newGame?.interactControl;
     if (!control) return;
     if (selected === "rustbucket") {
-      this.vehicle?.updateRescueInteraction({ selected, interactControl: control });
+      const market = this.findNearbyMarket(this.vehicle);
+      if (market) control.setMode("Shop");
+      else this.vehicle?.updateRescueInteraction({ selected, interactControl: control });
       return;
     }
     const member = this.getTeamMember(selected);
@@ -903,6 +912,10 @@ export class Omniverse {
       if (distance < nearest) { nearest = distance; target = resident; }
     }
     if (target) return attacker.attack?.(target) ?? false;
+    if (attacker.activeTransformation === "Chromastone") {
+      attacker.rig?.attack?.();
+      return true;
+    }
     this.getActiveRig(attacker)?._rig?.playAnimation("punch");
     return false;
   }
