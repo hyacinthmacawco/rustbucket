@@ -119,9 +119,11 @@ export class Omniverse {
 
     this.titleScreen = new Title({
       onNewGame: async () => {
-        await this.requestFullscreen();
+        // Start the dialogue synchronously inside the user's click gesture.
+        // Awaiting fullscreen first can consume the browser's audio activation.
         this.audioPlayer.unlocked = true;
         this.setStage("prelude");
+        await this.requestFullscreen();
       },
       onSkipPrelude: async () => {
         await this.requestFullscreen();
@@ -575,6 +577,7 @@ export class Omniverse {
   findNearbyMarket(member, range = 14) {
     const entity = member?.group || member?.ship || (member?.isObject3D ? member : null);
     if (!entity || !this.celestial) return null;
+    if (member?.ship) range = Math.max(range, 42);
     const point = entity.getWorldPosition(new THREE.Vector3());
     let market = null;
     this.celestial.traverse(object => {
