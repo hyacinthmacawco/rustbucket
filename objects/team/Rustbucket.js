@@ -96,7 +96,7 @@ export class Rustbucket {
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
-    if (resident.homeworld === planet?.world?.key) {
+    if (planet?.world?.key && resident.homeworld === planet.world.key) {
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
