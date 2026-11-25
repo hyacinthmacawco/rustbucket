@@ -333,19 +333,14 @@ export class Omniverse {
   handleResidentClick(resident) {
     if (!resident || !this.vehicle || !this.currentPlanet) return false;
 
-    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
-    const currentWorld = this.currentPlanet.world.key;
-
-    // Clicking an aboard resident unloads them only when the Rustbucket is
-    // currently at their homeworld. This routes delivery through the same
-    // unboardResident method used by the vehicle rescue action.
+    // Clicking an aboard resident unloads them only on their homeworld.
     if (resident.isAboard) {
-      if (homeworld !== currentWorld) return false;
+      if (resident.homeworld !== this.currentPlanet.world.key) return false;
       return this.vehicle.unboardResident(resident);
     }
 
-    // Residents away from home can still be boarded by clicking them.
-    if (homeworld !== currentWorld) {
+    // Residents away from home can still be boarded.
+    if (resident.homeworld !== this.currentPlanet.world.key) {
       return this.vehicle.boardResident(resident);
     }
 
