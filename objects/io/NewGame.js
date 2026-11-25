@@ -111,6 +111,8 @@ export class NewGame {
       member.seated = false;
     });
     omniverse.vehicle.setRamp(true);
+    omniverse.registerVehiclePhysics(omniverse.vehicle);
+    omniverse.crew.forEach(member => omniverse.registerPhysicsBody(member.group, member, member.group.userData.collisionCapsule));
 
     omniverse.joystick?.destroy();
     this.jumpControl?.destroy();
@@ -149,7 +151,11 @@ export class NewGame {
     this.povControl = new POV({ onToggle: enabled => omniverse.setPOV(enabled) });
     this.rampControl = new Ramp({ onPress: () => omniverse.vehicle?.toggleRamp() });
     this.attackControl = new Attack({
-      onStart: () => { omniverse.handleCombatAttack(omniverse.joystick.currentSelection); omniverse.joystick.lastAttackAt = performance.now(); omniverse.joystick.input.attackHeld = true; },
+      onStart: () => {
+        omniverse.joystick.input.attackHeld = true;
+        omniverse.joystick.lastAttackAt = performance.now();
+        omniverse.handleCombatAttack(omniverse.joystick.currentSelection);
+      },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
     });
     this.jumpControl.create();
