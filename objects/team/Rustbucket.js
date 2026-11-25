@@ -61,7 +61,7 @@ export class Rustbucket {
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
     this.rescuePassengers = [];
-    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, helix: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {}, onBoard: () => {}, onUnboard: () => {} };
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, helix: null, onUpdate: () => {}, onPickup: () => null, onBoard: () => {}, onUnboard: () => {} };
     this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
