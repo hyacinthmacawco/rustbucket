@@ -73,7 +73,7 @@ export class Rustbucket {
     const index = this.rescuePassengers.length;
     resident.group.position.set(
       -0.65 + (index % 3) * 0.65,
-      -0.25,
+      -1.18,
       -1.1 - Math.floor(index / 3) * 0.7
     );
     resident.group.rotation.set(0, Math.PI, 0);
@@ -89,7 +89,7 @@ export class Rustbucket {
     const context = this.rescueContext;
     const planet = context.getCurrentPlanet();
     this.ship.updateWorldMatrix(true, false);
-    const exit = this.ship.localToWorld(new THREE.Vector3(0, -1.1, -6.3));
+    const exit = this.ship.localToWorld(new THREE.Vector3(0, -1.18, -6.3));
     const world = this.ship.parent;
     world.attach(resident.group);
     resident.group.position.copy(exit);
