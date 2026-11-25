@@ -431,7 +431,7 @@ export class Omniverse {
     const position = object.getWorldPosition(new THREE.Vector3());
     const scale = object.getWorldScale(new THREE.Vector3());
     const body = this.physicsWorld.createRigidBody(
-      RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z).lockRotations().setCanSleep(false)
+      RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z).setLinearDamping(5).setAngularDamping(5).lockRotations().setCanSleep(false)
     );
     const worldRotation = object.getWorldQuaternion(new THREE.Quaternion());
     const yaw = new THREE.Euler().setFromQuaternion(worldRotation, "YXZ").y;
