@@ -44,7 +44,7 @@ export class Rustbucket {
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
     this.rescuePassengers = [];
-    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, helix: null, onUpdate: () => {}, onPickup: () => null, onBoard: () => {}, onUnboard: () => {} };
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, helix: null, audioPlayer: null, onUpdate: () => {}, onPickup: () => null, onBoard: () => {}, onUnboard: () => {} };
     this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
@@ -57,6 +57,7 @@ export class Rustbucket {
       getResidents: context.getResidents || (() => []),
       account: context.account || null,
       helix: context.helix || null,
+      audioPlayer: context.audioPlayer || null,
       onUpdate: context.onUpdate || (() => {}),
       onPickup: context.onPickup || (() => null),
       onDrop: context.onDrop || (() => {}),
@@ -131,25 +132,70 @@ export class Rustbucket {
       }
     }
 
-    // The unload action itself owns the completion-screen trigger. Do not
-    // make the screen depend on task-list lookup or a homeworld-key comparison.
-    try {
-      context.helix?.completeTask(resident);
-      if (context.helix?.showTaskCompleted) {
-        context.helix.showTaskCompleted({
-          resident,
-          relationshipIncrease: returnedHome ? actualRelationshipIncrease : 0,
-          taydeniteIncrease: earned
-        });
-      } else {
-        console.error("Rustbucket unload: Helix completion screen is unavailable.");
-      }
-    } catch (error) {
-      console.error("Rustbucket unload: unable to show task completion screen:", error);
-    }
+    this.showRescueCompleted({
+      resident,
+      relationshipIncrease: returnedHome ? actualRelationshipIncrease : 0,
+      taydeniteIncrease: earned
+    });
 
     context.onUpdate();
     return true;
+  }
+
+  showRescueCompleted({ resident, relationshipIncrease = 0, taydeniteIncrease = 0 } = {}) {
+    if (!this.rescueCompletedPage) {
+      const page = document.createElement("section");
+      page.id = "rescue-completed-screen";
+      Object.assign(page.style, {
+        position: "fixed", inset: "0", zIndex: "200", display: "none",
+        alignItems: "center", justifyContent: "center", padding: "20px",
+        background: "rgba(0, 8, 4, .78)", boxSizing: "border-box"
+      });
+      const panel = document.createElement("div");
+      Object.assign(panel.style, {
+        width: "min(92vw, 560px)", minHeight: "300px", boxSizing: "border-box",
+        padding: "clamp(24px, 6vw, 54px)", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: "20px", textAlign: "center",
+        color: "#eaffef", border: "1px solid rgba(126,255,168,.5)", borderRadius: "12px",
+        background: "rgba(3,18,10,.98)", boxShadow: "0 0 45px rgba(56,255,128,.2)",
+        fontFamily: "Industry Light, sans-serif"
+      });
+      const heading = document.createElement("h1");
+      heading.textContent = "RESCUE COMPLETED";
+      Object.assign(heading.style, { margin: "0", color: "#9effb6", letterSpacing: ".12em", fontWeight: "300" });
+      const summary = document.createElement("div");
+      Object.assign(summary.style, { display: "grid", gap: "12px", fontSize: "1.05rem", letterSpacing: ".06em" });
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "CONTINUE";
+      Object.assign(button.style, {
+        padding: "9px 10px", border: "1px solid rgba(126,255,168,.38)",
+        borderRadius: "5px", background: "rgba(7,42,22,.8)", color: "#eaffef",
+        font: "inherit", letterSpacing: ".06em", cursor: "pointer"
+      });
+      button.addEventListener("click", () => {
+        this.rescueContext.audioPlayer?.stopOverrideMusic();
+        page.style.display = "none";
+      });
+      panel.append(heading, summary, button);
+      page.append(panel);
+      document.body.append(page);
+      this.rescueCompletedPage = page;
+      this.rescueCompletedSummary = summary;
+    }
+    const name = resident?.species || resident?.group?.userData?.species || "Rescued individual";
+    this.rescueCompletedSummary.replaceChildren();
+    for (const line of [
+      name + " safely returned home.",
+      "RELATIONSHIP  +" + relationshipIncrease + "%",
+      "TAYDENITE  +" + taydeniteIncrease
+    ]) {
+      const item = document.createElement("div");
+      item.textContent = line;
+      this.rescueCompletedSummary.append(item);
+    }
+    this.rescueCompletedPage.style.display = "flex";
+    this.rescueContext.audioPlayer?.playOverrideMusic("./files/songs/ov-end-credits.m4a");
   }
 
   performRescueAction() {
