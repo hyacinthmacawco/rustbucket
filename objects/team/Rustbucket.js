@@ -6,6 +6,14 @@ export class Rustbucket {
     this.ship.name = "Rustbucket";
     this.ship.position.set(0, 2, 0);
     this.ship.scale.setScalar(3);
+    this.health = 1000;
+    this.maxHealth = 1000;
+    this.energy = 100;
+    this.maxEnergy = 100;
+    this.healthRecoveryDelay = 0;
+    this.energyRecoveryDelay = 0;
+    this.resources = {};
+    this.ship.userData.statusOwner = this;
     parent.add(this.ship);
 
     this.materials = {
@@ -369,7 +377,7 @@ export class Rustbucket {
         .setAngularDamping(0)
         .setCanSleep(false)
     );
-    this.vehicleBody.setGravityScale(0, true);
+    this.vehicleBody.setGravityScale(1, true);
 
     this.physicsWorld = world;
     this.physicsRapier = RAPIER;
