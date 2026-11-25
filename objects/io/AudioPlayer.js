@@ -62,8 +62,8 @@ export class AudioPlayer {
 
   async startTrack(track, type) {
     try {
-      if (track.readyState === HTMLMediaElement.HAVE_NOTHING) track.load();
-      await track.play();
+      const playback = track.play();
+      if (playback && typeof playback.then === "function") await playback;
     } catch (error) {
       console.warn(type + " playback could not start:", track.src, error);
     }
