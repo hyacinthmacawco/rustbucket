@@ -1111,7 +1111,6 @@ export class Omniverse {
       onBoard: resident => this.setResidentAboard(resident, true),
       onUnboard: resident => this.setResidentAboard(resident, false)
     });
-    this.vehicle?.showRescueCompleted();
     return this.celestial;
   }
 
