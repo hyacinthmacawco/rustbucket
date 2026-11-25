@@ -105,7 +105,7 @@ export class Augstaka {
     this.patrolTime = 0;
     const positions = [[-350, 1250, -1050], [0, 1320, -1100], [350, 1250, -1050]];
     for (let index = 0; index < positions.length; index++) {
-      const visual = new HighbreedShip(parent, { scale: 3 });
+      const visual = new HighbreedShip(parent, { scale: 8 });
       const group = visual.group;
       group.name = this.world.key + "PatrolShip" + index;
       const [x, y, z] = positions[index];
@@ -118,7 +118,7 @@ export class Augstaka {
         health: 50,
         destroyed: false,
         orbitPhase: -Math.PI / 2 + (index - 1) * 0.28,
-        orbitRadius: 1100,
+        orbitRadius: 520,
         orbitSpeed: 0.12 + index * 0.015,
         takeDamage: amount => {
           patrol.health = Math.max(0, patrol.health - Math.max(0, Number(amount) || 0));
@@ -150,7 +150,7 @@ export class Augstaka {
       const angle = patrol.orbitPhase + this.patrolTime * patrol.orbitSpeed;
       patrol.group.position.set(
         274300 + Math.cos(angle) * patrol.orbitRadius,
-        1250 + Math.sin(this.patrolTime * 0.32 + patrol.orbitPhase) * 110,
+        1550 + Math.sin(this.patrolTime * 0.32 + patrol.orbitPhase) * 70,
         Math.sin(angle) * patrol.orbitRadius
       );
       patrol.group.rotation.y = -angle;
