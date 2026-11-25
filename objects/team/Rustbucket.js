@@ -121,8 +121,9 @@ export class Rustbucket {
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
+    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const deliverable = this.rescuePassengers.find(resident =>
-      (resident.homeworld || resident.group?.userData?.homeWorldKey) === planet.world.key
+      normalizeWorld(resident.homeworld || resident.group?.userData?.homeWorldKey) === normalizeWorld(planet.world.key)
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
