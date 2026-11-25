@@ -30,6 +30,10 @@ export class Omniverse {
     this.audioPlayer = new AudioPlayer();
     this.physicsWorld = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.physicsWorld.timestep = 1 / 60;
+    this.characterController = this.physicsWorld.createCharacterController(0.04);
+    this.characterController.setMaxSlopeClimbAngle(Math.PI / 4);
+    this.characterController.setMinSlopeSlideAngle(Math.PI / 4);
+    this.characterController.setApplyImpulsesToDynamicBodies(true);
     this.physicsBodies = new Map();
     this.physicsGroundBody = null;
     this.dead = false;
@@ -63,6 +67,11 @@ export class Omniverse {
       fontFamily: "Industry Light, sans-serif"
     });
 
+    this.canvas.addEventListener("pointerdown", this.handleCanvasPointerDown);
+    this.canvas.addEventListener("pointerup", this.handleCanvasPointerUp);
+    this.canvas.addEventListener("pointercancel", this.handleCanvasPointerCancel);
+    this.raycaster = new THREE.Raycaster();
+    this.pointerDown = null;
     document.body.appendChild(this.canvas);
     this.scene = new THREE.Scene();
     this.scene.name = "Rustbucket";
@@ -260,6 +269,127 @@ export class Omniverse {
       // Browsers can reject fullscreen when permission or user-gesture rules
       // are not satisfied. The game remains playable in the available viewport.
     }
+  }
+
+  handleCanvasPointerDown = event => {
+    if (event.button !== 0 || this.state.stage !== "gameplay") return;
+    this.pointerDown = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  };
+
+  handleCanvasPointerCancel = event => {
+    if (this.pointerDown?.id === event.pointerId) this.pointerDown = null;
+  };
+
+  handleCanvasPointerUp = event => {
+    const start = this.pointerDown;
+    this.pointerDown = null;
+    if (!start || start.id !== event.pointerId || this.state.stage !== "gameplay") return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 9) return;
+    const rect = this.canvas.getBoundingClientRect();
+    this.pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const hits = this.raycaster.intersectObjects(this.celestial.children, true);
+    for (const hit of hits) {
+      let target = hit.object;
+      while (target && target !== this.celestial) {
+        if (typeof target.userData?.onClick === "function") {
+          target.userData.onClick({ event, hit, omniverse: this });
+          return;
+        }
+        target = target.parent;
+      }
+    }
+  };
+
+  attachObjectClickHandlers() {
+    for (const bag of this.bags || []) bag.onClick = () => this.handleBagClick(bag);
+    for (const resident of this.residents || []) resident.onClick = () => this.handleResidentClick(resident);
+    this.celestial?.traverse(object => {
+      if (object.userData?.market) object.userData.clickHandler = () => this.openMarket(null, object);
+    });
+  }
+
+  handleBagClick(bag) {
+    const member = this.getTeamMember(this.joystick?.currentSelection);
+    if (!member || !bag) return false;
+    if (member.carryingBag === bag) {
+      const position = member.group.getWorldPosition(new THREE.Vector3());
+      this.celestial.attach(bag.group);
+      bag.group.position.copy(position).add(new THREE.Vector3(0.55, 0, 0));
+      bag.group.rotation.set(0, 0, 0);
+      bag.pickable = true;
+      bag.stored = false;
+      bag.group.userData.pickable = true;
+      member.carryingBag = null;
+      return true;
+    }
+    if (member.carryingBag || !bag.pickable || bag.stored) return false;
+    return this.pickTeamBag(member, bag);
+  }
+
+  handleResidentClick(resident) {
+    if (!resident || !this.vehicle || !this.currentPlanet) return false;
+    if (resident.isAboard) return this.vehicle.unboardResident(resident);
+    if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
+    return false;
+  }
+
+  setResidentAboard(resident, aboard) {
+    const entry = this.physicsBodies.get(resident?.group);
+    if (!entry) return;
+    if (aboard) {
+      entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setEnabled(false);
+      entry.disabled = true;
+      return;
+    }
+    resident.group.updateWorldMatrix(true, false);
+    const p = resident.group.getWorldPosition(new THREE.Vector3());
+    entry.body.setTranslation({ x: p.x, y: p.y, z: p.z }, true);
+    entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setEnabled(true);
+    entry.disabled = false;
+  }
+
+  moveCharacterWithCollisions(object, dx, dz) {
+    const entry = this.physicsBodies.get(object);
+    if (!entry || entry.disabled || !this.characterController) {
+      object.position.x += dx;
+      object.position.z += dz;
+      return;
+    }
+    const collider = entry.body.collider(0);
+    if (!collider) return;
+    this.characterController.computeColliderMovement(collider, { x: dx, y: 0, z: dz });
+    const movement = this.characterController.computedMovement();
+    const current = entry.body.translation();
+    const next = { x: current.x + movement.x, y: current.y + movement.y, z: current.z + movement.z };
+    entry.body.setTranslation(next, true);
+    const worldPosition = new THREE.Vector3(next.x, next.y, next.z);
+    object.parent?.updateWorldMatrix(true, false);
+    object.position.copy(object.parent ? object.parent.worldToLocal(worldPosition) : worldPosition);
+    object.updateMatrix();
+  }
+
+  setCharacterPhysicsEnabled(object, enabled) {
+    const entry = this.physicsBodies.get(object);
+    if (!entry) return;
+    if (!enabled) {
+      entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setEnabled(false);
+      entry.disabled = true;
+      return;
+    }
+    object.updateWorldMatrix(true, false);
+    const p = object.getWorldPosition(new THREE.Vector3());
+    entry.body.setTranslation({ x: p.x, y: p.y, z: p.z }, true);
+    entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setEnabled(true);
+    entry.disabled = false;
   }
 
   registerPhysicsBody(object, owner, capsule = object?.userData?.collisionCapsule) {
@@ -670,8 +800,12 @@ export class Omniverse {
     if (distance > 0.08) {
       const parentScale = member.group.parent === this.vehicle?.ship ? (this.vehicle.ship.scale.x || 1) : 1;
       const step = Math.min(distance, (2.5 / parentScale) * delta);
-      position.x += dx / distance * step;
-      position.z += dz / distance * step;
+      if (member.group.parent === this.vehicle?.ship) {
+        position.x += dx / distance * step;
+        position.z += dz / distance * step;
+      } else {
+        this.moveCharacterWithCollisions(member.group, dx / distance * step, dz / distance * step);
+      }
       member.group.rotation.y = Math.atan2(dx, dz);
       this.getActiveRig(member)?._rig?.setWalking(true);
     } else {
@@ -707,6 +841,7 @@ export class Omniverse {
         if (distance < 1.0) {
           this.storeTeamBag(member);
           ship.attach(member.group);
+          this.setCharacterPhysicsEnabled(member.group, false);
           task.phase = "toSeat";
         }
       } else if (task.phase === "toSeat") {
@@ -854,7 +989,7 @@ export class Omniverse {
     this.vehicle?.vehicleBody?.setGravityScale(1, true);
     if (ship) {
       this.vehicle.ship = ship;
-      ship.position.set(0, 2, 34);
+      ship.position.set(0, 3.54, 34);
       ship.rotation.set(0, 0, 0);
       this.celestial.add(ship);
       this.resetCameraToShip(ship);
@@ -887,14 +1022,20 @@ export class Omniverse {
     this.helixButton.style.display = "inline-flex";
     this.helix?.setLocation(planet.world.key);
     this.residents = planet.spawnResidents?.(this.celestial) || [];
-    for (const resident of this.residents) this.registerPhysicsBody(resident.group, resident, resident.group.userData.collisionCapsule);
+    for (const resident of this.residents) {
+      this.registerPhysicsBody(resident.group, resident, resident.group.userData.collisionCapsule);
+      resident.moveWithCollisions = (dx, dz) => this.moveCharacterWithCollisions(resident.group, dx, dz);
+    }
+    this.attachObjectClickHandlers();
     this.vehicle?.setRescueContext({
       getCurrentPlanet: () => this.currentPlanet,
       getResidents: () => this.residents || [],
       account: this.account,
       onUpdate: () => this.updateAccountHUD(),
       onPickup: resident => this.handleRescuePickup(resident),
-      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => this.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease)
+      onDrop: (resident, relationshipIncrease, taydeniteIncrease) => this.handleRescueDrop(resident, relationshipIncrease, taydeniteIncrease),
+      onBoard: resident => this.setResidentAboard(resident, true),
+      onUnboard: resident => this.setResidentAboard(resident, false)
     });
     return this.celestial;
   }
@@ -971,7 +1112,6 @@ export class Omniverse {
       for (const member of this.crew || []) { if (member.health <= 0) { member.group.visible = false; member.dead = true; } }
       if (!this.dead && this.crew?.length === 4 && this.crew.every(member => member.health <= 0)) { this.dead = true; this.deathScreen.setVisible(true); this.audioPlayer.playMusic("./files/songs/af-end-credits-slowed.opus"); }
       this.updateCrewAutomation(delta, elapsed);
-      this.updateTeamInteractionMode();
     }
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
@@ -1095,6 +1235,9 @@ export class Omniverse {
   destroy() {
     window.removeEventListener("resize", this.onResize);
     document.removeEventListener("pointerdown", this.onFirstInteraction, true);
+    this.canvas.removeEventListener("pointerdown", this.handleCanvasPointerDown);
+    this.canvas.removeEventListener("pointerup", this.handleCanvasPointerUp);
+    this.canvas.removeEventListener("pointercancel", this.handleCanvasPointerCancel);
     this.cameraController.destroy();
     this.helix.destroy();
     this.titleScreen.destroy();
