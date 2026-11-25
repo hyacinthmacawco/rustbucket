@@ -1,4 +1,3 @@
-import { Tasks } from "./Tasks.js";
 import { Relationships } from "./Relationships.js";
 import { Omnipedia } from "./Omnipedia.js";
 import { Accounts } from "./Accounts.js";
@@ -16,13 +15,11 @@ export class Helix {
     this.activeTabId = 1;
     this.nextTabId = 2;
     this.pages = {
-      tasks: new Tasks(),
       relationships: new Relationships(),
       accounts: new Accounts(this.account)
     };
     this.sites = [
       { title: "Private Cloud", url: "ottps://bgkr.omnicloud.com" },
-      { title: "Tasks — Private Cloud", url: "ottps://bgkr.omnicloud.com/tasks" },
       { title: "Relationships — Private Cloud", url: "ottps://bgkr.omnicloud.com/relationships" },
       { title: "Accounts — Private Cloud", url: "ottps://bgkr.omnicloud.com/accounts" },
       { title: "Omnidata", url: "ottps://en.omnidata.org" },
@@ -215,7 +212,7 @@ export class Helix {
     if (url.startsWith("en.omnidata.org")) url = "ottps://" + url;
     const valid = url === "extranet://home" ||
       url === "ottps://bgkr.omnicloud.com" ||
-      ["tasks", "relationships", "accounts"].some(path => url === "ottps://bgkr.omnicloud.com/" + path) ||
+      ["relationships", "accounts"].some(path => url === "ottps://bgkr.omnicloud.com/" + path) ||
       url === "ottps://en.omnidata.org";
     if (!valid) {
       this.current = "notfound";
@@ -237,7 +234,6 @@ export class Helix {
     this.suggestions.style.display = "none";
     if (url === "extranet://home") this.renderHome();
     else if (url === "ottps://bgkr.omnicloud.com") this.renderPrivateCloud();
-    else if (url.endsWith("/tasks")) this.renderTasks();
     else if (url.endsWith("/relationships")) this.renderRelationships();
     else if (url.endsWith("/accounts")) this.renderAccounts();
     else this.renderOmnidata(allowSystemJump);
@@ -281,7 +277,7 @@ export class Helix {
     this.page.replaceChildren();
     const grid = document.createElement("div");
     Object.assign(grid.style, this.styles.bookmarkGrid);
-    for (const [label, path] of [["Tasks", "tasks"], ["Relationships", "relationships"], ["Accounts", "accounts"]]) {
+    for (const [label, path] of [["Relationships", "relationships"], ["Accounts", "accounts"]]) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
@@ -290,12 +286,6 @@ export class Helix {
       grid.append(button);
     }
     this.page.append(grid);
-  }
-
-  renderTasks() {
-    this.current = "tasks";
-    this.setTabDetails("Tasks");
-    this.pages.tasks.render(this.page);
   }
 
   renderRelationships() {
@@ -318,33 +308,10 @@ export class Helix {
 
   home = () => this.navigate("extranet://home");
   privateCloud = () => this.navigate("ottps://bgkr.omnicloud.com");
-  tasks = () => this.navigate("ottps://bgkr.omnicloud.com/tasks");
   showRelationships = () => this.navigate("ottps://bgkr.omnicloud.com/relationships");
   accounts = () => this.navigate("ottps://bgkr.omnicloud.com/accounts");
   omnidata = (allowSystemJump = false) => this.navigate("ottps://en.omnidata.org", { allowSystemJump });
   updateAccount() { this.pages.accounts.update(); }
-  addTask(resident) { return this.pages.tasks.addTask(resident); }
-  completeTask(id) { return this.pages.tasks.completeTask(id); }
-
-  showTaskCompleted({ resident, relationshipIncrease = 5, taydeniteIncrease = 10 } = {}) {
-    const name = resident?.species || resident?.group?.userData?.species || "Rescued individual";
-    this.taskSummary.replaceChildren();
-    for (const line of [name + " safely returned home.", "RELATIONSHIP  +" + relationshipIncrease + "%", "TAYDENITE  +" + taydeniteIncrease]) {
-      const item = document.createElement("div");
-      item.textContent = line;
-      this.taskSummary.append(item);
-    }
-    this.root.style.display = "flex";
-    this.window.style.display = "none";
-    this.taskCompletedPage.style.display = "flex";
-    this.audioPlayer?.playOverrideMusic("./files/songs/ov-end-credits.m4a");
-  }
-
-  continueAfterTask = () => {
-    this.audioPlayer?.stopOverrideMusic();
-    this.taskCompletedPage.style.display = "none";
-    this.window.style.display = "flex";
-  };
 
   setLocation(location) {
     this.currentLocation = location;
@@ -368,7 +335,6 @@ export class Helix {
   close = () => { this.root.style.display = "none"; };
 
   destroy() {
-    this.pages.tasks.destroy?.();
     this.pages.relationships.destroy?.();
     this.pages.accounts.destroy?.();
     this.backButton.removeEventListener("click", this.goBack);
