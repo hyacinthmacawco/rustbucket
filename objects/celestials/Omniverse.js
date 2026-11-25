@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import RAPIER from "@dimforge/rapier3d-compat";
 import { Title } from "../io/Title.js";
 import { Death } from "../team/Death.js";
 import { Camera } from "../team/Camera.js";
@@ -27,6 +28,10 @@ export class Omniverse {
     this.installStyles();
     this.account = new Account();
     this.audioPlayer = new AudioPlayer();
+    this.physicsWorld = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+    this.physicsWorld.timestep = 1 / 60;
+    this.physicsBodies = new Map();
+    this.physicsGroundBody = null;
     this.dead = false;
 
     this.canvas = document.createElement("canvas");
@@ -115,11 +120,11 @@ export class Omniverse {
     this.titleScreen = new Title({
       onNewGame: async () => {
         await this.requestFullscreen();
-        this.audioPlayer.unlock("title", this.titleScreen.song);
         this.setStage("prelude");
       },
       onSkipPrelude: async () => {
         await this.requestFullscreen();
+        this.audioPlayer.stopSfx();
         this.setStage("gameplay");
       }
     });
@@ -163,8 +168,12 @@ export class Omniverse {
       this.resize();
     };
     window.addEventListener("resize", this.onResize);
-    this.onFirstInteraction = () => { this.requestFullscreen(); this.audioPlayer.unlock(this.state.stage, this.titleScreen.song); };
-    document.addEventListener("pointerdown", this.onFirstInteraction, { once: true });
+    // Browsers require a fresh user gesture to re-enter fullscreen after a tab switch.
+    this.onFirstInteraction = () => {
+      this.requestFullscreen();
+      this.audioPlayer.unlock(this.state.stage, this.titleScreen.song);
+    };
+    document.addEventListener("pointerdown", this.onFirstInteraction, true);
     this.clock = new THREE.Clock();
     this.animationFrame = null;
     this.animate = this.animate.bind(this);
@@ -247,6 +256,82 @@ export class Omniverse {
     } catch (error) {
       // Browsers can reject fullscreen when permission or user-gesture rules
       // are not satisfied. The game remains playable in the available viewport.
+    }
+  }
+
+  registerPhysicsBody(object, owner, capsule = object?.userData?.collisionCapsule) {
+    if (!object || !owner || !capsule || !this.physicsWorld || this.physicsBodies.has(object)) return null;
+    object.updateWorldMatrix(true, false);
+    const position = object.getWorldPosition(new THREE.Vector3());
+    const scale = object.getWorldScale(new THREE.Vector3());
+    const body = this.physicsWorld.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z).lockRotations().setCanSleep(false)
+    );
+    this.physicsWorld.createCollider(
+      RAPIER.ColliderDesc.capsule(capsule.halfHeight * scale.y, capsule.radius * scale.x)
+        .setTranslation(0, capsule.centerY * scale.y, 0).setFriction(0.85).setRestitution(0),
+      body
+    );
+    this.physicsBodies.set(object, { body, owner, disabled: false });
+    return body;
+  }
+
+  registerVehiclePhysics(vehicle) {
+    if (!vehicle?.ship || !this.physicsWorld) return null;
+    const body = vehicle.addVehicle(this.physicsWorld, RAPIER);
+    const inAtmosphere = this.state.currentScene !== "space" && !this.state.currentScene.startsWith("system-");
+    body.setGravityScale(inAtmosphere ? 1 : 0, true);
+    this.physicsBodies.set(vehicle.ship, { body, owner: vehicle, disabled: false });
+    return body;
+  }
+
+  setPhysicsGround(enabled) {
+    if (this.physicsGroundBody) {
+      this.physicsWorld.removeRigidBody(this.physicsGroundBody);
+      this.physicsGroundBody = null;
+    }
+    if (!enabled || !this.physicsWorld) return;
+    this.physicsGroundBody = this.physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+    this.physicsWorld.createCollider(
+      RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -1.1, 0).setFriction(0.9),
+      this.physicsGroundBody
+    );
+    this.physicsWorld.createCollider(
+      RAPIER.ColliderDesc.cuboid(17, 0.175, 16).setTranslation(0, -0.2, -31).setFriction(0.9),
+      this.physicsGroundBody
+    );
+  }
+
+  stepPhysics(delta) {
+    if (!this.physicsWorld || this.state.stage !== "gameplay") return;
+    for (const [object, entry] of this.physicsBodies) {
+      if (!object.parent) continue;
+      const insideShip = object.parent === this.vehicle?.ship;
+      if (entry.owner?.seated || insideShip) {
+        if (!entry.disabled) entry.body.setEnabled(false);
+        entry.disabled = true;
+        continue;
+      }
+      if (entry.disabled) {
+        entry.body.setEnabled(true);
+        entry.disabled = false;
+      }
+      object.updateWorldMatrix(true, false);
+      const position = object.getWorldPosition(new THREE.Vector3());
+      const rotation = object.getWorldQuaternion(new THREE.Quaternion());
+      entry.body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+      entry.body.setRotation({ x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w }, true);
+    }
+    this.physicsWorld.timestep = Math.max(1 / 120, Math.min(delta, 0.05));
+    this.physicsWorld.step();
+    for (const [object, entry] of this.physicsBodies) {
+      if (!object.parent || entry.disabled) continue;
+      const p = entry.body.translation(), q = entry.body.rotation(), parent = object.parent;
+      parent.updateWorldMatrix(true, false);
+      object.position.copy(parent.worldToLocal(new THREE.Vector3(p.x, p.y, p.z)));
+      const parentRotation = parent.getWorldQuaternion(new THREE.Quaternion()).invert();
+      object.quaternion.copy(parentRotation.multiply(new THREE.Quaternion(q.x, q.y, q.z, q.w)));
+      object.updateMatrix();
     }
   }
 
@@ -452,6 +537,8 @@ export class Omniverse {
     member.seatIndex = seatIndex;
     seat.occupiedBy = member;
     member.group.userData.seated = true;
+    const physicsEntry = this.physicsBodies.get(member.group);
+    if (physicsEntry) { physicsEntry.body.setEnabled(false); physicsEntry.disabled = true; }
     return true;
   }
 
@@ -468,6 +555,8 @@ export class Omniverse {
     if (seat?.occupiedBy === member) seat.occupiedBy = null;
     member.seated = false;
     member.group.userData.seated = false;
+    const physicsEntry = this.physicsBodies.get(member.group);
+    if (physicsEntry) { physicsEntry.body.setEnabled(true); physicsEntry.disabled = false; }
     if (member.automation) member.automation.phase = "manual";
     return true;
   }
@@ -619,6 +708,8 @@ export class Omniverse {
           member.seatIndex = task.seatIndex;
           seat.occupiedBy = member;
           member.group.userData.seated = true;
+          const physicsEntry = this.physicsBodies.get(member.group);
+          if (physicsEntry) { physicsEntry.body.setEnabled(false); physicsEntry.disabled = true; }
           task.phase = "done";
         }
       }
@@ -687,6 +778,7 @@ export class Omniverse {
     const SystemClass = this.systemClasses[systemKey] || SolarSystem;
     this.systemWorld = new SystemClass();
     this.celestial.add(this.systemWorld.model());
+    this.setPhysicsGround(false);
     this.audioPlayer?.playSongs(this.systemWorld.songs);
 
     this.addSystemPlanets(systemKey);
@@ -698,6 +790,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
+    this.vehicle?.vehicleBody?.setGravityScale(0, true);
     if (ship) {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
@@ -730,6 +823,7 @@ export class Omniverse {
 
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
+    this.setPhysicsGround(true);
     this.currentPlanet = planet;
     this.audioPlayer?.playSongs(planet.songs);
     this.earth = planet.world.key === "earth" ? planet : null;
@@ -738,6 +832,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
+    this.vehicle?.vehicleBody?.setGravityScale(1, true);
     if (ship) {
       this.vehicle.ship = ship;
       ship.position.set(0, 2, 34);
@@ -753,6 +848,8 @@ export class Omniverse {
         }
         member.seated = false;
         member.group.userData.seated = false;
+        const physicsEntry = this.physicsBodies.get(member.group);
+        if (physicsEntry) { physicsEntry.body.setEnabled(true); physicsEntry.disabled = false; }
         this.getActiveRig(member)?.stand?.();
         this.celestial.attach(member.group);
         member.group.position.set(-4 + index * 2.6, 0, 8);
@@ -771,6 +868,7 @@ export class Omniverse {
     this.helixButton.style.display = "inline-flex";
     this.helix?.setLocation(planet.world.key);
     this.residents = planet.spawnResidents?.(this.celestial) || [];
+    for (const resident of this.residents) this.registerPhysicsBody(resident.group, resident, resident.group.userData.collisionCapsule);
     this.vehicle?.setRescueContext({
       getCurrentPlanet: () => this.currentPlanet,
       getResidents: () => this.residents || [],
@@ -792,7 +890,9 @@ export class Omniverse {
       const distance = origin.distanceTo(resident.group.getWorldPosition(new THREE.Vector3()));
       if (distance < nearest) { nearest = distance; target = resident; }
     }
-    return target ? attacker.attack?.(target) ?? false : false;
+    if (target) return attacker.attack?.(target) ?? false;
+    this.getActiveRig(attacker)?._rig?.playAnimation("punch");
+    return false;
   }
 
   updateResidents(delta, elapsed) {
@@ -843,6 +943,7 @@ export class Omniverse {
     this.systemWorld?.animate?.(delta, elapsed);
     this.vehicle?.update?.(delta);
     if (this.state.stage === "gameplay") {
+      this.stepPhysics(delta);
       for (const patrol of this.systemWorld?.ships || []) {
         patrol.attackCooldown = Math.max(0, (patrol.attackCooldown || 0) - delta);
         if (patrol.destroyed || patrol.attackCooldown > 0) continue;
@@ -868,13 +969,19 @@ export class Omniverse {
 
     this.titleScreen.newGame.setControlsVisible(stage === "gameplay");
     if (stage === "prelude") {
-      this.audioPlayer.playSfx("./files/dialogues/ov-final-dialogues.mp3");
+      this.audioPlayer.stopMusic();
+      this.audioPlayer.stopSfx();
+      this.audioPlayer.playSfx("./files/dialogues/ov-final-dialogues.mp3", () => {
+        if (this.state.stage === "prelude") this.setStage("gameplay");
+      });
     } else if (stage === "gameplay") {
+      this.audioPlayer.stopSfx();
       this.titleScreen.newGame.initialize(this);
     } else if (stage === "title") {
       this.joystick?.setVisible(false);
       this.pause.setVisible(false);
       this.loadTitleWorld();
+      if (this.audioPlayer.unlocked) this.audioPlayer.playMusic(this.titleScreen.song);
     }
   }
 
@@ -922,6 +1029,14 @@ export class Omniverse {
   }
 
   clearWorld() {
+    this.setPhysicsGround(false);
+    for (const resident of this.residents || []) {
+      const entry = this.physicsBodies.get(resident.group);
+      if (entry) {
+        this.physicsWorld.removeRigidBody(entry.body);
+        this.physicsBodies.delete(resident.group);
+      }
+    }
     this.celestial.traverse(object => {
       if (!object.isMesh) return;
       object.geometry?.dispose();
@@ -943,7 +1058,7 @@ export class Omniverse {
 
   destroy() {
     window.removeEventListener("resize", this.onResize);
-    document.removeEventListener("pointerdown", this.onFirstInteraction);
+    document.removeEventListener("pointerdown", this.onFirstInteraction, true);
     this.cameraController.destroy();
     this.helix.destroy();
     this.titleScreen.destroy();
@@ -956,9 +1071,14 @@ export class Omniverse {
     if (this.animationFrame !== null) cancelAnimationFrame(this.animationFrame);
     this.animationFrame = null;
     this.audioPlayer?.destroy();
+    for (const entry of this.physicsBodies.values()) this.physicsWorld.removeRigidBody(entry.body);
+    this.physicsBodies.clear();
+    if (this.physicsGroundBody) this.physicsWorld.removeRigidBody(this.physicsGroundBody);
+    this.physicsWorld.free();
     this.renderer.dispose();
     this.canvas.remove();
   }
 }
 
+await RAPIER.init();
 new Omniverse();
