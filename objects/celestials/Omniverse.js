@@ -205,7 +205,12 @@ export class Omniverse {
   }
 
   handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
-    this.helix?.completeTask(resident?.taskId);
+    const taskCompleted = this.helix?.completeTask(resident?.taskId ?? resident);
+    if (!taskCompleted && resident) {
+      // A resident reference is a reliable fallback if an older save or a
+      // re-boarded passenger no longer carries its original task ID.
+      this.helix?.completeTask(resident);
+    }
     const species = resident?.species || resident?.group?.userData?.species;
     let actualRelationshipIncrease = relationshipIncrease;
     if (species && resident?.homeworld === this.currentPlanet?.world?.key) {
@@ -426,6 +431,7 @@ export class Omniverse {
     entry.body.setTranslation({ x: p.x, y: p.y, z: p.z }, true);
     entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setGravityScale(1, true);
     entry.body.setEnabled(true);
     entry.disabled = false;
   }
@@ -438,6 +444,8 @@ export class Omniverse {
     const body = this.physicsWorld.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z).setLinearDamping(5).setAngularDamping(5).lockRotations().setCanSleep(false)
     );
+    // Crew bodies always use world gravity while they are outside the ship.
+    body.setGravityScale(1, true);
     const worldRotation = object.getWorldQuaternion(new THREE.Quaternion());
     const yaw = new THREE.Euler().setFromQuaternion(worldRotation, "YXZ").y;
     body.setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw), true);
@@ -512,8 +520,10 @@ export class Omniverse {
     }
     if (!enabled || !this.physicsWorld) return;
     this.physicsGroundBody = this.physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+    // Planet visuals place the walkable surface at y = -0.6. Keep the
+    // fixed Rapier collider exactly on that surface instead of floating at y = 0.
     this.physicsWorld.createCollider(
-      RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -0.5, 0).setFriction(0.9),
+      RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -1.1, 0).setFriction(0.9),
       this.physicsGroundBody
     );
     if (includeStorageFloor) {
@@ -1104,28 +1114,45 @@ export class Omniverse {
   checkPatrolShipCollisions() {
     const patrols = this.systemWorld?.ships || [];
     const projectiles = this.vehicle?.projectiles || [];
+    if (!patrols.length || !projectiles.length) return;
+
+    const previous = new THREE.Vector3();
+    const current = new THREE.Vector3();
+    const segment = new THREE.Vector3();
+    const offset = new THREE.Vector3();
+    const closest = new THREE.Vector3();
+    const thresholdSq = 24 * 24;
+
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const bolt = projectiles[index];
-      if (!bolt?.parent) continue;
-      bolt.parent.updateWorldMatrix(true, false);
-      const current = bolt.getWorldPosition(new THREE.Vector3());
-      const previous = bolt.userData.previousPosition
-        ? bolt.userData.previousPosition.clone().applyMatrix4(bolt.parent.matrixWorld)
-        : current.clone();
-      const segment = new THREE.Line3(previous, current);
+      const parent = bolt?.parent;
+      if (!parent) continue;
+      parent.updateWorldMatrix(true, false);
+      bolt.getWorldPosition(current);
+      if (bolt.userData.previousPosition) {
+        previous.copy(bolt.userData.previousPosition).applyMatrix4(parent.matrixWorld);
+      } else {
+        previous.copy(current);
+      }
+      segment.subVectors(current, previous);
+      const segmentLengthSq = segment.lengthSq();
       let hit = false;
+
       for (const patrol of patrols) {
         if (patrol.destroyed || !patrol.group?.visible) continue;
-        const center = patrol.group.getWorldPosition(new THREE.Vector3());
-        const closest = new THREE.Vector3();
-        segment.closestPointToPoint(center, closest);
-        if (closest.distanceTo(center) > 24) continue;
+        patrol.group.getWorldPosition(offset);
+        const t = segmentLengthSq > 1e-8
+          ? THREE.MathUtils.clamp(offset.sub(previous).dot(segment) / segmentLengthSq, 0, 1)
+          : 0;
+        closest.copy(previous).addScaledVector(segment, t);
+        if (closest.distanceToSquared(offset.copy(patrol.group.getWorldPosition(offset))) > thresholdSq) continue;
         patrol.takeDamage?.(bolt.userData.damage ?? 10);
         hit = true;
         break;
       }
+
       if (hit) {
-        bolt.parent.remove(bolt);
+        parent.remove(bolt);
         bolt.geometry?.dispose();
         bolt.material?.dispose();
         projectiles.splice(index, 1);
