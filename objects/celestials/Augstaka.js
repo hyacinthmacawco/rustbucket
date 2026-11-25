@@ -6,7 +6,6 @@ import { Anodite } from "../species/Anodite.js";
 import { Galvan } from "../species/Galvan.js";
 import { Highbreed } from "../species/Highbreed.js";
 import { Incursean } from "../species/Incursean.js";
-import { AugstakaSystem } from "./AugstakaSystem.js";
 
 export class Augstaka {
   static relationships = { Ben: 40, Gwen: 30, Kevin: 20, Rook: 10, Incursean: -64, Anodite: 3, Galvan: 16, Human: -56 };
