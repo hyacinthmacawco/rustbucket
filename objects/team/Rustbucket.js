@@ -83,6 +83,10 @@ export class Rustbucket {
     return true;
   }
 
+  normalizeWorldKey(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
   unboardResident(resident) {
     if (!resident?.isAboard || !this.ship.parent) return false;
     const context = this.rescueContext;
@@ -96,27 +100,41 @@ export class Rustbucket {
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
-    if (planet?.world?.key && resident.homeworld === planet.world.key) {
-      const before = context.account?.balance ?? 0;
-      resident.awardTaydenite?.(context.account, 10);
-      const earned = Math.max(0, (context.account?.balance ?? before) - before);
 
-      // Complete the resident's task by object identity when it exists. The
-      // homeworld return itself is the completion condition, not task lookup.
-      context.helix?.completeTask(resident);
-
-      const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
+    const currentWorld = this.normalizeWorldKey(planet?.world?.key);
+    const residentHomeworld = this.normalizeWorldKey(
+      resident.homeworld || resident.group?.userData?.homeWorldKey
+    );
+    if (currentWorld && residentHomeworld && residentHomeworld === currentWorld) {
+      let earned = 0;
       let actualRelationshipIncrease = 0.5;
-      if (species && context.helix?.pages?.relationships) {
-        const relationships = context.helix.pages.relationships;
-        for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
-          const previous = relationships.getRelationship(species, name) ?? 0;
-          relationships.addRelationship(species, name, 0.5);
-          const next = relationships.getRelationship(species, name) ?? previous;
-          actualRelationshipIncrease = next - previous;
+      try {
+        const before = context.account?.balance ?? 0;
+        resident.awardTaydenite?.(context.account, 10);
+        earned = Math.max(0, (context.account?.balance ?? before) - before);
+
+        const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
+        const relationships = context.helix?.pages?.relationships;
+        if (species && relationships) {
+          for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
+            const previous = relationships.getRelationship(species, name) ?? 0;
+            relationships.addRelationship(species, name, 0.5);
+            const next = relationships.getRelationship(species, name) ?? previous;
+            actualRelationshipIncrease = next - previous;
+          }
         }
+      } catch (error) {
+        console.error("Rustbucket delivery reward update failed:", error);
       }
 
+      // Delivery to the resident's homeworld completes the task. The overlay
+      // is triggered directly by the unload path, independently of task-list
+      // lookup or reward updates.
+      try {
+        context.helix?.completeTask(resident);
+      } catch (error) {
+        console.error("Rustbucket task-list update failed:", error);
+      }
       context.helix?.showTaskCompleted({
         resident,
         relationshipIncrease: actualRelationshipIncrease,
@@ -139,8 +157,9 @@ export class Rustbucket {
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
+    const currentWorld = this.normalizeWorldKey(planet.world.key);
     const deliverable = this.rescuePassengers.find(resident =>
-      resident.homeworld === planet.world.key
+      this.normalizeWorldKey(resident.homeworld || resident.group?.userData?.homeWorldKey) === currentWorld
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
