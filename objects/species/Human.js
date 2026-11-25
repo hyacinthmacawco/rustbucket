@@ -47,6 +47,7 @@ export class Human {
 
 
 export class HumanRig {
+  static collisionCapsule = Object.freeze({ type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 });
 
   constructor(options = {}) {
     this.species = "Human";
@@ -162,7 +163,7 @@ export class HumanRig {
     bodyBox(ankle, side + "HumanShoe", [0.20, 0.14, 0.29], [0, -0.06, 0.07], bodyMaterials.shoes);
   }
   }
-  root.userData.collisionCapsule = { type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 };
+  root.userData.collisionCapsule = HumanRig.collisionCapsule;
 
   const initialRotations = new Map(
     bones.map(bone => [bone, bone.rotation.clone()])
@@ -532,7 +533,7 @@ export function initializeResident(instance, index, { species, homeworld, style 
   instance.group.userData.statusOwner = instance;
   instance.group.userData.speciesInstance = instance;
   instance.group.userData.rig = residentRig;
-  instance.group.userData.collisionCapsule = { type: "capsule", radius: 0.23, halfHeight: 0.72, centerY: 0.95 };
+  instance.group.userData.collisionCapsule = instance.constructor.collisionCapsule || HumanRig.collisionCapsule;
   instance.group.userData.updateRigAnimation = (moving, time) => residentRig._rig.updateWalk(time);
   instance.chooseTarget = () => {
     const angle = Math.random() * Math.PI * 2;
