@@ -120,16 +120,31 @@ export class Incursia {
         orbitPhase: -Math.PI / 2 + (index - 1) * 0.28,
         orbitRadius: 520,
         orbitSpeed: 0.12 + index * 0.015,
+        healthBar: null,
         takeDamage: amount => {
+          if (patrol.destroyed) return 0;
           patrol.health = Math.max(0, patrol.health - Math.max(0, Number(amount) || 0));
-          if (patrol.health === 0 && !patrol.destroyed) {
+          if (patrol.healthBar) {
+            const ratio = patrol.health / 50;
+            patrol.healthBar.fill.scale.x = Math.max(0.001, ratio);
+            patrol.healthBar.fill.position.x = -0.48 * (1 - ratio);
+            patrol.healthBar.group.visible = patrol.health < 50;
+          }
+          if (patrol.health === 0) {
             patrol.destroyed = true;
             group.visible = false;
+            patrol.healthBar?.group.removeFromParent();
             for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
               patrol.relationships[name] = Math.max(-100, Number(patrol.relationships[name] ?? 0) - 0.5);
             }
           }
           return patrol.health;
+        },
+        destroy: () => {
+          if (patrol.destroyed) return;
+          patrol.destroyed = true;
+          group.visible = false;
+          patrol.healthBar?.group.removeFromParent();
         },
         attack: target => {
           const species = target?.species || target?.constructor?.name;
@@ -138,6 +153,18 @@ export class Incursia {
           return true;
         }
       };
+      const barGroup = new THREE.Group();
+      barGroup.position.set(0, 7, 0);
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.12), new THREE.MeshBasicMaterial({ color: 0x250909, side: THREE.DoubleSide, depthTest: false }));
+      const fill = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.075), new THREE.MeshBasicMaterial({ color: 0x65ff72, side: THREE.DoubleSide, depthTest: false }));
+      fill.position.z = 0.01;
+      back.userData.noPhysics = true;
+      fill.userData.noPhysics = true;
+      barGroup.add(back, fill);
+      barGroup.visible = false;
+      barGroup.userData.noPhysics = true;
+      group.add(barGroup);
+      patrol.healthBar = { group: barGroup, fill };
       this.ships.push(patrol);
     }
     return this.ships;
