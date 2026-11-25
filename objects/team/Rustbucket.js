@@ -1,5 +1,22 @@
 import * as THREE from "three";
 
+const normalizeHomeworld = value => {
+  const key = String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const aliases = {
+    anodite: "anodyne",
+    anodine: "anodyne",
+    anodyne: "anodyne",
+    highbreed: "augstaka",
+    augstaka: "augstaka",
+    incursean: "incursia",
+    incursian: "incursia",
+    incursia: "incursia",
+    galvanprime: "galvan",
+    galvan: "galvan"
+  };
+  return aliases[key] || key;
+};
+
 export class Rustbucket {
   constructor(parent) {
     this.ship = new THREE.Group();
@@ -95,11 +112,12 @@ export class Rustbucket {
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
-    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
-    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (planet?.world?.key && normalizeWorld(planet.world.key) === normalizeWorld(homeworld)) {
+    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
+    if (planet?.world?.key && normalizeHomeworld(planet.world.key) === normalizeHomeworld(homeworld)) {
       resident.homeworld = planet.world.key;
-      if (resident.taskId == null) resident.taskId = context.onPickup(resident);
+      // Reuse the active task or create one if the pickup event was missed.
+      const taskId = context.onPickup(resident);
+      if (taskId != null) resident.taskId = taskId;
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
@@ -117,13 +135,12 @@ export class Rustbucket {
     const nearby = residents.find(resident =>
       !resident.isAboard &&
       resident.group.parent === this.ship.parent &&
-      String(resident.homeworld || resident.group?.userData?.homeWorldKey || "").toLowerCase().replace(/[^a-z0-9]/g, "") !== String(planet.world.key || "").toLowerCase().replace(/[^a-z0-9]/g, "") &&
+      normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) !== normalizeHomeworld(planet.world.key) &&
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
-    const normalizeWorld = value => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const deliverable = this.rescuePassengers.find(resident =>
-      normalizeWorld(resident.homeworld || resident.group?.userData?.homeWorldKey) === normalizeWorld(planet.world.key)
+      normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) === normalizeHomeworld(planet.world.key)
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
