@@ -21,7 +21,7 @@ export class Anodyne {
   };
 
   constructor() {
-    this.songs = ["./files/songs/neodevol-ov.mp3"];
+    this.songs = ["./files/songs/neodevol-ov.m4a"];
     this.world = Anodyne.WORLD;
     this.system = "anodyne";
     this.atmosphereHeight = 90;
