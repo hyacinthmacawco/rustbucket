@@ -83,7 +83,7 @@ export class Joystick {
     });
     this.healthFill = this.createStatusBar("HEALTH");
     this.energyFill = this.createStatusBar("ENERGY");
-    this.bottomBar.append(this.element, this.statusBars);
+
     this.actionControls = document.createElement("div");
     this.actionControls.id = "game-action-controls";
     Object.assign(this.actionControls.style, {
@@ -91,8 +91,8 @@ export class Joystick {
       display: "flex", alignItems: "center", gap: "12px",
       flex: "0 0 auto", pointerEvents: "auto", zIndex: "2147483647"
     });
-    this.bottomBar.append(this.actionControls);
-    document.body.append(this.bottomBar, this.teamPanel);
+
+    document.body.append(this.element, this.statusBars, this.actionControls, this.teamPanel);
 
     this.transformationSelect = document.createElement("select");
     this.transformationSelect.id = "ben-transformations";
@@ -123,7 +123,7 @@ export class Joystick {
     Object.assign(this.liftKnob.style, this.styles.knob);
     this.liftBase.append(this.liftKnob);
     this.liftElement.append(this.liftBase);
-    this.bottomBar.append(this.liftElement);
+
 
     this.handleBaseDown = this.handleBaseDown.bind(this);
     this.handleBaseMove = this.handleBaseMove.bind(this);
