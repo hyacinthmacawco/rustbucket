@@ -12,6 +12,8 @@ export class Bag {
     this.group.userData.pickable = true;
     this.group.userData.owner = owner;
     this.group.userData.bag = this;
+    this.onClick = null;
+    this.group.userData.onClick = event => this.onClick?.(event);
 
     this.materials = {
       fabric: new THREE.MeshStandardMaterial({ color, roughness: 0.92 }),
