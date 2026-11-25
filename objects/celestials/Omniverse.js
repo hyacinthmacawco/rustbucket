@@ -725,7 +725,7 @@ export class Omniverse {
     const ship = this.vehicle?.ship;
     if (!member?.seated || !ship) return false;
     ship.updateWorldMatrix(true, false);
-    const exit = ship.localToWorld(new THREE.Vector3(0, -0.65, -6.3));
+    const exit = ship.localToWorld(new THREE.Vector3(0, -1.18, -6.3));
     this.celestial.attach(member.group);
     member.group.position.copy(exit);
     member.group.rotation.y = ship.rotation.y;
