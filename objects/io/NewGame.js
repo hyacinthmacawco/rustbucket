@@ -16,7 +16,7 @@ import { POV } from "../team/POV.js";
 import { Ramp } from "../team/Ramp.js";
 
 export class NewGame {
-  static helpText = "WASD / joystick: Move.\\nDrag / swipe: Rotate the camera.\\nMouse wheel / pinch: Zoom.\\nF / joystick centre: Switch team member.\\nSpace / JUMP: Open the system map when Rustbucket is selected.\\nClick bags: Pick up or drop them.\\nClick markets: Open the shop.\\nClick visiting species: Board or leave them at a planet.\\nQ / ATTACK: Attack hostile characters.\\nR: Open or close the Rustbucket ramp.\\n1P / 3P: Toggle first-person and third-person view.\\nPAUSE: Open settings, help and credits.\\nEXTRANET: Open the Private Cloud browser.";
+  static helpText = "WASD / joystick: Move.\nDrag / swipe: Rotate the camera.\nMouse wheel / pinch: Zoom.\nF / joystick centre: Switch team member.\nSpace / JUMP: Open the system map when Rustbucket is selected.\nClick bags: Pick up or drop them.\nClick markets: Open the shop.\nClick visiting species: Board or leave them at a planet.\nQ / ATTACK: Attack hostile characters.\nR: Open or close the Rustbucket ramp.\n1P / 3P: Toggle first-person and third-person view.\nPAUSE: Open settings, help and credits.\nEXTRANET: Open the Private Cloud browser.";
 
   constructor({ omniverse = null, onSelect = () => {}, onSkip = () => {} } = {}) {
     this.omniverse = omniverse;
@@ -26,7 +26,7 @@ export class NewGame {
     this.styles = {
       button: { padding: "14px 24px", background: "rgba(5,22,14,.76)", color: "#eaffef", font: "inherit", letterSpacing: ".16em", cursor: "pointer" },
       prelude: { position: "fixed", inset: "0", display: "none", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "28px", background: "#000", color: "#fff", zIndex: "50", font: "inherit", letterSpacing: ".18em" },
-      heading: { maxWidth: "min(88vw, 760px)", padding: "0 22px", fontSize: "clamp(14px, 2.2vw, 19px)", lineHeight: "1.8", letterSpacing: ".06em", textAlign: "center", fontFamily: "\"Industry Light\", sans-serif", fontWeight: "300" },
+      heading: { maxWidth: "min(88vw, 760px)", maxHeight: "70vh", overflowY: "auto", padding: "0 22px", fontSize: "clamp(12px, 2vw, 17px)", lineHeight: "1.8", letterSpacing: ".06em", textAlign: "left", whiteSpace: "pre-line", fontFamily: "\\"Industry Light\\", sans-serif", fontWeight: "300" },
       skip: { padding: "10px 28px", border: "1px solid #79e99a", background: "transparent", color: "#dffff0", font: "inherit", cursor: "pointer" }
     };
   }
