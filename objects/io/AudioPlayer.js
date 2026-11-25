@@ -90,7 +90,7 @@ export class AudioPlayer {
     }
   }
 
-  unlock(stage, titleSong = "./files/songs/senji-v2-ov.mp3") {
+  unlock(stage, titleSong = "./files/songs/senji-v2-ov.opus") {
     this.unlocked = true;
 
     if (stage === "title" && !this.musicTrack) {
