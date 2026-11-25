@@ -202,10 +202,10 @@ export class Rustbucket {
 
   createSeats() {
     this.seats = [
-      { name: "Front Left", position: new THREE.Vector3(-0.72, -0.92, 1.25), rotation: 0 },
-      { name: "Front Right", position: new THREE.Vector3(0.72, -0.92, 1.25), rotation: 0 },
-      { name: "Left Side", position: new THREE.Vector3(-0.92, -0.92, -1.15), rotation: Math.PI / 2 },
-      { name: "Right Side", position: new THREE.Vector3(0.92, -0.92, -1.15), rotation: -Math.PI / 2 }
+      { name: "Front Left", position: new THREE.Vector3(-0.72, -0.92, 3.45), rotation: 0 },
+      { name: "Front Right", position: new THREE.Vector3(0.72, -0.92, 3.45), rotation: 0 },
+      { name: "Left Side", position: new THREE.Vector3(-0.92, -0.92, 1.65), rotation: Math.PI / 2 },
+      { name: "Right Side", position: new THREE.Vector3(0.92, -0.92, 1.65), rotation: -Math.PI / 2 }
     ];
     const cushionMaterial = new THREE.MeshStandardMaterial({ color: 0x303b38, roughness: 0.9 });
     const backMaterial = new THREE.MeshStandardMaterial({ color: 0x252f2d, roughness: 0.88 });
