@@ -300,6 +300,7 @@ export class Omniverse {
       this.thirdPersonOffset = this.camera.position.clone().sub(this.cameraTarget || new THREE.Vector3());
     }
     this.firstPerson = enabling;
+    if (enabling) this._firstPersonJustEnabled = true;
     if (!enabling) {
       const selected = this.joystick?.currentSelection;
       const entity = selected === "rustbucket"
@@ -341,8 +342,14 @@ export class Omniverse {
           position.set(0, 1.55, 0).applyMatrix4(entity.matrixWorld);
         }
       }
-      this.camera.position.copy(position);
-      this.camera.lookAt(position.clone().add(forward.multiplyScalar(12)));
+      if (this._firstPersonJustEnabled) {
+        this.camera.position.copy(position);
+        this.camera.lookAt(position.clone().add(forward.multiplyScalar(12)));
+        this.camera.rotation.order = "YXZ";
+        this._firstPersonJustEnabled = false;
+      } else {
+        this.camera.position.copy(position);
+      }
       this.cameraTarget.copy(position);
       return;
     }
