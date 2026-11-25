@@ -315,20 +315,21 @@ export class Omniverse {
   }
 
   handleBagClick(bag) {
-    const member = this.getTeamMember(this.joystick?.currentSelection);
-    if (!member || !bag) return false;
-    if (member.carryingBag === bag) {
-      const position = member.group.getWorldPosition(new THREE.Vector3());
+    if (!bag) return false;
+    const carrier = (this.crew || []).find(member => member.carryingBag === bag);
+    if (carrier) {
+      const position = carrier.group.getWorldPosition(new THREE.Vector3());
       this.celestial.attach(bag.group);
       bag.group.position.copy(position).add(new THREE.Vector3(0.55, 0, 0));
       bag.group.rotation.set(0, 0, 0);
       bag.pickable = true;
       bag.stored = false;
       bag.group.userData.pickable = true;
-      member.carryingBag = null;
+      carrier.carryingBag = null;
       return true;
     }
-    if (member.carryingBag || !bag.pickable || bag.stored) return false;
+    const member = this.getTeamMember(this.joystick?.currentSelection);
+    if (!member || member.carryingBag || !bag.pickable || bag.stored) return false;
     return this.pickTeamBag(member, bag);
   }
 
@@ -716,8 +717,7 @@ export class Omniverse {
     member.seatIndex = seatIndex;
     seat.occupiedBy = member;
     member.group.userData.seated = true;
-    const physicsEntry = this.physicsBodies.get(member.group);
-    if (physicsEntry) { physicsEntry.body.setEnabled(false); physicsEntry.disabled = true; }
+    this.setCharacterPhysicsEnabled(member.group, false);
     return true;
   }
 
