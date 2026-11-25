@@ -415,7 +415,11 @@ export class HumanRig {
       joints.rightThigh.rotation.x = -1.15;
       joints.leftKnee.rotation.x = 1.25;
       joints.rightKnee.rotation.x = 1.25;
-      joints.spine.rotation.x = 0.08;
+      joints.leftShoulder.rotation.x = -0.2;
+      joints.rightShoulder.rotation.x = -0.2;
+      joints.leftElbow.rotation.x = -0.48;
+      joints.rightElbow.rotation.x = -0.48;
+      joints.spine.rotation.x = 0.16;
       return true;
     },
     stand() {
