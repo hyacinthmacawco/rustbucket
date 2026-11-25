@@ -1,22 +1,5 @@
 import * as THREE from "three";
 
-const normalizeHomeworld = value => {
-  const key = String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const aliases = {
-    anodite: "anodyne",
-    anodine: "anodyne",
-    anodyne: "anodyne",
-    highbreed: "augstaka",
-    augstaka: "augstaka",
-    incursean: "incursia",
-    incursian: "incursia",
-    incursia: "incursia",
-    galvanprime: "galvan",
-    galvan: "galvan"
-  };
-  return aliases[key] || key;
-};
-
 export class Rustbucket {
   constructor(parent) {
     this.ship = new THREE.Group();
@@ -113,15 +96,17 @@ export class Rustbucket {
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
-    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
-    if (planet?.world?.key && normalizeHomeworld(planet.world.key) === normalizeHomeworld(homeworld)) {
-      resident.homeworld = planet.world.key;
+    if (resident.homeworld === planet?.world?.key) {
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
-      const taskCompleted = context.helix?.completeTask(resident) === true;
+
+      // Complete the resident's task by object identity when it exists. The
+      // homeworld return itself is the completion condition, not task lookup.
+      context.helix?.completeTask(resident);
+
       const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
-      let actualRelationshipIncrease = 5;
+      let actualRelationshipIncrease = 0.5;
       if (species && context.helix?.pages?.relationships) {
         const relationships = context.helix.pages.relationships;
         for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) {
@@ -131,13 +116,12 @@ export class Rustbucket {
           actualRelationshipIncrease = next - previous;
         }
       }
-      if (taskCompleted) {
-        context.helix?.showTaskCompleted({
-          resident,
-          relationshipIncrease: actualRelationshipIncrease,
-          taydeniteIncrease: earned
-        });
-      }
+
+      context.helix?.showTaskCompleted({
+        resident,
+        relationshipIncrease: actualRelationshipIncrease,
+        taydeniteIncrease: earned
+      });
     }
     context.onUpdate();
     return true;
@@ -151,12 +135,12 @@ export class Rustbucket {
     const nearby = residents.find(resident =>
       !resident.isAboard &&
       resident.group.parent === this.ship.parent &&
-      normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) !== normalizeHomeworld(planet.world.key) &&
+      resident.homeworld !== planet.world.key &&
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
     const deliverable = this.rescuePassengers.find(resident =>
-      normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) === normalizeHomeworld(planet.world.key)
+      resident.homeworld === planet.world.key
     );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
