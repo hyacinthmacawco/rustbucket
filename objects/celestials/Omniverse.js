@@ -330,7 +330,9 @@ export class Omniverse {
       return true;
     }
     const member = this.getTeamMember(this.joystick?.currentSelection);
-    if (!member || member.carryingBag || !bag.pickable || bag.stored) return false;
+    if (!member || member.carryingBag) return false;
+    if (bag.stored) bag.setStored(false);
+    if (!bag.pickable) return false;
     return this.pickTeamBag(member, bag);
   }
 
@@ -489,10 +491,16 @@ export class Omniverse {
   registerVehiclePhysics(vehicle) {
     if (!vehicle?.ship || !this.physicsWorld) return null;
     const body = vehicle.addVehicle(this.physicsWorld, RAPIER);
-    // Keep the ship under normal world gravity; lift controls must counteract it.
-    body.setGravityScale(1, true);
+    const inSpace = this.state.currentScene === "space" || this.state.currentScene.startsWith("system-");
+    body.setGravityScale(inSpace ? 0 : 1, true);
     this.physicsBodies.set(vehicle.ship, { body, owner: vehicle, disabled: false });
     return body;
+  }
+
+  setPhysicsGravity(y = 0) {
+    if (!this.physicsWorld) return;
+    this.physicsWorld.gravity = { x: 0, y, z: 0 };
+    this.vehicle?.vehicleBody?.setGravityScale(y === 0 ? 0 : 1, true);
   }
 
   setPhysicsGround(enabled, includeStorageFloor = false) {
@@ -516,13 +524,17 @@ export class Omniverse {
 
   stepPhysics(delta) {
     if (!this.physicsWorld || this.state.stage !== "gameplay") return;
-    // Sync the vehicle before its passengers so child world transforms use
-    // the current ship transform. Only seated crew are taken out of simulation.
+    // Sync the vehicle first. Every object parented anywhere under its scene
+    // graph is carried by the ship transform, not by an independent rigid body.
     const physicsEntries = [...this.physicsBodies.entries()];
     physicsEntries.sort(([a], [b]) => a === this.vehicle?.ship ? -1 : b === this.vehicle?.ship ? 1 : 0);
     for (const [object, entry] of physicsEntries) {
       if (!object.parent) continue;
-      if (entry.owner?.seated) {
+      let attachedToVehicle = false;
+      for (let ancestor = object.parent; ancestor; ancestor = ancestor.parent) {
+        if (ancestor === this.vehicle?.ship) { attachedToVehicle = true; break; }
+      }
+      if (attachedToVehicle || entry.owner?.seated || entry.owner?.isAboard) {
         if (!entry.disabled) entry.body.setEnabled(false);
         entry.disabled = true;
         continue;
@@ -950,6 +962,7 @@ export class Omniverse {
     this.systemWorld = new SystemClass();
     this.celestial.add(this.systemWorld.model());
     this.setPhysicsGround(false);
+    this.setPhysicsGravity(0);
     this.audioPlayer?.playSongs(this.systemWorld.songs);
 
     this.addSystemPlanets(systemKey);
@@ -961,7 +974,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
-    this.vehicle?.vehicleBody?.setGravityScale(1, true);
+    this.vehicle?.vehicleBody?.setGravityScale(0, true);
     if (ship) {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
@@ -995,6 +1008,7 @@ export class Omniverse {
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
     this.setPhysicsGround(true, planet.world.key === "earth");
+    this.setPhysicsGravity(-9.81);
     this.currentPlanet = planet;
     this.audioPlayer?.playSongs(planet.songs);
     this.earth = planet.world.key === "earth" ? planet : null;
@@ -1055,6 +1069,38 @@ export class Omniverse {
       onUnboard: resident => this.setResidentAboard(resident, false)
     });
     return this.celestial;
+  }
+
+  checkPatrolShipCollisions() {
+    const patrols = this.systemWorld?.ships || [];
+    const projectiles = this.vehicle?.projectiles || [];
+    for (let index = projectiles.length - 1; index >= 0; index--) {
+      const bolt = projectiles[index];
+      if (!bolt?.parent) continue;
+      bolt.parent.updateWorldMatrix(true, false);
+      const current = bolt.getWorldPosition(new THREE.Vector3());
+      const previous = bolt.userData.previousPosition
+        ? bolt.userData.previousPosition.clone().applyMatrix4(bolt.parent.matrixWorld)
+        : current.clone();
+      const segment = new THREE.Line3(previous, current);
+      let hit = false;
+      for (const patrol of patrols) {
+        if (patrol.destroyed || !patrol.group?.visible) continue;
+        const center = patrol.group.getWorldPosition(new THREE.Vector3());
+        const closest = new THREE.Vector3();
+        segment.closestPointToPoint(center, closest);
+        if (closest.distanceTo(center) > 24) continue;
+        patrol.takeDamage?.(bolt.userData.damage ?? 10);
+        hit = true;
+        break;
+      }
+      if (hit) {
+        bolt.parent.remove(bolt);
+        bolt.geometry?.dispose();
+        bolt.material?.dispose();
+        projectiles.splice(index, 1);
+      }
+    }
   }
 
   handleCombatAttack(selected) {
@@ -1134,6 +1180,7 @@ export class Omniverse {
     this.vehicle?.update?.(delta);
     if (this.state.stage === "gameplay") {
       this.stepPhysics(delta);
+      this.checkPatrolShipCollisions();
       for (const patrol of this.systemWorld?.ships || []) {
         patrol.attackCooldown = Math.max(0, (patrol.attackCooldown || 0) - delta);
         if (patrol.destroyed || patrol.attackCooldown > 0) continue;
@@ -1179,6 +1226,7 @@ export class Omniverse {
     for (const entry of this.physicsBodies.values()) this.physicsWorld.removeRigidBody(entry.body);
     this.physicsBodies.clear();
     this.setPhysicsGround(false);
+    this.setPhysicsGravity(0);
     this.joystick?.destroy();
     this.joystick = null;
     this.pause?.setVisible(false);
