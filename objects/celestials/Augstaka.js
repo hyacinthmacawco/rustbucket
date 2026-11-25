@@ -73,6 +73,7 @@ export class Augstaka {
     hub.name = "AugstakaMarket";
     hub.position.set(0, 0, -24);
     hub.userData.market = true;
+    hub.userData.onClick = event => hub.userData.clickHandler?.(event);
     hub.resources = { "Grape Smoothie": 1 + Math.floor(Math.random() * 10) };
     interior.add(hub);
     const dark = new THREE.MeshStandardMaterial({ color: 0x17231c, roughness: 0.9 });
