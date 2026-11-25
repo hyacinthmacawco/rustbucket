@@ -559,8 +559,11 @@ export function initializeResident(instance, index, { species, homeworld, style 
       return;
     }
     const step = Math.min(distance, instance.speed * delta);
-    instance.group.position.x += dx / distance * step;
-    instance.group.position.z += dz / distance * step;
+    if (instance.moveWithCollisions) instance.moveWithCollisions(dx / distance * step, dz / distance * step);
+    else {
+      instance.group.position.x += dx / distance * step;
+      instance.group.position.z += dz / distance * step;
+    }
     instance.group.rotation.y = Math.atan2(dx, dz);
     residentRig._rig.setWalking(true);
     residentRig._rig.updateWalk(elapsed);
