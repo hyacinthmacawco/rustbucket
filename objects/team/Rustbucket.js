@@ -45,7 +45,7 @@ export class Rustbucket {
     // a vertical lift value. Keep the flight behavior on the vehicle itself.
     this.projectiles = [];
     this.rescuePassengers = [];
-    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {} };
+    this.rescueContext = { getCurrentPlanet: () => null, getResidents: () => [], account: null, onUpdate: () => {}, onPickup: () => null, onDrop: () => {}, onBoard: () => {}, onUnboard: () => {} };
     this.ship.userData.performPickup = this.performRescueAction.bind(this);
     this.ship.userData.moveVehicle = this.moveVehicle.bind(this);
     this.ship.userData.performAttack = this.performAttack.bind(this);
@@ -65,56 +65,61 @@ export class Rustbucket {
     };
   }
 
+  boardResident(resident) {
+    if (!resident || resident.isAboard || !this.ship.parent) return false;
+    resident.isAboard = true;
+    this.ship.attach(resident.group);
+    const index = this.rescuePassengers.length;
+    resident.group.position.set(
+      -0.65 + (index % 3) * 0.65,
+      -0.25,
+      -1.1 - Math.floor(index / 3) * 0.7
+    );
+    resident.group.rotation.set(0, Math.PI, 0);
+    this.rescuePassengers.push(resident);
+    this.rescueContext.onBoard(resident);
+    resident.taskId = this.rescueContext.onPickup(resident);
+    this.rescueContext.onUpdate();
+    return true;
+  }
+
+  unboardResident(resident) {
+    if (!resident?.isAboard || !this.ship.parent) return false;
+    const context = this.rescueContext;
+    const planet = context.getCurrentPlanet();
+    this.ship.updateWorldMatrix(true, false);
+    const exit = this.ship.localToWorld(new THREE.Vector3(0, -1.1, -6.3));
+    const world = this.ship.parent;
+    world.attach(resident.group);
+    resident.group.position.copy(exit);
+    resident.group.rotation.set(0, this.ship.rotation.y, 0);
+    resident.isAboard = false;
+    this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
+    context.onUnboard(resident);
+    if (planet?.world?.key === resident.homeworld) {
+      const before = context.account?.balance ?? 0;
+      resident.awardTaydenite?.(context.account, 10);
+      const earned = Math.max(0, (context.account?.balance ?? before) - before);
+      context.onDrop(resident, 5, earned);
+    }
+    context.onUpdate();
+    return true;
+  }
+
   performRescueAction() {
     const context = this.rescueContext;
     const planet = context.getCurrentPlanet();
+    if (!planet || !this.ship.parent) return false;
     const residents = context.getResidents();
-    if (!planet || !this.ship.parent) return;
-
     const nearby = residents.find(resident =>
       !resident.isAboard &&
       resident.group.parent === this.ship.parent &&
       resident.homeworld !== planet.world.key &&
-      resident.group.position.distanceTo(this.ship.position) < 12
+      resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
-
-    if (nearby) {
-      nearby.isAboard = true;
-      this.ship.attach(nearby.group);
-      context.onBoard(nearby);
-      nearby.group.position.set(
-        -0.65 + (this.rescuePassengers.length % 3) * 0.65,
-        -0.25,
-        -1.1 - Math.floor(this.rescuePassengers.length / 3) * 0.7
-      );
-      nearby.group.rotation.set(0, Math.PI, 0);
-      const residentIndex = residents.indexOf(nearby);
-      if (residentIndex >= 0) residents.splice(residentIndex, 1);
-      this.rescuePassengers.push(nearby);
-      nearby.taskId = context.onPickup(nearby);
-      context.onUpdate();
-      return;
-    }
-
+    if (nearby) return this.boardResident(nearby);
     const deliverable = this.rescuePassengers.find(resident => resident.homeworld === planet.world.key);
-    if (!deliverable) return;
-
-    deliverable.isAboard = false;
-    this.ship.parent.attach(deliverable.group);
-    context.onUnboard(deliverable);
-    deliverable.group.position.set(
-      this.ship.position.x + 4 + Math.random() * 2,
-      0,
-      this.ship.position.z + 3 + Math.random() * 2
-    );
-    deliverable.group.rotation.set(0, Math.random() * Math.PI * 2, 0);
-    this.rescuePassengers = this.rescuePassengers.filter(resident => resident !== deliverable);
-    residents.push(deliverable);
-    const balanceBefore = context.account?.balance ?? 0;
-    deliverable.awardTaydenite(context.account, 10);
-    const taydeniteIncrease = Math.max(0, (context.account?.balance ?? balanceBefore) - balanceBefore);
-    context.onDrop(deliverable, 5, taydeniteIncrease);
-    context.onUpdate();
+    return deliverable ? this.unboardResident(deliverable) : false;
   }
 
   updateRescueInteraction({ selected, interactControl } = {}) {
