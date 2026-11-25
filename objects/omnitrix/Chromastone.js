@@ -178,6 +178,9 @@ export class Chromastone {
 
   update(delta) {
     this.energyRecoveryDelay = Math.max(0, this.energyRecoveryDelay - delta);
+    if (this.energyRecoveryDelay === 0 && this.energy < this.maxEnergy) {
+      this.energy = Math.min(this.maxEnergy, this.energy + delta * 0.48);
+    }
     if (this.beam) {
       this.beam.userData.remaining -= delta;
       if (this.beam.userData.remaining <= 0) {
