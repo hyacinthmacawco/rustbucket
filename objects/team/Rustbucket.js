@@ -122,23 +122,6 @@ export class Rustbucket {
     return deliverable ? this.unboardResident(deliverable) : false;
   }
 
- = {}) {
-    if (!interactControl) return;
-    if (selected !== "rustbucket") {
-      interactControl.setMode("Pick");
-      return;
-    }
-    const planet = this.rescueContext.getCurrentPlanet();
-    const residents = this.rescueContext.getResidents();
-    const nearby = planet && residents.some(resident =>
-      !resident.isAboard &&
-      resident.group.parent === this.ship.parent &&
-      resident.homeworld !== planet.world.key &&
-      resident.group.position.distanceTo(this.ship.position) < 12
-    );
-    const canDrop = planet && this.rescuePassengers.some(resident => resident.homeworld === planet.world.key);
-    interactControl.setMode(nearby ? "Pick" : canDrop ? "Drop" : "Pick");
-  }
 
   moveVehicle(moveX, moveZ, lift, delta, liftX = 0, heading = this.ship.rotation.y) {
     const horizontalSpeed = 18;
