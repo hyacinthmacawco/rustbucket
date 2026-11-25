@@ -329,14 +329,23 @@ export class Omniverse {
   }
 
   handleResidentClick(resident) {
-    if (!resident || !this.vehicle || !this.currentPlanet) return false;
+    if (!resident || !this.vehicle) return false;
     if (resident.isAboard) return this.vehicle.unboardResident(resident);
+    if (!this.currentPlanet) return false;
     if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
     return false;
   }
 
   setResidentAboard(resident, aboard) {
-    const entry = this.physicsBodies.get(resident?.group);
+    if (!resident?.group) return;
+    let entry = this.physicsBodies.get(resident.group);
+    if (!entry && !aboard && resident.group.parent) {
+      entry = this.registerPhysicsBody(resident.group, resident, resident.group.userData.collisionCapsule);
+    }
+    if (!aboard) {
+      this.residents ||= [];
+      if (!this.residents.includes(resident)) this.residents.push(resident);
+    }
     if (!entry) return;
     if (aboard) {
       entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
