@@ -34,6 +34,8 @@ export class Omniverse {
     this.characterController.setMaxSlopeClimbAngle(Math.PI / 4);
     this.characterController.setMinSlopeSlideAngle(Math.PI / 4);
     this.characterController.setApplyImpulsesToDynamicBodies(true);
+    this.characterController.enableAutostep(0.45, 0.18, true);
+    this.characterController.enableSnapToGround(0.22);
     this.physicsBodies = new Map();
     this.physicsGroundBody = null;
     this.dead = false;
