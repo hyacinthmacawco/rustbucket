@@ -302,7 +302,19 @@ export class Ben {
   group.userData.statusOwner = this;
   }
 
-  attack(target) { if (!target || target.health <= 0) return false; const relation = Number(target.relationships?.Ben ?? target.constructor?.relationships?.Ben ?? 0); if (relation >= 0) return false; this.rig?._rig?.playAnimation("punch"); target.takeDamage?.(this.damage || 1); return true; }
+  attack(target) {
+    if (!target || target.health <= 0) return false;
+    const relation = Number(target.relationships?.Ben ?? target.constructor?.relationships?.Ben ?? 0);
+    if (relation >= 0) return false;
+    if (this.activeTransformation === "Chromastone") {
+      if (!this.chromastone.attack()) return false;
+      target.takeDamage?.(this.chromastone.damage);
+      return true;
+    }
+    this.rig?._rig?.playAnimation("punch");
+    target.takeDamage?.(this.damage || 1);
+    return true;
+  }
 
   updateStatus(delta) {
     if (this.dead || this.health <= 0) { this.health = 0; this.dead = true; this.group.visible = false; return; }
