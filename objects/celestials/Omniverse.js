@@ -225,24 +225,20 @@ export class Omniverse {
   }
 
   handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
-    if (!resident || !this.currentPlanet?.world?.key) return false;
-    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
-    if (normalizeHomeworld(homeworld) !== normalizeHomeworld(this.currentPlanet.world.key)) return false;
+    if (!resident) return false;
 
-    // addTask returns the current unfinished task, or creates a fresh one if
-    // this resident had an earlier completed task or its pickup event was lost.
-    const taskId = this.helix?.addTask(resident);
-    if (taskId == null) return false;
-    resident.taskId = taskId;
-    const taskCompleted = this.helix?.completeTask(taskId) === true;
-    if (!taskCompleted) {
-      console.error("Could not complete the homeworld return task:", resident);
-      return false;
-    }
+    // Pickup creates and stores the task ID. Complete that exact task first;
+    // if an old passenger has no ID, resolve the task by resident reference.
+    let taskCompleted = this.helix?.completeTask(resident.taskId ?? resident) === true;
+    if (!taskCompleted) taskCompleted = this.helix?.completeTask(resident) === true;
 
+    // The caller only invokes this callback after the Rustbucket has been
+    // unloaded on the passenger's homeworld. Do not reject completion here
+    // based on a second, potentially stale scene/homeworld check.
     const species = resident.species || resident.group?.userData?.species || resident.constructor?.name;
     let actualRelationshipIncrease = relationshipIncrease;
-    if (species) {
+    if (species && this.currentPlanet?.world?.key &&
+        normalizeHomeworld(resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld) === normalizeHomeworld(this.currentPlanet.world.key)) {
       const relationships = this.helix?.pages.relationships;
       const home = this.currentPlanet;
       const teamNames = ["Ben", "Gwen", "Kevin", "Rook"];
@@ -253,8 +249,17 @@ export class Omniverse {
         actualRelationshipIncrease = next - before;
       }
     }
-    this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
-    return true;
+
+    if (!taskCompleted) {
+      console.error("Rescue task was not found for delivered passenger; creating and completing a recovery task.", resident);
+      const recoveryTaskId = this.helix?.addTask(resident);
+      if (recoveryTaskId != null) taskCompleted = this.helix?.completeTask(recoveryTaskId) === true;
+    }
+
+    if (taskCompleted) {
+      this.helix?.showTaskCompleted({ resident, relationshipIncrease: actualRelationshipIncrease, taydeniteIncrease });
+    }
+    return taskCompleted;
   }
 
   installStyles() {
