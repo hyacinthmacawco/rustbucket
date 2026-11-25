@@ -19,23 +19,6 @@ import { AudioPlayer } from "../io/AudioPlayer.js";
 import { Pause } from "../io/Pause.js";
 import { Account } from "../io/Account.js";
 
-const normalizeHomeworld = value => {
-  const key = String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const aliases = {
-    anodite: "anodyne",
-    anodine: "anodyne",
-    anodyne: "anodyne",
-    highbreed: "augstaka",
-    augstaka: "augstaka",
-    incursean: "incursia",
-    incursian: "incursia",
-    incursia: "incursia",
-    galvanprime: "galvan",
-    galvan: "galvan"
-  };
-  return aliases[key] || key;
-};
-
 export class Omniverse {
   static state = { stage: "title", currentScene: "space" };
 
@@ -343,7 +326,7 @@ export class Omniverse {
   handleResidentClick(resident) {
     if (!resident || !this.vehicle || !this.currentPlanet) return false;
     if (resident.isAboard) return this.vehicle.unboardResident(resident);
-    if (String(resident.homeworld || resident.group?.userData?.homeWorldKey || "").toLowerCase().replace(/[^a-z0-9]/g, "") !== String(this.currentPlanet.world.key || "").toLowerCase().replace(/[^a-z0-9]/g, "")) return this.vehicle.boardResident(resident);
+    if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
     return false;
   }
 
