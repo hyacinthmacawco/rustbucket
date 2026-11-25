@@ -95,7 +95,10 @@ export class Rustbucket {
     resident.isAboard = false;
     this.rescuePassengers = this.rescuePassengers.filter(passenger => passenger !== resident);
     context.onUnboard(resident);
-    if (planet?.world?.key === resident.homeworld) {
+    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
+    if (planet?.world?.key === homeworld) {
+      resident.homeworld = homeworld;
+      if (resident.taskId == null) resident.taskId = context.onPickup(resident);
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
@@ -117,7 +120,9 @@ export class Rustbucket {
       resident.group.getWorldPosition(new THREE.Vector3()).distanceTo(this.ship.getWorldPosition(new THREE.Vector3())) < 18
     );
     if (nearby) return this.boardResident(nearby);
-    const deliverable = this.rescuePassengers.find(resident => resident.homeworld === planet.world.key);
+    const deliverable = this.rescuePassengers.find(resident =>
+      (resident.homeworld || resident.group?.userData?.homeWorldKey) === planet.world.key
+    );
     return deliverable ? this.unboardResident(deliverable) : false;
   }
 
@@ -322,8 +327,8 @@ export class Rustbucket {
     for (const offset of [-0.62, 0.62]) {
       const muzzle = new THREE.Vector3(offset, 0.12, 7.75).applyMatrix4(this.ship.matrixWorld);
       const bolt = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.055, 0.055, 2.8, 8),
-        new THREE.MeshBasicMaterial({ color: 0x8dff4f, toneMapped: false })
+        new THREE.CylinderGeometry(0.11, 0.11, 4.8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x9dff62, toneMapped: false })
       );
       bolt.position.copy(muzzle);
       bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
