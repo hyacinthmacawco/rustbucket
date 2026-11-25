@@ -122,7 +122,7 @@ export class Camera {
 
   zoomByRatio(ratio) {
     if (this.getFirstPerson()) {
-      this.camera.fov = this.THREE.MathUtils.clamp(this.camera.fov / ratio, 25, 85);
+      this.camera.fov = this.THREE.MathUtils.clamp(this.camera.fov * ratio, 25, 85);
       this.camera.updateProjectionMatrix();
       return;
     }
