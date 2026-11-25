@@ -10,9 +10,9 @@ export class Joystick {
       joystick: { position: "relative", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
       knob: { position: "absolute", left: "50%", top: "50%", width: "46px", height: "46px", margin: "-23px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
-      lift: { position: "relative", width: "46px", height: "46px", flex: "0 0 46px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
+      lift: { position: "relative", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
-      teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
+      teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "90", boxSizing: "border-box" },
       teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
       transformation: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(320px, calc(env(safe-area-inset-bottom) + 300px))", width: "142px", padding: "9px 10px", zIndex: "2147483646", border: "1px solid rgba(126,255,168,.5)", borderRadius: "6px", background: "rgba(2,16,10,.9)", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em" }
     };
@@ -75,24 +75,24 @@ export class Joystick {
     this.statusBars = document.createElement("div");
     this.statusBars.id = "selected-member-status";
     Object.assign(this.statusBars.style, {
-      position: "fixed", left: "max(16px, env(safe-area-inset-left))", bottom: "max(112px, calc(env(safe-area-inset-bottom) + 100px))",
+      position: "fixed", left: "50%", bottom: "max(14px, env(safe-area-inset-bottom))", transform: "translateX(-50%)", width: "min(34vw, 220px)",
       display: "flex", flexDirection: "column", justifyContent: "center",
-      gap: "5px", flex: "1 1 82px", minWidth: "58px", maxWidth: "150px",
+      gap: "5px", minWidth: "90px", maxWidth: "220px",
       color: "#dfffe8", font: "9px Industry, sans-serif", letterSpacing: ".06em",
       pointerEvents: "none"
     });
-    this.healthFill = this.createStatusBar("HEALTH");
-    this.energyFill = this.createStatusBar("ENERGY");
+    this.healthFill = this.createStatusBar("#ff4545");
+    this.energyFill = this.createStatusBar("#45e878");
 
     this.actionControls = document.createElement("div");
     this.actionControls.id = "game-action-controls";
     Object.assign(this.actionControls.style, {
-      position: "fixed", right: "max(16px, env(safe-area-inset-right))", bottom: "max(14px, env(safe-area-inset-bottom))",
+      position: "fixed", right: "max(112px, calc(env(safe-area-inset-right) + 96px))", bottom: "max(14px, env(safe-area-inset-bottom))",
       display: "flex", alignItems: "center", gap: "12px",
       flex: "0 0 auto", pointerEvents: "auto", zIndex: "2147483647"
     });
 
-    document.body.append(this.element, this.statusBars, this.actionControls, this.liftElement, this.teamPanel);
+    document.body.append(this.element, this.statusBars, this.actionControls, this.teamPanel);
 
     this.transformationSelect = document.createElement("select");
     this.transformationSelect.id = "ben-transformations";
@@ -123,6 +123,7 @@ export class Joystick {
     Object.assign(this.liftKnob.style, this.styles.knob);
     this.liftBase.append(this.liftKnob);
     this.liftElement.append(this.liftBase);
+    document.body.append(this.liftElement);
 
 
     this.handleBaseDown = this.handleBaseDown.bind(this);
@@ -143,18 +144,15 @@ export class Joystick {
   }
 
 
-  createStatusBar(label) {
+  createStatusBar(color) {
     const row = document.createElement("div");
-    Object.assign(row.style, { display: "flex", alignItems: "center", gap: "4px", minWidth: "0" });
-    const caption = document.createElement("span");
-    caption.textContent = label;
-    caption.style.width = "38px";
+    Object.assign(row.style, { display: "flex", alignItems: "center", minWidth: "0" });
     const track = document.createElement("div");
-    Object.assign(track.style, { height: "6px", flex: "1", minWidth: "12px", borderRadius: "5px", overflow: "hidden", background: "rgba(255,255,255,.18)" });
+    Object.assign(track.style, { height: "7px", width: "100%", borderRadius: "5px", overflow: "hidden", background: "rgba(255,255,255,.18)" });
     const fill = document.createElement("div");
-    Object.assign(fill.style, { width: "100%", height: "100%", background: "#80ffa6", transition: "width .12s linear" });
+    Object.assign(fill.style, { width: "100%", height: "100%", background: color, transition: "width .12s linear" });
     track.append(fill);
-    row.append(caption, track);
+    row.append(track);
     this.statusBars.append(row);
     return fill;
   }
@@ -162,6 +160,7 @@ export class Joystick {
   updateStatusBars() {
     const entity = this.entities?.[this.selected];
     const owner = entity?.userData?.statusOwner;
+    this.statusBars.style.display = owner ? "flex" : "none";
     const health = Number(owner?.health ?? 0);
     const maxHealth = Math.max(1, Number(owner?.maxHealth ?? 100));
     const energy = Number(owner?.energy ?? 0);
@@ -263,7 +262,7 @@ export class Joystick {
   }
 
    setVisible(visible, showJoystick = true) {
-    this.bottomBar.style.display = visible && showJoystick ? "flex" : "none";
+    this.bottomBar.style.display = visible && showJoystick ? "contents" : "none";
     this.element.style.display = visible && showJoystick ? "block" : "none";
     this.teamPanel.style.display = visible && showJoystick ? "grid" : "none";
     this.liftElement.style.display = visible && showJoystick && this.vehicleMode ? "block" : "none";
@@ -306,6 +305,7 @@ export class Joystick {
     this.selectableMembers = Joystick.TEAM_MEMBERS.filter(name => entities[name]);
     this.setTeamOptions(this.selected);
     this.setVehicleMode(this.selected === "rustbucket");
+    this.updateStatusBars();
     this.onSelect(this.selected);
     this.transformationSelect.style.display = this.selected === "ben" ? "block" : "none";
     window.addEventListener("keydown", this.handleKeyDown);
@@ -344,6 +344,7 @@ export class Joystick {
     this.setVehicleMode(this.selected === "rustbucket");
     this.transformationSelect.style.display = this.selected === "ben" && this.element.style.display !== "none" ? "block" : "none";
     this.onSelect(this.selected);
+    this.updateStatusBars();
     this.updateCamera();
   }
 
