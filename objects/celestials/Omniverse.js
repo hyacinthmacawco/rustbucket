@@ -355,6 +355,15 @@ export class Omniverse {
   }
 
   moveCharacterWithCollisions(object, dx, dz) {
+    const vehicleEntry = this.physicsBodies.get(this.vehicle?.ship);
+    if (vehicleEntry && this.vehicle?.ship?.parent) {
+      const ship = this.vehicle.ship;
+      ship.updateWorldMatrix(true, false);
+      const shipPosition = ship.getWorldPosition(new THREE.Vector3());
+      vehicleEntry.body.setTranslation({ x: shipPosition.x, y: shipPosition.y, z: shipPosition.z }, true);
+      const yaw = new THREE.Euler().setFromQuaternion(ship.getWorldQuaternion(new THREE.Quaternion()), "YXZ").y;
+      vehicleEntry.body.setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw), true);
+    }
     const entry = this.physicsBodies.get(object);
     if (!entry || entry.disabled || !this.characterController) {
       object.position.x += dx;
