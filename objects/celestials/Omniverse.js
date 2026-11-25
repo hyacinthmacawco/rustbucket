@@ -71,6 +71,7 @@ export class Omniverse {
     this.canvas.addEventListener("pointerup", this.handleCanvasPointerUp);
     this.canvas.addEventListener("pointercancel", this.handleCanvasPointerCancel);
     this.raycaster = new THREE.Raycaster();
+    this.pointer = new THREE.Vector2();
     this.pointerDown = null;
     document.body.appendChild(this.canvas);
     this.scene = new THREE.Scene();
