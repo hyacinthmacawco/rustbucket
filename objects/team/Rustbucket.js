@@ -86,15 +86,14 @@ export class Rustbucket {
     const deliverable = this.rescuePassengers.find(resident => resident.homeworld === planet.world.key);
     if (!deliverable) return;
 
-    deliverable.group.removeFromParent();
     deliverable.isAboard = false;
+    this.ship.parent.attach(deliverable.group);
     deliverable.group.position.set(
       this.ship.position.x + 4 + Math.random() * 2,
       0,
       this.ship.position.z + 3 + Math.random() * 2
     );
     deliverable.group.rotation.set(0, Math.random() * Math.PI * 2, 0);
-    this.ship.parent.add(deliverable.group);
     this.rescuePassengers = this.rescuePassengers.filter(resident => resident !== deliverable);
     residents.push(deliverable);
     const balanceBefore = context.account?.balance ?? 0;
