@@ -809,7 +809,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
-    this.vehicle?.vehicleBody?.setGravityScale(0, true);
+    this.vehicle?.vehicleBody?.setGravityScale(1, true);
     if (ship) {
       ship.position.set(center.x, center.y + 1500, center.z);
       ship.rotation.set(0, 0, 0);
@@ -851,7 +851,7 @@ export class Omniverse {
 
     this.vehicle = vehicle || (ship ? { ship } : null);
     this.crew = crew || [];
-    this.vehicle?.vehicleBody?.setGravityScale(0, true);
+    this.vehicle?.vehicleBody?.setGravityScale(1, true);
     if (ship) {
       this.vehicle.ship = ship;
       ship.position.set(0, 2, 34);
