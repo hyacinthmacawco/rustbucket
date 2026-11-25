@@ -5,34 +5,21 @@ export class AudioPlayer {
     this.unlocked = false;
     this.musicVolume = 0.55;
     this.sfxVolume = 0.7;
-    this.audioContext = null;
-    this.trackNodes = new Map();
   }
 
   createTrack(source, loop, volume) {
     const track = new Audio(new URL(source, document.baseURI).href);
     track.loop = loop;
-    track.volume = 1;
+    track.volume = volume;
     track.preload = "auto";
     this.connectTrack(track, volume);
     return track;
   }
 
   connectTrack(track, volume) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) { track.volume = volume; return; }
-    try {
-      this.audioContext ||= new AudioContextClass();
-      if (this.unlocked) this.audioContext.resume().catch(() => {});
-      const source = this.audioContext.createMediaElementSource(track);
-      const output = this.audioContext.createGain();
-      output.gain.value = volume;
-      source.connect(output).connect(this.audioContext.destination);
-      this.trackNodes.set(track, { source, output });
-    } catch (error) {
-      track.volume = volume;
-      console.warn("Audio processing could not be initialized:", error);
-    }
+    // Use native media playback directly. A Web Audio graph is unnecessary
+    // for volume control and can leave music silent on mobile browsers.
+    track.volume = volume;
   }
 
   stopMusic() {
@@ -40,9 +27,6 @@ export class AudioPlayer {
     this.musicTrack.pause();
     this.musicTrack.currentTime = 0;
     this.musicTrack.src = "";
-    this.trackNodes.get(this.musicTrack)?.source.disconnect();
-    this.trackNodes.get(this.musicTrack)?.output.disconnect();
-    this.trackNodes.delete(this.musicTrack);
     this.musicTrack = null;
   }
 
@@ -78,7 +62,7 @@ export class AudioPlayer {
 
   async startTrack(track, type) {
     try {
-      if (this.audioContext?.state === "suspended") await this.audioContext.resume();
+      if (track.readyState === HTMLMediaElement.HAVE_NOTHING) track.load();
       await track.play();
     } catch (error) {
       console.warn(type + " playback could not start:", track.src, error);
@@ -87,16 +71,11 @@ export class AudioPlayer {
 
   handleSfxEnded(track, onEnded) {
     this.sfxTracks.delete(track);
-    const nodes = this.trackNodes.get(track);
-    nodes?.source.disconnect(); nodes?.output.disconnect();
-    this.trackNodes.delete(track);
     if (onEnded) onEnded();
   }
 
   handleTrackError(track, type) {
     this.sfxTracks.delete(track);
-    this.trackNodes.get(track)?.source.disconnect();
-    this.trackNodes.delete(track);
     console.error("Could not load " + type + ":", track.src);
   }
 
@@ -107,16 +86,12 @@ export class AudioPlayer {
       item.pause();
       item.currentTime = 0;
       item.src = "";
-      this.trackNodes.get(item)?.source.disconnect();
-      this.trackNodes.get(item)?.output.disconnect();
-      this.trackNodes.delete(item);
       this.sfxTracks.delete(item);
     }
   }
 
   unlock(stage, titleSong = "./files/songs/senji-v2-ov.mp3") {
     this.unlocked = true;
-    if (this.audioContext?.state === "suspended") this.audioContext.resume().catch(() => {});
 
     if (stage === "title" && !this.musicTrack) {
       this.playMusic(titleSong);
@@ -129,16 +104,13 @@ export class AudioPlayer {
     const value = Math.max(0, Math.min(1, Number(volume)));
     this.musicVolume = value;
     this.sfxVolume = value;
-    if (this.musicTrack) { const nodes = this.trackNodes.get(this.musicTrack); if (nodes) nodes.output.gain.value = value; else this.musicTrack.volume = value; }
-    for (const track of this.sfxTracks) { const nodes = this.trackNodes.get(track); if (nodes) nodes.output.gain.value = value; else track.volume = value; }
+    if (this.musicTrack) this.musicTrack.volume = value;
+    for (const track of this.sfxTracks) track.volume = value;
   }
 
   destroy() {
     this.stopMusic();
     this.stopSfx();
-    this.trackNodes.clear();
-    this.audioContext?.close?.();
-    this.audioContext = null;
     this.unlocked = false;
   }
 }
