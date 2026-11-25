@@ -25,7 +25,6 @@ export class Joystick {
        liftX: 0,
       liftY: 0,
       jumpRequested: false,
-      pickRequested: false,
       attackHeld: false
     };
     this.vehicleMode = false;
@@ -293,14 +292,14 @@ export class Joystick {
     }
   }
 
-  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, onTransformationChange = () => {}, onInteract = null, initialSelected = "ben" }) {
+  createKeyboard({ entities, camera, updateCamera, isMobile = false, onSelect = () => {}, onJump = () => {}, onToggleRamp = () => {}, onAtmosphereCheck = () => {}, onTransformationChange = () => {}, onMove = null, initialSelected = "ben" }) {
     this.keys = new Set();
     this.entities = entities;
     this.camera = camera;
     this.updateCamera = updateCamera;
      this.onSelect = onSelect;
     this.onTransformationChange = onTransformationChange;
-    this.onInteract = onInteract;
+    this.onMove = onMove;
     this.onJump = onJump;
     this.onToggleRamp = onToggleRamp;
     this.onAtmosphereCheck = onAtmosphereCheck;
@@ -330,7 +329,6 @@ export class Joystick {
       event.preventDefault();
     }
     if (key === " " && !event.repeat) this.input.jumpRequested = true;
-    if (key === "e" && !event.repeat) this.input.pickRequested = true;
   };
 
   handleKeyUp = event => {
@@ -402,18 +400,14 @@ export class Joystick {
       const fuelDemand = magnitude > 0.08 || Math.abs(lift) > 0.05;
       const hasFuel = !fuelDemand || object.userData.onFuelUse?.((magnitude + Math.abs(lift)) * dt) !== false;
       if (hasFuel) object.userData.moveVehicle(mx, mz, lift, dt, joy.liftX, Math.atan2(fx, fz));
+    } else if (this.onMove && magnitude > 0.08) {
+      this.onMove(object, mx * speed * dt, mz * speed * dt, dt);
     } else if (object.userData.moveWithCollisions) {
       object.userData.moveWithCollisions(mx * speed * dt, mz * speed * dt, dt);
     } else if (magnitude > 0.08) {
       object.position.add(localMovement.multiplyScalar(speed * dt));
     }
 
-    if (joy.pickRequested) {
-      if (this.onInteract) this.onInteract(this.selected, object);
-      else if (this.selected === "rustbucket") object.userData.performPickup?.();
-      else object.userData.statusOwner?.rig?.pick();
-      joy.pickRequested = false;
-    }
 
     const attackHeld = joy.attackHeld || this.keys.has("q");
     const attackInterval = this.selected === "rustbucket" ? 280 : 720;
