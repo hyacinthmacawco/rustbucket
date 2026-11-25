@@ -541,10 +541,9 @@ export class Omniverse {
         entry.disabled = true;
         continue;
       }
-      if (entry.disabled) {
-        entry.body.setEnabled(true);
-        entry.disabled = false;
-      }
+      // Disabled bodies are intentionally attached to a hand, seat, passenger
+      // cabin or other parent. Re-enable them only through their owner method.
+      if (entry.disabled) continue;
       object.updateWorldMatrix(true, false);
       const position = object.getWorldPosition(new THREE.Vector3());
       const rotation = object.getWorldQuaternion(new THREE.Quaternion());
