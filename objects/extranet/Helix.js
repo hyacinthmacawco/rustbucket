@@ -26,7 +26,7 @@ export class Helix {
       { title: "Helix Home", url: "extranet://home" }
     ];
     this.systems = {
-      solar: { name: "SOLAR SYSTEM", body: "Earth, the Moon, Mars and other known worlds orbit the Sun. Earth is the team's homeworld.", worlds: "Earth • Moon • Mars • Saturn • Pluto", status: "ACTIVE / HOME SYSTEM" },
+      solar: { name: "SOLAR SYSTEM", body: "The Solar System, also known as the Sol System, is a system of eight planets that orbit the sun, located in the Milky Way Galaxy.", worlds: "Earth", status: "ACTIVE / HOME SYSTEM" },
       highbreed: { name: "HIGHBREED HOMEWORLD", body: "Augstaka is the Highbreed homeworld, known for its temperate climate, rolling green hills and coastal waters.", worlds: "Augstaka • at least one moon", status: "ACTIVE / AUGSTAKA" },
       incursean: { name: "INCURSEAN HOMEWORLD", body: "Incursia was the Incursean homeworld. It was destroyed after an attempt to use Ascalon to end a civil war.", worlds: "Incursia (destroyed)", status: "DESTROYED / HISTORICAL" },
       anodite: { name: "ANODITE HOMEWORLD", body: "Anodyne is the home planet of the Anodites.", worlds: "Anodyne", status: "ACTIVE / ANODYNE" },
