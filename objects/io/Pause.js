@@ -96,11 +96,33 @@ export class Pause {
       Object.assign(heading.style, this.styles.heading);
       const developer = document.createElement("p");
       developer.textContent = "Developed by Hyacinth Macaw.";
-      const soundtrack = document.createElement("p");
-      soundtrack.textContent = "Soundtrack artists: see soundtrack credits.";
+      const soundtrackHeading = document.createElement("h4");
+      soundtrackHeading.textContent = "SOUNDTRACK";
+      Object.assign(soundtrackHeading.style, this.styles.heading, { margin: "18px 0 8px" });
+      const soundtrack = document.createElement("ul");
+      Object.assign(soundtrack.style, { paddingLeft: "20px", margin: "0 0 16px", display: "grid", gap: "7px" });
+      const tracks = [
+        ["Ben 10 Epic Orchestral Medley V2 - D. Senji", "https://www.youtube.com/watch?v=bf1rpRdPHwg"],
+        ["Ben 10: Omniverse Theme Remix - Neodevol", "https://www.youtube.com/watch?v=6x0aTgTxpTU"],
+        ["Ben 10 Kinda Sad Kinda Epic Theme Song - BairdTen", "https://www.youtube.com/watch?v=kpXMuIx_zXk"],
+        ["Ben 10 Alien Force Lofi Hiphop - Daydreams", "https://www.youtube.com/watch?v=6gBBCId50JQ"],
+        ["Ben 10 Alien Force Slowed + Reverb - AZB74", "https://www.youtube.com/watch?v=-Nw2We57Ppk"],
+        ["Ben 10: Omniverse End Credits - Sebastian Evans II", "https://www.youtube.com/watch?v=3svNfCZb9eY"]
+      ];
+      for (const [label, url] of tracks) {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = label;
+        Object.assign(link.style, { color: "#a6ffbd", textDecoration: "underline", overflowWrap: "anywhere" });
+        item.append(link);
+        soundtrack.append(item);
+      }
       const franchise = document.createElement("p");
       franchise.textContent = "Ben 10 created by Man of Action.";
-      this.content.append(heading, developer, soundtrack, franchise);
+      this.content.append(heading, developer, soundtrackHeading, soundtrack, franchise);
     }
   }
 
