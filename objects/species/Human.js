@@ -532,6 +532,8 @@ export function initializeResident(instance, index, { species, homeworld, style 
   instance.group.userData.homeWorldKey = homeworld;
   instance.group.userData.statusOwner = instance;
   instance.group.userData.speciesInstance = instance;
+  instance.onClick = null;
+  instance.group.userData.onClick = event => instance.onClick?.(event);
   instance.group.userData.rig = residentRig;
   instance.group.userData.collisionCapsule = instance.constructor.collisionCapsule || HumanRig.collisionCapsule;
   instance.group.userData.updateRigAnimation = (moving, time) => residentRig._rig.updateWalk(time);
