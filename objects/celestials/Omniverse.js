@@ -287,7 +287,7 @@ export class Omniverse {
     return body;
   }
 
-  setPhysicsGround(enabled) {
+  setPhysicsGround(enabled, includeStorageFloor = false) {
     if (this.physicsGroundBody) {
       this.physicsWorld.removeRigidBody(this.physicsGroundBody);
       this.physicsGroundBody = null;
@@ -298,10 +298,12 @@ export class Omniverse {
       RAPIER.ColliderDesc.cuboid(210, 0.5, 210).setTranslation(0, -1.1, 0).setFriction(0.9),
       this.physicsGroundBody
     );
-    this.physicsWorld.createCollider(
-      RAPIER.ColliderDesc.cuboid(17, 0.175, 16).setTranslation(0, -0.2, -31).setFriction(0.9),
-      this.physicsGroundBody
-    );
+    if (includeStorageFloor) {
+      this.physicsWorld.createCollider(
+        RAPIER.ColliderDesc.cuboid(17, 0.175, 16).setTranslation(0, -0.2, -31).setFriction(0.9),
+        this.physicsGroundBody
+      );
+    }
   }
 
   stepPhysics(delta) {
@@ -828,7 +830,7 @@ export class Omniverse {
 
     this.clearWorld();
     this.celestial.add(planet.model("interior"));
-    this.setPhysicsGround(true);
+    this.setPhysicsGround(true, planet.world.key === "earth");
     this.currentPlanet = planet;
     this.audioPlayer?.playSongs(planet.songs);
     this.earth = planet.world.key === "earth" ? planet : null;
