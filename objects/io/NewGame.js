@@ -145,11 +145,11 @@ export class NewGame {
       initialSelected: "ben"
     });
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
-    this.interactControl = new Interact({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
+    this.interactControl = new Interact({ onPress: () => omniverse.handleTeamInteraction(omniverse.joystick.currentSelection) });
     this.povControl = new POV({ onToggle: enabled => omniverse.setPOV(enabled) });
     this.rampControl = new Ramp({ onPress: () => omniverse.vehicle?.toggleRamp() });
     this.attackControl = new Attack({
-      onStart: () => { omniverse.joystick.input.attackHeld = true; },
+      onStart: () => { omniverse.handleCombatAttack(omniverse.joystick.currentSelection); omniverse.joystick.lastAttackAt = performance.now(); omniverse.joystick.input.attackHeld = true; },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
     });
     this.jumpControl.create();
