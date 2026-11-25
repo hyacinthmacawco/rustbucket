@@ -14,6 +14,7 @@ import { Jump } from "../team/Jump.js";
 import { Attack } from "../team/Attack.js";
 import { Interact } from "../team/Interact.js";
 import { POV } from "../team/POV.js";
+import { Ramp } from "../team/Ramp.js";
 
 export class NewGame {
   static helpText = "WASD / joystick: move. Drag / swipe: rotate camera. Mouse wheel / pinch: zoom. F / joystick centre: switch team member. Space / JUMP: open the system map when Rustbucket is selected. E / INTERACT: pick up, drop off, sit, stand or shop. Q / ATTACK: attack hostile characters. R: open or close the Rustbucket ramp. 1P / 3P: toggle first-person and third-person view. PAUSE: open settings, help and credits. EXTRANET: open the Private Cloud browser.";
@@ -116,6 +117,7 @@ export class NewGame {
     this.interactControl?.destroy();
     this.attackControl?.destroy();
     this.povControl?.destroy();
+    this.rampControl?.destroy();
     omniverse.joystick = new Joystick();
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const entities = {
@@ -145,6 +147,7 @@ export class NewGame {
     this.jumpControl = new Jump({ onPress: () => { omniverse.joystick.input.jumpRequested = true; } });
     this.interactControl = new Interact({ onPress: () => { omniverse.joystick.input.pickRequested = true; } });
     this.povControl = new POV({ onToggle: enabled => omniverse.setPOV(enabled) });
+    this.rampControl = new Ramp({ onPress: () => omniverse.vehicle?.toggleRamp() });
     this.attackControl = new Attack({
       onStart: () => { omniverse.joystick.input.attackHeld = true; },
       onEnd: () => { omniverse.joystick.input.attackHeld = false; }
@@ -153,7 +156,8 @@ export class NewGame {
     this.interactControl.create();
     this.attackControl.create();
     this.povControl.create();
-    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element, this.povControl.element]);
+    this.rampControl.create();
+    omniverse.joystick.setActionControls([this.interactControl.element, this.attackControl.element, this.jumpControl.element, this.povControl.element, omniverse.helixButton, this.rampControl.element]);
     this.setControlsVisible(true);
     omniverse.joystick.setVisible(true, true);
     omniverse.pause.setVisible(false);
@@ -166,6 +170,7 @@ export class NewGame {
     this.interactControl?.setVisible(visible);
     this.attackControl?.setVisible(visible);
     this.povControl?.setVisible(visible);
+    this.rampControl?.setVisible(visible);
   }
 
   setPreludeVisible(visible) {
@@ -181,5 +186,6 @@ export class NewGame {
     this.interactControl?.destroy();
     this.attackControl?.destroy();
     this.povControl?.destroy();
+    this.rampControl?.destroy();
   }
 }
