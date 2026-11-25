@@ -8,7 +8,7 @@ import { Incursean } from "../species/Incursean.js";
 
 export class Earth {
   static relationships = { Ben: 96, Gwen: 80, Kevin: 50, Rook: 28, Highbreed: -56, Incursean: -36, Anodite: 40, Galvan: 56 };
-  static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x8bbce8, ground: 0x557c45 };
+  static WORLD = { key: "earth", name: "Earth", species: "Human", sky: 0x9ac8e8, ground: 0x557c45 };
 
   constructor() {
     this.songs = ["./files/songs/neodevol-ov.m4a"];
@@ -43,9 +43,9 @@ export class Earth {
   interior() {
     const interior = new THREE.Group();
     interior.name = "EarthInterior";
-    interior.add(Starfield.createAtmosphere(this.world.sky));
-    interior.add(new THREE.HemisphereLight(0x9fcfff, 0x40512e, 1.8));
-    const sunlight = new THREE.DirectionalLight(0xffe4c4, 2);
+    interior.add(Starfield.createAtmosphere(this.world.sky, { afternoon: true }));
+    interior.add(new THREE.HemisphereLight(0xc4e1ff, 0x69543c, 1.9));
+    const sunlight = new THREE.DirectionalLight(0xffd8b0, 2.2);
     sunlight.position.set(-35, 70, 25);
     interior.add(sunlight);
     const groundCanvas = document.createElement("canvas");
