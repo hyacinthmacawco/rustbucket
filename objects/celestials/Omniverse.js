@@ -131,7 +131,7 @@ export class Omniverse {
       onNewGame: async () => {
         // Start the dialogue synchronously inside the user's click gesture.
         // Awaiting fullscreen first can consume the browser's audio activation.
-        this.audioPlayer.unlocked = true;
+        this.audioPlayer.unlock("prelude", this.titleScreen.song);
         this.setStage("prelude");
         await this.requestFullscreen();
       },
@@ -322,6 +322,7 @@ export class Omniverse {
       this.celestial.attach(bag.group);
       bag.group.position.copy(position).add(new THREE.Vector3(0.55, 0, 0));
       bag.group.rotation.set(0, 0, 0);
+      this.setBagPhysicsEnabled(bag, true);
       bag.pickable = true;
       bag.stored = false;
       bag.group.userData.pickable = true;
@@ -443,6 +444,46 @@ export class Omniverse {
     );
     this.physicsBodies.set(object, { body, owner, disabled: false });
     return body;
+  }
+
+  registerBagPhysics(bag) {
+    if (!bag?.group || !this.physicsWorld || this.physicsBodies.has(bag.group)) return null;
+    bag.group.updateWorldMatrix(true, false);
+    const p = bag.group.getWorldPosition(new THREE.Vector3());
+    const scale = bag.group.getWorldScale(new THREE.Vector3());
+    const body = this.physicsWorld.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic().setTranslation(p.x, p.y, p.z)
+        .setLinearDamping(3).setAngularDamping(5).lockRotations().setCanSleep(false)
+    );
+    const [hx, hy, hz] = bag.group.userData.collisionBox?.halfExtents || [0.48, 0.38, 0.34];
+    const center = bag.group.userData.collisionBox?.center || [0, 0, 0];
+    this.physicsWorld.createCollider(
+      RAPIER.ColliderDesc.cuboid(hx * scale.x, hy * scale.y, hz * scale.z)
+        .setTranslation(center[0] * scale.x, center[1] * scale.y, center[2] * scale.z)
+        .setFriction(0.8).setRestitution(0),
+      body
+    );
+    this.physicsBodies.set(bag.group, { body, owner: bag, disabled: false });
+    return body;
+  }
+
+  setBagPhysicsEnabled(bag, enabled) {
+    const entry = this.physicsBodies.get(bag?.group);
+    if (!entry) return;
+    if (!enabled) {
+      entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      entry.body.setEnabled(false);
+      entry.disabled = true;
+      return;
+    }
+    bag.group.updateWorldMatrix(true, false);
+    const p = bag.group.getWorldPosition(new THREE.Vector3());
+    entry.body.setTranslation({ x: p.x, y: p.y, z: p.z }, true);
+    entry.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    entry.body.setEnabled(true);
+    entry.disabled = false;
   }
 
   registerVehiclePhysics(vehicle) {
@@ -680,6 +721,7 @@ export class Omniverse {
     bag.pickable = false;
     bag.group.userData.pickable = false;
     member.carryingBag = bag;
+    this.setBagPhysicsEnabled(bag, false);
     this.getActiveRig(member)?.pick?.();
     return true;
   }
@@ -692,6 +734,7 @@ export class Omniverse {
     const index = Math.max(0, this.crew.indexOf(member));
     bag.group.position.set(-1.05 + index * 0.7, -0.95, -3.65);
     bag.group.rotation.set(0, 0, 0);
+    this.setBagPhysicsEnabled(bag, false);
     bag.stored = true;
     bag.pickable = false;
     bag.group.userData.pickable = false;
