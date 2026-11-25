@@ -1099,6 +1099,7 @@ export class Omniverse {
       getCurrentPlanet: () => this.currentPlanet,
       getResidents: () => this.residents || [],
       account: this.account,
+      helix: this.helix,
       onUpdate: () => this.updateAccountHUD(),
       onPickup: resident => this.handleRescuePickup(resident),
       onBoard: resident => this.setResidentAboard(resident, true),
