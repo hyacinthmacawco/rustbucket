@@ -3,6 +3,7 @@ import { initializeResident } from "./Human.js";
 
 export class Highbreed {
   static homeworld = "augstaka";
+  static collisionCapsule = Object.freeze({ type: "capsule", radius: 0.25, halfHeight: 0.82, centerY: 1.05 });
 
   constructor(parent = null, options = {}) {
     this.group = new THREE.Group();
