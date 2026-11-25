@@ -592,23 +592,46 @@ export class Omniverse {
 
   selectTeamMember(selected) {
     if (selected === "rustbucket") {
-      const ship = this.vehicle?.ship;
-      if (!ship) return;
-      if (!ship.parent) {
-        this.loadSystemScene(this.vehicleSystem || "solar", ship, []);
-      }
+      if (!this.vehicle?.ship) return;
       this.updateCamera();
       return;
     }
-
-    const index = ["ben", "gwen", "kevin", "rook"].indexOf(selected);
-    const member = this.crew?.[index];
+    const member = this.getTeamMember(selected);
     if (!member) return;
-    const home = this.crewHomePlanet || this.earth || new Earth();
-    if (this.state.currentScene !== home.world.key) {
-      this.enterPlanetScene(home, this.vehicle?.ship || null, [...(this.crew || [])]);
-    }
+    // Selection is a camera/control change only. It must never change worlds,
+    // recreate the vehicle, or reset the crew's saved world positions.
     this.updateCamera();
+  }
+
+  secureCrewInVehicle(ship, crew = this.crew || [], bags = this.bags || []) {
+    if (!ship) return;
+    crew.forEach((member, index) => {
+      if (!member?.group) return;
+      const seat = ship.seats?.[index];
+      ship.attach(member.group);
+      if (seat) {
+        member.group.position.copy(seat.position);
+        member.group.rotation.set(0, seat.rotation, 0);
+        seat.occupiedBy = member;
+        member.seated = true;
+        member.seatIndex = index;
+        member.group.userData.seated = true;
+        this.getActiveRig(member)?.sit?.();
+      }
+      const physics = this.physicsBodies.get(member.group);
+      if (physics) { physics.body.setEnabled(false); physics.disabled = true; }
+    });
+    bags.forEach((bag, index) => {
+      if (!bag?.group || crew.some(member => member.carryingBag === bag)) return;
+      ship.attach(bag.group);
+      bag.group.position.set(-1.05 + index * 0.7, -0.95, -3.65);
+      bag.group.rotation.set(0, 0, 0);
+      bag.stored = true;
+      bag.pickable = false;
+      bag.group.userData.pickable = false;
+      const physics = this.physicsBodies.get(bag.group);
+      if (physics) { physics.body.setEnabled(false); physics.disabled = true; }
+    });
   }
 
   setPOV(firstPerson) {
@@ -810,16 +833,36 @@ export class Omniverse {
   openMarket(member, market) {
     if (!market) return;
     this.marketDialog?.remove();
+    const resource = "Grape Smoothie";
+    const quantity = Math.max(0, Math.floor(Number(market.resources?.[resource]) || 0));
+    const price = Math.max(0, Math.floor(Number(market.prices?.[resource]) || 5));
     const dialog = document.createElement("section");
     Object.assign(dialog.style, { position: "fixed", inset: "15% 8%", zIndex: "120", padding: "24px", background: "rgba(3,18,12,.96)", color: "#eaffef", border: "1px solid #79e99a", font: "inherit", display: "grid", alignContent: "start", gap: "14px" });
     const title = document.createElement("h2"); title.textContent = "MARKET";
-    const stock = document.createElement("p"); const quantity = Number(market.resources?.["Grape Smoothie"] || 0); stock.textContent = `Grape Smoothie — ${quantity}`;
-    const buy = document.createElement("button"); buy.textContent = "BUY";
+    const stock = document.createElement("p");
+    const balance = document.createElement("p");
+    const buy = document.createElement("button"); buy.textContent = "BUY 1";
     Object.assign(buy.style, { padding: "12px", background: "#174c2c", color: "white", font: "inherit" });
-    buy.disabled = quantity <= 0;
-    buy.onclick = () => { const bag = member ? (member.carryingBag || this.bags?.[this.crew.indexOf(member)]) : null; if (quantity <= 0) return; if (bag) bag.resources["Grape Smoothie"] = (bag.resources["Grape Smoothie"] || 0) + quantity; else { this.vehicle.resources ||= {}; this.vehicle.resources["Grape Smoothie"] = (this.vehicle.resources["Grape Smoothie"] || 0) + quantity; } market.resources["Grape Smoothie"] = 0; stock.textContent = "Grape Smoothie — 0"; buy.disabled = true; };
+    const refresh = () => {
+      const currentStock = Math.max(0, Math.floor(Number(market.resources?.[resource]) || 0));
+      stock.textContent = `${resource} — ${currentStock} available · ${price} Taydenite each`;
+      balance.textContent = `YOUR BALANCE — ${this.account.balance} TAYDENITE`;
+      buy.disabled = currentStock < 1 || this.account.balance < price;
+      buy.textContent = this.account.balance < price ? "INSUFFICIENT TAYDENITE" : "BUY 1";
+    };
+    buy.onclick = () => {
+      const currentStock = Math.max(0, Math.floor(Number(market.resources?.[resource]) || 0));
+      if (currentStock < 1 || !this.account.spendTaydenite(price)) { refresh(); return; }
+      const bag = member ? (member.carryingBag || this.bags?.[this.crew.indexOf(member)]) : null;
+      if (bag) { bag.resources ||= {}; bag.resources[resource] = (bag.resources[resource] || 0) + 1; }
+      else { this.vehicle.resources ||= {}; this.vehicle.resources[resource] = (this.vehicle.resources[resource] || 0) + 1; }
+      market.resources[resource] = currentStock - 1;
+      this.updateAccountHUD();
+      refresh();
+    };
     const close = document.createElement("button"); close.textContent = "CLOSE"; close.onclick = () => dialog.remove();
-    dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
+    dialog.append(title, stock, balance, buy, close); document.body.append(dialog); this.marketDialog = dialog;
+    refresh();
   }
 
   moveCrewMember(member, target, delta, elapsed, local = false) {
@@ -952,12 +995,12 @@ export class Omniverse {
 
   loadSystemScene(systemKey, ship = this.vehicle?.ship, crew = this.crew || [], destinationKey = null) {
     const vehicle = this.vehicle;
+    const persistentBags = this.bags || [];
+    if (ship) this.secureCrewInVehicle(ship, crew, persistentBags);
     ship?.removeFromParent();
-    crew.forEach(member => {
-      if (member.group?.parent !== ship) member.group?.removeFromParent();
-    });
 
     this.clearWorld();
+    this.bags = persistentBags;
 
     const SystemClass = this.systemClasses[systemKey] || SolarSystem;
     this.systemWorld = new SystemClass();
@@ -1001,12 +1044,12 @@ export class Omniverse {
   enterPlanetScene(planet, ship, crew) {
     const vehicle = this.vehicle;
     const activeShip = ship || vehicle?.ship;
+    const persistentBags = this.bags || [];
+    if (activeShip) this.secureCrewInVehicle(activeShip, crew, persistentBags);
     activeShip?.removeFromParent();
-    crew.forEach(member => {
-      if (member.group?.parent !== activeShip) member.group?.removeFromParent();
-    });
 
     this.clearWorld();
+    this.bags = persistentBags;
     this.celestial.add(planet.model("interior"));
     this.setPhysicsGround(true, planet.world.key === "earth");
     this.setPhysicsGravity(-9.81);
@@ -1026,21 +1069,7 @@ export class Omniverse {
       this.celestial.add(ship);
       this.resetCameraToShip(ship);
     }
-    if (planet === this.crewHomePlanet) {
-      this.crew.forEach((member, index) => {
-        if (member.seated) {
-          const seat = vehicle?.seats?.[member.seatIndex];
-          if (seat?.occupiedBy === member) seat.occupiedBy = null;
-        }
-        member.seated = false;
-        member.group.userData.seated = false;
-        const physicsEntry = this.physicsBodies.get(member.group);
-        if (physicsEntry) { physicsEntry.body.setEnabled(true); physicsEntry.disabled = false; }
-        this.getActiveRig(member)?.stand?.();
-        this.celestial.attach(member.group);
-        member.group.position.set(-4 + index * 2.6, 0, 8);
-      });
-    }
+
     if (!ship) {
       this.camera.position.set(0, 8, 23);
       this.camera.lookAt(0, 1.5, 0);
