@@ -333,10 +333,8 @@ export class Omniverse {
   handleResidentClick(resident) {
     if (!resident || !this.vehicle || !this.currentPlanet) return false;
 
-    const homeworld = this.vehicle.normalizeWorldKey(
-      resident.homeworld || resident.group?.userData?.homeWorldKey
-    );
-    const currentWorld = this.vehicle.normalizeWorldKey(this.currentPlanet.world.key);
+    const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey;
+    const currentWorld = this.currentPlanet.world.key;
 
     // Clicking an aboard resident unloads them only when the Rustbucket is
     // currently at their homeworld. This routes delivery through the same
