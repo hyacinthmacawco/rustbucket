@@ -94,7 +94,7 @@ export class Rustbucket {
     resident.group.rotation.set(0, Math.PI, 0);
     this.rescuePassengers.push(resident);
     this.rescueContext.onBoard(resident);
-    resident.taskId = this.rescueContext.onPickup(resident);
+    this.rescueContext.onPickup(resident);
     this.rescueContext.onUpdate();
     return true;
   }
@@ -115,9 +115,6 @@ export class Rustbucket {
     const homeworld = resident.homeworld || resident.group?.userData?.homeWorldKey || resident.constructor?.homeworld;
     if (planet?.world?.key && normalizeHomeworld(planet.world.key) === normalizeHomeworld(homeworld)) {
       resident.homeworld = planet.world.key;
-      // The task is created when the resident boards. Only create a fallback
-      // task if that original pickup callback did not produce an ID.
-      if (resident.taskId == null) resident.taskId = context.onPickup(resident);
       const before = context.account?.balance ?? 0;
       resident.awardTaydenite?.(context.account, 10);
       const earned = Math.max(0, (context.account?.balance ?? before) - before);
