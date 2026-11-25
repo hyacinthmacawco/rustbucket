@@ -2,7 +2,7 @@ export class Attack {
   constructor({ onStart = () => {}, onEnd = () => {} } = {}) {
     this.onStart = onStart;
     this.onEnd = onEnd;
-    this.styles = { position: "static", display: "grid", placeItems: "center", width: "38px", minWidth: "38px", height: "40px", padding: "4px", fontSize: "10px", border: "1px solid rgba(126,255,168,.28)", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
+    this.styles = { position: "static", display: "grid", placeItems: "center", width: "62px", minWidth: "62px", height: "40px", padding: "4px 6px", boxSizing: "border-box", whiteSpace: "nowrap", fontSize: "9px", border: "1px solid rgba(126,255,168,.28)", background: "rgba(5,30,18,.8)", color: "#eaffef", font: "inherit", letterSpacing: ".08em", touchAction: "none", pointerEvents: "auto", cursor: "pointer" };
   }
 
   create() {
