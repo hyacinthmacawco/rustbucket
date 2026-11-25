@@ -219,18 +219,16 @@ export class Omniverse {
 
   handleRescuePickup(resident) {
     if (!resident) return null;
-    const taskId = this.helix?.addTask(resident) ?? null;
-    if (taskId != null) resident.taskId = taskId;
-    return taskId;
+    this.helix?.addTask(resident);
+    return true;
   }
 
   handleRescueDrop(resident, relationshipIncrease = 0.5, taydeniteIncrease = 10) {
     if (!resident) return false;
 
-    // Pickup creates and stores the task ID. Complete that exact task first;
-    // if an old passenger has no ID, resolve the task by resident reference.
-    let taskCompleted = this.helix?.completeTask(resident.taskId ?? resident) === true;
-    if (!taskCompleted) taskCompleted = this.helix?.completeTask(resident) === true;
+    // Tasks are associated with the resident object itself. Complete that
+    // resident's task directly; task IDs are not part of the rescue flow.
+    const taskCompleted = this.helix?.completeTask(resident) === true;
 
     // The caller only invokes this callback after the Rustbucket has been
     // unloaded on the passenger's homeworld. Do not reject completion here
@@ -248,12 +246,6 @@ export class Omniverse {
         const next = relationships?.getRelationship(species, name) ?? Number(home?.constructor?.relationships?.[name] ?? before);
         actualRelationshipIncrease = next - before;
       }
-    }
-
-    if (!taskCompleted) {
-      console.error("Rescue task was not found for delivered passenger; creating and completing a recovery task.", resident);
-      const recoveryTaskId = this.helix?.addTask(resident);
-      if (recoveryTaskId != null) taskCompleted = this.helix?.completeTask(recoveryTaskId) === true;
     }
 
     if (taskCompleted) {
