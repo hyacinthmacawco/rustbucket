@@ -7,9 +7,9 @@ export class Joystick {
   constructor() {
     this.onAttack = null;
     this.styles = {
-      joystick: { position: "relative", width: "46px", height: "46px", flex: "0 0 46px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
+      joystick: { position: "relative", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
-      knob: { position: "absolute", left: "50%", top: "50%", width: "26px", height: "26px", margin: "-13px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
+      knob: { position: "absolute", left: "50%", top: "50%", width: "46px", height: "46px", margin: "-23px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
       lift: { position: "relative", width: "46px", height: "46px", flex: "0 0 46px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "2147483646", boxSizing: "border-box" },
@@ -67,14 +67,15 @@ export class Joystick {
       position: "fixed", left: "0", right: "0",
       bottom: "max(6px, env(safe-area-inset-bottom))",
       width: "100%", minHeight: "64px", padding: "4px 6px",
-      boxSizing: "border-box", display: "flex", alignItems: "center",
-      justifyContent: "space-between", gap: "2px",
+      boxSizing: "border-box", display: "contents", alignItems: "center",
+      justifyContent: "space-between", gap: "12px",
       zIndex: "2147483647", pointerEvents: "none"
     });
-    this.element.style.pointerEvents = "auto";
+    Object.assign(this.element.style, { position: "fixed", left: "max(16px, env(safe-area-inset-left))", bottom: "max(14px, env(safe-area-inset-bottom))", width: "84px", height: "84px", pointerEvents: "auto", zIndex: "2147483647" });
     this.statusBars = document.createElement("div");
     this.statusBars.id = "selected-member-status";
     Object.assign(this.statusBars.style, {
+      position: "fixed", left: "max(16px, env(safe-area-inset-left))", bottom: "max(112px, calc(env(safe-area-inset-bottom) + 100px))",
       display: "flex", flexDirection: "column", justifyContent: "center",
       gap: "5px", flex: "1 1 82px", minWidth: "58px", maxWidth: "150px",
       color: "#dfffe8", font: "9px Industry, sans-serif", letterSpacing: ".06em",
@@ -86,8 +87,9 @@ export class Joystick {
     this.actionControls = document.createElement("div");
     this.actionControls.id = "game-action-controls";
     Object.assign(this.actionControls.style, {
-      display: "flex", alignItems: "center", gap: "2px",
-      flex: "0 0 auto", pointerEvents: "auto"
+      position: "fixed", right: "max(16px, env(safe-area-inset-right))", bottom: "max(14px, env(safe-area-inset-bottom))",
+      display: "flex", alignItems: "center", gap: "12px",
+      flex: "0 0 auto", pointerEvents: "auto", zIndex: "2147483647"
     });
     this.bottomBar.append(this.actionControls);
     document.body.append(this.bottomBar, this.teamPanel);
@@ -110,6 +112,7 @@ export class Joystick {
 
     this.liftElement = document.createElement("div");
     this.liftElement.id = "lift-joystick";
+    Object.assign(this.liftElement.style, { position: "fixed", right: "max(16px, env(safe-area-inset-right))", bottom: "max(112px, calc(env(safe-area-inset-bottom) + 100px))", width: "84px", height: "84px", zIndex: "2147483647" });
     this.liftElement.setAttribute("aria-label", "Rustbucket altitude control");
     Object.assign(this.liftElement.style, this.styles.lift);
     this.liftBase = document.createElement("div");
