@@ -334,9 +334,8 @@ export class Omniverse {
   }
 
   handleResidentClick(resident) {
-    if (!resident || !this.vehicle) return false;
+    if (!resident || !this.vehicle || !this.currentPlanet) return false;
     if (resident.isAboard) return this.vehicle.unboardResident(resident);
-    if (!this.currentPlanet) return false;
     if (resident.homeworld !== this.currentPlanet.world.key) return this.vehicle.boardResident(resident);
     return false;
   }
