@@ -332,12 +332,26 @@ export class Omniverse {
   }
 
   handleResidentClick(resident) {
-    if (!resident || !this.vehicle || !this.currentPlanet || resident.isAboard) return false;
-    // Boarding is the only resident-click action. Unloading is handled by
-    // Rustbucket's rescue action so task completion has one authoritative path.
-    if (resident.homeworld !== this.currentPlanet.world.key) {
+    if (!resident || !this.vehicle || !this.currentPlanet) return false;
+
+    const homeworld = this.vehicle.normalizeWorldKey(
+      resident.homeworld || resident.group?.userData?.homeWorldKey
+    );
+    const currentWorld = this.vehicle.normalizeWorldKey(this.currentPlanet.world.key);
+
+    // Clicking an aboard resident unloads them only when the Rustbucket is
+    // currently at their homeworld. This routes delivery through the same
+    // unboardResident method used by the vehicle rescue action.
+    if (resident.isAboard) {
+      if (homeworld !== currentWorld) return false;
+      return this.vehicle.unboardResident(resident);
+    }
+
+    // Residents away from home can still be boarded by clicking them.
+    if (homeworld !== currentWorld) {
       return this.vehicle.boardResident(resident);
     }
+
     return false;
   }
 
