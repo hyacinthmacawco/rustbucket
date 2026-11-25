@@ -21,7 +21,7 @@ export class Augstaka {
   };
 
   constructor() {
-    this.songs = ["./files/songs/neodevol-ov.mp3"];
+    this.songs = ["./files/songs/neodevol-ov.m4a"];
     this.world = Augstaka.WORLD;
     this.system = "augstaka";
     this.atmosphereHeight = 90;
