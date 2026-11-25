@@ -3,6 +3,7 @@ import { initializeResident } from "./Human.js";
 
 export class Anodite {
   static homeworld = "anodyne";
+  static collisionCapsule = Object.freeze({ type: "capsule", radius: 0.24, halfHeight: 0.78, centerY: 1.02 });
 
   constructor(parent = null, options = {}) {
     this.leader = false;
