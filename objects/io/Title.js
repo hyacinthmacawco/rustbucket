@@ -16,7 +16,7 @@ export class Title {
     this.element = document.createElement("main");
     this.element.id = "title-screen";
     this.song = "./files/songs/senji-v2-ov.mp3";
-    this.element.style.backgroundImage = 'url("./files/textures/ov-final-shot.jpg")';
+    this.element.style.backgroundImage = 'url("./files/textures/ov-final-shot.webp")';
     this.element.style.backgroundSize = "cover";
     this.element.style.backgroundPosition = "center";
     this.element.style.backgroundRepeat = "no-repeat";
