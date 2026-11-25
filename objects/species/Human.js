@@ -139,8 +139,13 @@ export class HumanRig {
     parent.add(mesh);
     return mesh;
   };
-  bodyBox(spine, "HumanTorso", [0.45, 0.78, 0.28], [0, 0.02, 0], bodyMaterials.shirt);
-  bodyBox(head, "HumanHead", [0.36, 0.42, 0.32], [0, 0.055, 0], bodyMaterials.skin);
+  const torsoMesh = bodyBox(spine, "HumanTorso", [0.45, 0.78, 0.28], [0, 0.02, 0], bodyMaterials.shirt);
+  const headMesh = bodyBox(head, "HumanHead", [0.36, 0.42, 0.32], [0, 0.055, 0], bodyMaterials.skin);
+  // Align the head bottom with the torso top through the neck hierarchy.
+  torsoMesh.geometry.computeBoundingBox();
+  headMesh.geometry.computeBoundingBox();
+  headMesh.position.y = torsoMesh.geometry.boundingBox.max.y + torsoMesh.position.y
+    - neck.position.y - head.position.y - headMesh.geometry.boundingBox.min.y;
   bodyBox(head, "HumanHair", [0.38, 0.14, 0.34], [0, 0.25, -0.005], bodyMaterials.hair);
   for (const side of ["left", "right"]) {
     const shoulder = joints[side + "Shoulder"];
