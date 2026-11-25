@@ -742,66 +742,6 @@ export class Omniverse {
     dialog.append(title, stock, buy, close); document.body.append(dialog); this.marketDialog = dialog;
   }
 
-  handleTeamInteraction(selected) {
-    if (selected === "rustbucket") {
-      const market = this.findNearbyMarket(this.vehicle);
-      if (market) this.openMarket(null, market);
-      else this.vehicle?.performRescueAction();
-      return;
-    }
-    const member = this.getTeamMember(selected);
-    if (!member) return;
-    const market = this.findNearbyMarket(member);
-    if (market) { this.openMarket(member, market); return; }
-    if (member.seated) {
-      this.standTeamMember(member);
-      return;
-    }
-    if (member.carryingBag) {
-      const shipPosition = this.vehicle?.ship?.getWorldPosition(new THREE.Vector3());
-      const memberPosition = member.group.getWorldPosition(new THREE.Vector3());
-      if (shipPosition && memberPosition.distanceTo(shipPosition) < 12) {
-        this.storeTeamBag(member);
-      } else {
-        const bag = member.carryingBag;
-        this.celestial.attach(bag.group);
-        bag.group.position.copy(memberPosition).add(new THREE.Vector3(0.6, 0, 0));
-        bag.group.rotation.set(0, 0, 0);
-        bag.pickable = true;
-        bag.group.userData.pickable = true;
-        member.carryingBag = null;
-      }
-      return;
-    }
-    const seatIndex = this.findNearbySeat(member);
-    if (seatIndex >= 0) {
-      this.sitTeamMember(member, seatIndex);
-      return;
-    }
-    const bag = this.findNearbyBag(member);
-    if (bag) this.pickTeamBag(member, bag);
-  }
-
-  updateTeamInteractionMode() {
-    const selected = this.joystick?.currentSelection;
-    const control = this.titleScreen?.newGame?.interactControl;
-    if (!control) return;
-    if (selected === "rustbucket") {
-      const market = this.findNearbyMarket(this.vehicle);
-      if (market) control.setMode("Shop");
-      else this.vehicle?.updateRescueInteraction({ selected, interactControl: control });
-      return;
-    }
-    const member = this.getTeamMember(selected);
-    if (!member) return;
-    if (this.findNearbyMarket(member)) control.setMode("Shop");
-    else if (member.seated) control.setMode("Stand");
-    else if (member.carryingBag) control.setMode("Drop");
-    else if (this.findNearbySeat(member) >= 0) control.setMode("Sit");
-    else if (this.findNearbyBag(member)) control.setMode("Pick");
-    else control.setMode("Pick");
-  }
-
   moveCrewMember(member, target, delta, elapsed, local = false) {
     const position = member.group.position;
     const dx = target.x - position.x;
