@@ -10,7 +10,7 @@ export class Joystick {
       joystick: { position: "relative", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", userSelect: "none", pointerEvents: "auto" },
       base: { position: "absolute", inset: "0", pointerEvents: "auto", touchAction: "none", border: "1px solid rgba(126,255,168,.55)", borderRadius: "50%", background: "radial-gradient(circle, rgba(15,70,40,.62), rgba(2,16,10,.74))", boxShadow: "0 0 24px rgba(60,255,130,.18)" },
       knob: { position: "absolute", left: "50%", top: "50%", width: "46px", height: "46px", margin: "-23px", border: "1px solid rgba(188,255,205,.8)", borderRadius: "50%", background: "rgba(66,190,111,.65)", transform: "translate(0px,0px)", display: "grid", placeItems: "center", color: "#effff2", fontSize: "1.1rem" },
-      lift: { position: "relative", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
+      lift: { position: "fixed", right: "max(14px, env(safe-area-inset-right))", bottom: "max(14px, env(safe-area-inset-bottom))", width: "84px", height: "84px", flex: "0 0 84px", zIndex: "2147483647", touchAction: "none", pointerEvents: "auto" },
       liftBase: { position: "absolute", inset: "0", border: "1px solid rgba(126,255,168,.5)", borderRadius: "50%", background: "rgba(2,16,10,.68)" },
       teamPanel: { position: "fixed", left: "max(22px, env(safe-area-inset-left))", bottom: "max(174px, calc(env(safe-area-inset-bottom) + 154px))", width: "142px", display: "grid", gap: "5px", padding: "8px", border: "1px solid rgba(126,255,168,.45)", borderRadius: "7px", background: "rgba(2,16,10,.86)", boxShadow: "0 0 20px rgba(60,255,130,.14)", zIndex: "90", boxSizing: "border-box" },
       teamButton: { width: "100%", minHeight: "25px", padding: "4px 8px", color: "#c8ffd7", font: "11px Industry, sans-serif", letterSpacing: ".08em", textAlign: "left", border: "none", borderRadius: "3px", background: "rgba(5,30,18,.7)", cursor: "pointer", touchAction: "manipulation" },
@@ -170,7 +170,11 @@ export class Joystick {
   }
 
   setActionControls(controls = []) {
-    this.actionControls.replaceChildren(...controls.filter(Boolean));
+    const items = controls.filter(Boolean);
+    for (const item of items) {
+      Object.assign(item.style, { position: "relative", right: "auto", bottom: "auto", left: "auto", top: "auto", margin: "0", flex: "0 0 auto" });
+    }
+    this.actionControls.replaceChildren(...items);
   }
 
   updateBase(event) {
