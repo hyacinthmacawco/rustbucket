@@ -6,7 +6,6 @@ export class AudioPlayer {
     this.musicVolume = 0.55;
     this.sfxVolume = 0.7;
     this.audioContext = null;
-    this.reverb = null;
     this.trackNodes = new Map();
   }
 
@@ -25,30 +24,14 @@ export class AudioPlayer {
     try {
       this.audioContext ||= new AudioContextClass();
       if (this.unlocked) this.audioContext.resume().catch(() => {});
-      if (!this.reverb) {
-        const length = Math.floor(this.audioContext.sampleRate * 2.4);
-        const impulse = this.audioContext.createBuffer(2, length, this.audioContext.sampleRate);
-        for (let channel = 0; channel < 2; channel++) {
-          const data = impulse.getChannelData(channel);
-          for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.8);
-        }
-        this.reverb = this.audioContext.createConvolver();
-        this.reverb.buffer = impulse;
-      }
       const source = this.audioContext.createMediaElementSource(track);
-      const dry = this.audioContext.createGain();
-      const wet = this.audioContext.createGain();
       const output = this.audioContext.createGain();
-      dry.gain.value = 0.78;
-      wet.gain.value = 0.28;
       output.gain.value = volume;
-      source.connect(dry).connect(output);
-      source.connect(this.reverb).connect(wet).connect(output);
-      output.connect(this.audioContext.destination);
-      this.trackNodes.set(track, { source, dry, wet, output });
+      source.connect(output).connect(this.audioContext.destination);
+      this.trackNodes.set(track, { source, output });
     } catch (error) {
       track.volume = volume;
-      console.warn("Audio reverb could not be initialized:", error);
+      console.warn("Audio processing could not be initialized:", error);
     }
   }
 
@@ -156,7 +139,6 @@ export class AudioPlayer {
     this.trackNodes.clear();
     this.audioContext?.close?.();
     this.audioContext = null;
-    this.reverb = null;
     this.unlocked = false;
   }
 }
