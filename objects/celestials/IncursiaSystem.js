@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Starfield } from "./Starfield.js";
+import { IncurseanShip } from "../resources/IncurseanShip.js";
 import { Incursia } from "./Incursia.js";
 
 export class IncursiaSystem {
@@ -25,13 +26,12 @@ export class IncursiaSystem {
     this.root.add(this.stars.model());
     this.ships = [];
     for (let index = 0; index < 3; index++) {
-      const group = new THREE.Group();
+      const visual = new IncurseanShip(this.root, { scale: 3 });
+      const group = visual.group;
       group.name = "incursiaPatrolShip" + index;
-      const hull = new THREE.Mesh(new THREE.ConeGeometry(1.4, 5, 5), new THREE.MeshStandardMaterial({ color: 0x657b8d, metalness: 0.55, roughness: 0.4 }));
-      hull.rotation.x = Math.PI / 2;
-      group.add(hull);
-      group.position.set(24000 + index * 9000, 6000 + index * 1800, -18000 - index * 5000);
-      this.root.add(group);
+      const orbit = 1650 + index * 260;
+      const angle = (index / 3) * Math.PI * 2;
+      group.position.set(274300 + Math.cos(angle) * orbit, 180 + index * 110, Math.sin(angle) * orbit);
       const ship = { group, homePlanet: "incursia", relationships: Incursia.relationships, damage: 5, health: 50, destroyed: false, takeDamage: amount => { ship.health = Math.max(0, ship.health - Math.max(0, amount)); if (ship.health === 0 && !ship.destroyed) { ship.destroyed = true; group.visible = false; for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) ship.relationships[name] = Math.max(-100, Number(ship.relationships[name] ?? 0) - 0.5); try { const key = "rustbucket.planet." + ship.homePlanet; const saved = JSON.parse(localStorage.getItem(key) || "null") || {}; saved.relationships = { ...(saved.relationships || {}), ...ship.relationships }; localStorage.setItem(key, JSON.stringify(saved)); } catch (error) {} } return ship.health; }, attack: target => {
         const species = target?.species || target?.constructor?.name;
         if (!target || target.health <= 0 || Number(ship.relationships[species] ?? 0) >= 0) return false;
