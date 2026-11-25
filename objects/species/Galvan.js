@@ -3,6 +3,7 @@ import { initializeResident } from "./Human.js";
 
 export class Galvan {
   static homeworld = "galvan";
+  static collisionCapsule = Object.freeze({ type: "capsule", radius: 0.22, halfHeight: 0.64, centerY: 0.84 });
 
   constructor(parent = null, options = {}) {
     this.leader = false;
