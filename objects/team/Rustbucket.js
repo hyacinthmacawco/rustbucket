@@ -69,7 +69,7 @@ export class Rustbucket {
     if (nearby) {
       nearby.isAboard = true;
       nearby.group.removeFromParent();
-      this.ship.add(nearby.group);
+      this.ship.attach(nearby.group);
       nearby.group.position.set(
         -0.65 + (this.rescuePassengers.length % 3) * 0.65,
         -0.25,
@@ -280,6 +280,23 @@ export class Rustbucket {
     this.tailPanel.visible = !this.rampOpen;
     this.ramp.visible = true;
     this.rampPivot.rotation.x = this.rampOpen ? -Math.PI / 2 : 0;
+    this.updateRearCollider();
+  }
+
+  updateRearCollider() {
+    if (!this.vehicleBody || !this.physicsWorld || !this.physicsRapier) return;
+    if (this.rearCollider) {
+      this.physicsWorld.removeCollider(this.rearCollider, true);
+      this.rearCollider = null;
+    }
+    if (!this.rampOpen) {
+      const scale = this.ship.scale.x || 1;
+      this.rearCollider = this.physicsWorld.createCollider(
+        this.physicsRapier.ColliderDesc.cuboid(1.35 * scale, 1.22 * scale, 0.08 * scale)
+          .setTranslation(0, 0, -5.18 * scale),
+        this.vehicleBody
+      );
+    }
   }
 
   toggleRamp() {
@@ -356,17 +373,18 @@ export class Rustbucket {
     );
     this.vehicleBody.setGravityScale(0, true);
 
+    this.physicsWorld = world;
+    this.physicsRapier = RAPIER;
+    this.rearCollider = null;
     const hullColliders = [
-      RAPIER.ColliderDesc.cuboid(size(0.12), size(0.82), size(5)).setTranslation(size(-1.38), 0, 0),
-      RAPIER.ColliderDesc.cuboid(size(0.12), size(0.82), size(5)).setTranslation(size(1.38), 0, 0),
-      RAPIER.ColliderDesc.cuboid(size(1.32), size(0.82), size(0.12)).setTranslation(0, 0, size(5)),
-      RAPIER.ColliderDesc.cuboid(size(1.36), size(0.09), size(5.15)).setTranslation(0, size(1.28), 0)
+      RAPIER.ColliderDesc.cuboid(size(0.12), size(1.22), size(5.25)).setTranslation(size(-1.38), 0, 0),
+      RAPIER.ColliderDesc.cuboid(size(0.12), size(1.22), size(5.25)).setTranslation(size(1.38), 0, 0),
+      RAPIER.ColliderDesc.cuboid(size(1.32), size(1.22), size(0.12)).setTranslation(0, 0, size(5)),
+      RAPIER.ColliderDesc.cuboid(size(1.36), size(0.09), size(5.15)).setTranslation(0, size(1.28), 0),
+      RAPIER.ColliderDesc.cuboid(size(1.32), size(0.08), size(5.05)).setTranslation(0, size(-1.18), 0)
     ];
-
-    for (const collider of hullColliders) {
-      world.createCollider(collider, this.vehicleBody);
-    }
-
+    for (const collider of hullColliders) world.createCollider(collider, this.vehicleBody);
+    this.updateRearCollider();
     this.ship.userData.vehicleBody = this.vehicleBody;
     return this.vehicleBody;
   }
