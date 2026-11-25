@@ -74,6 +74,7 @@ export class NewGame {
       getCurrentPlanet: () => omniverse.currentPlanet,
       getResidents: () => omniverse.residents || [],
       account: omniverse.account,
+      helix: omniverse.helix,
       onUpdate: () => omniverse.updateAccountHUD(),
       onPickup: resident => omniverse.handleRescuePickup(resident),
       onBoard: resident => omniverse.setResidentAboard(resident, true),
