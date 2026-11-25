@@ -68,7 +68,6 @@ export class Rustbucket {
 
     if (nearby) {
       nearby.isAboard = true;
-      nearby.group.removeFromParent();
       this.ship.attach(nearby.group);
       nearby.group.position.set(
         -0.65 + (this.rescuePassengers.length % 3) * 0.65,
