@@ -38,6 +38,7 @@ export class Camera {
     this.onPointerDown = event => {
       if (event.button !== 0 || this.getStage() === "title") return;
       if (event.target !== this.canvas) return;
+      event.preventDefault();
       this.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       this.canvas.setPointerCapture?.(event.pointerId);
       if (this.pointers.size === 1) {
@@ -49,6 +50,7 @@ export class Camera {
     };
     this.onPointerMove = event => {
       if (this.getStage() === "title" || !this.pointers.has(event.pointerId)) return;
+      event.preventDefault();
       this.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (this.pointers.size >= 2) {
         const distance = this.getPointerDistance();
