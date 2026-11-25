@@ -213,6 +213,35 @@ export class HumanRig {
         { at: 0.46, pose: { leftShoulder: { x: -0.52 }, leftElbow: { x: -0.86 } } },
         { at: 0.56, pose: {} }
       ]
+    },
+    sit: {
+      duration: 0.48,
+      loop: false,
+      frames: [
+        { at: 0, pose: {} },
+        { at: 0.45, pose: { leftThigh: { x: -0.58 }, rightThigh: { x: -0.58 }, spine: { x: 0.08 } } },
+        { at: 1, pose: {
+          leftThigh: { x: -1.15 }, rightThigh: { x: -1.15 },
+          leftKnee: { x: 1.25 }, rightKnee: { x: 1.25 },
+          leftShoulder: { x: -0.2 }, rightShoulder: { x: -0.2 },
+          leftElbow: { x: -0.48 }, rightElbow: { x: -0.48 },
+          spine: { x: 0.16 }
+        } }
+      ]
+    },
+    stand: {
+      duration: 0.38,
+      loop: false,
+      frames: [
+        { at: 0, pose: {
+          leftThigh: { x: -1.15 }, rightThigh: { x: -1.15 },
+          leftKnee: { x: 1.25 }, rightKnee: { x: 1.25 },
+          leftShoulder: { x: -0.2 }, rightShoulder: { x: -0.2 },
+          leftElbow: { x: -0.48 }, rightElbow: { x: -0.48 },
+          spine: { x: 0.16 }
+        } },
+        { at: 1, pose: {} }
+      ]
     }
   };
 
@@ -265,7 +294,7 @@ export class HumanRig {
     setWalking(enabled) {
       if (sitting) return;
       walking = Boolean(enabled);
-      if (!walking) {
+      if (!walking && !activeAction) {
         rig.resetPose();
         root.position.y = 0;
       }
@@ -325,9 +354,18 @@ export class HumanRig {
           }
         }
         if (!clip.loop && t >= 1) {
+          const completed = activeAction;
           activeAction = null;
-          rig.resetPose();
-          walking = true;
+          if (completed.name === "sit") {
+            root.position.y = completed.rootY;
+            sitting = true;
+            walking = false;
+          } else {
+            rig.resetPose();
+            if (completed.rootY !== undefined) root.position.y = completed.rootY;
+            sitting = false;
+            walking = true;
+          }
         }
         return;
       }
@@ -405,33 +443,21 @@ export class HumanRig {
       root.position.y = 0;
     },
     sit() {
-      const rootY = root.position.y;
-      activeAction = null;
-      sitting = true;
+      if (sitting || activeAction?.name === "sit") return true;
+      activeAction = { name: "sit", startedAt: null, rootY: root.position.y };
+      sitting = false;
       walking = false;
-      rig.resetPose();
-      root.position.y = rootY;
-      joints.leftThigh.rotation.x = -1.15;
-      joints.rightThigh.rotation.x = -1.15;
-      joints.leftKnee.rotation.x = 1.25;
-      joints.rightKnee.rotation.x = 1.25;
-      joints.leftShoulder.rotation.x = -0.2;
-      joints.rightShoulder.rotation.x = -0.2;
-      joints.leftElbow.rotation.x = -0.48;
-      joints.rightElbow.rotation.x = -0.48;
-      joints.spine.rotation.x = 0.16;
       return true;
     },
     stand() {
-      const rootY = root.position.y;
+      if (!sitting && activeAction?.name !== "sit") return true;
+      activeAction = { name: "stand", startedAt: null, rootY: root.position.y };
       sitting = false;
-      activeAction = null;
-      rig.resetPose();
-      root.position.y = rootY;
-      walking = true;
+      walking = false;
       return true;
     },
     get sitting() { return sitting; },
+    get animating() { return Boolean(activeAction); },
     resetPose() {
       for (const [bone, rotation] of initialRotations) {
         bone.rotation.copy(rotation);
