@@ -4,7 +4,7 @@ export class Rustbucket {
   constructor(parent) {
     this.ship = new THREE.Group();
     this.ship.name = "Rustbucket";
-    this.ship.position.set(0, 2, 0);
+    this.ship.position.set(0, 3.54, 0);
     this.ship.scale.setScalar(3);
     this.health = 1000;
     this.maxHealth = 1000;
@@ -14,6 +14,8 @@ export class Rustbucket {
     this.energyRecoveryDelay = 0;
     this.resources = {};
     this.ship.userData.statusOwner = this;
+    this.ship.userData.onClick = event => this.onClick?.(event);
+    this.onClick = null;
     parent.add(this.ship);
 
     this.materials = {
@@ -57,7 +59,9 @@ export class Rustbucket {
       account: context.account || null,
       onUpdate: context.onUpdate || (() => {}),
       onPickup: context.onPickup || (() => null),
-      onDrop: context.onDrop || (() => {})
+      onDrop: context.onDrop || (() => {}),
+      onBoard: context.onBoard || (() => {}),
+      onUnboard: context.onUnboard || (() => {})
     };
   }
 
@@ -77,6 +81,7 @@ export class Rustbucket {
     if (nearby) {
       nearby.isAboard = true;
       this.ship.attach(nearby.group);
+      context.onBoard(nearby);
       nearby.group.position.set(
         -0.65 + (this.rescuePassengers.length % 3) * 0.65,
         -0.25,
@@ -96,6 +101,7 @@ export class Rustbucket {
 
     deliverable.isAboard = false;
     this.ship.parent.attach(deliverable.group);
+    context.onUnboard(deliverable);
     deliverable.group.position.set(
       this.ship.position.x + 4 + Math.random() * 2,
       0,
@@ -131,7 +137,7 @@ export class Rustbucket {
 
   moveVehicle(moveX, moveZ, lift, delta, liftX = 0, heading = this.ship.rotation.y) {
     const horizontalSpeed = 18;
-    const verticalSpeed = 12;
+    const verticalSpeed = 40;
     this.ship.position.x += moveX * horizontalSpeed * delta;
     this.ship.position.z += moveZ * horizontalSpeed * delta;
     this.ship.position.y += lift * verticalSpeed * delta;
