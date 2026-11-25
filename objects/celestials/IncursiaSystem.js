@@ -29,9 +29,9 @@ export class IncursiaSystem {
       const visual = new IncurseanShip(this.root, { scale: 3 });
       const group = visual.group;
       group.name = "incursiaPatrolShip" + index;
-      const orbit = 1650 + index * 260;
-      const angle = (index / 3) * Math.PI * 2;
-      group.position.set(274300 + Math.cos(angle) * orbit, 180 + index * 110, Math.sin(angle) * orbit);
+      const patrolPositions = [[-520, 1250, -620], [0, 1450, -550], [520, 1250, -620]];
+      const patrolPosition = patrolPositions[index];
+      group.position.set(274300 + patrolPosition[0], patrolPosition[1], patrolPosition[2]);
       const ship = { group, homePlanet: "incursia", relationships: Incursia.relationships, damage: 5, health: 50, destroyed: false, takeDamage: amount => { ship.health = Math.max(0, ship.health - Math.max(0, amount)); if (ship.health === 0 && !ship.destroyed) { ship.destroyed = true; group.visible = false; for (const name of ["Ben", "Gwen", "Kevin", "Rook"]) ship.relationships[name] = Math.max(-100, Number(ship.relationships[name] ?? 0) - 0.5); try { const key = "rustbucket.planet." + ship.homePlanet; const saved = JSON.parse(localStorage.getItem(key) || "null") || {}; saved.relationships = { ...(saved.relationships || {}), ...ship.relationships }; localStorage.setItem(key, JSON.stringify(saved)); } catch (error) {} } return ship.health; }, attack: target => {
         const species = target?.species || target?.constructor?.name;
         if (!target || target.health <= 0 || Number(ship.relationships[species] ?? 0) >= 0) return false;
